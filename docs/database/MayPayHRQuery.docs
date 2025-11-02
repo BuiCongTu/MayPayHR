@@ -564,6 +564,15 @@ WHERE role_id = (SELECT role_id FROM tbRole WHERE name = 'Worker')
   AND department_id = (SELECT department_id FROM tbDepartment WHERE name = 'Trung tâm hoàn thành');
 GO
 
+
+ALTER TABLE tbUser
+ADD password_hash VARCHAR(255);
+GO
+
+UPDATE tbUser
+SET password_hash = '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy';
+GO
+
 SELECT * FROM tbRole
 SELECT * FROM tbLeaveReason
 SELECT * FROM tbSkillLevel

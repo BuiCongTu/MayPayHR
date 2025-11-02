@@ -1,5 +1,6 @@
 package fpt.aptech.springbootapp.configs;
 
+import fpt.aptech.springbootapp.securities.JwtAuthenticationFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -36,7 +37,7 @@ public class SecurityConfig {
         http.csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(
                         (authorize)->authorize
-                                .requestMatchers("/api/auth/" , "/api/auth/register", "api/auth/login")
+                                .requestMatchers("/api/auth/**")
                                 .permitAll()
                                 .anyRequest()
                                 .authenticated())
