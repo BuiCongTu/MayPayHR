@@ -37,7 +37,9 @@ public class SecurityConfig {
         http.csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(
                         (authorize)->authorize
-                                .requestMatchers("/api/auth/**")
+                                .requestMatchers(
+                                        "/api/auth/**",
+                                        "/api/overtime/**")     //testing only
                                 .permitAll()
                                 .anyRequest()
                                 .authenticated())
