@@ -1,6 +1,5 @@
 package fpt.aptech.springbootapp.configs;
 
-import fpt.aptech.springbootapp.securities.JwtAuthenticationFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -14,12 +13,18 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
 
+import fpt.aptech.springbootapp.securities.JwtAuthenticationFilter;
+import fpt.aptech.springbootapp.service.user.CustomUserDetailsService;
+
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
-    public SecurityConfig(JwtAuthenticationFilter jwtAuthenticationFilter) {
+    private final CustomUserDetailsService userDetailsService;
+
+    public SecurityConfig(JwtAuthenticationFilter jwtAuthenticationFilter, CustomUserDetailsService userDetailsService) {
         this.jwtAuthenticationFilter = jwtAuthenticationFilter;
+        this.userDetailsService = userDetailsService;
     }
 
     @Bean
@@ -34,15 +39,21 @@ public class SecurityConfig {
 
     @Bean
     SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+
+        //them de kiem tra xem ro cac loi
+         System.out.println(" Loading Security Configuration...");
         http.csrf(AbstractHttpConfigurer::disable)
+            .cors(cors -> cors.configurationSource(request -> new CorsConfiguration().applyPermitDefaultValues()))
+            .formLogin(AbstractHttpConfigurer::disable)
+            .httpBasic(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(
                         (authorize)->authorize
                                 .requestMatchers("/api/auth/**")
                                 .permitAll()
                                 .anyRequest()
                                 .authenticated())
-                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
-                .cors(configure -> new CorsConfiguration().applyPermitDefaultValues());
+                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+                // .cors(configure -> new CorsConfiguration().applyPermitDefaultValues());
         return http.build();
     }
 }
