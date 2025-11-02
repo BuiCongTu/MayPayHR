@@ -3,21 +3,26 @@ package fpt.aptech.springbootapp.entities.ModuleC;
 import fpt.aptech.springbootapp.entities.Core.TbDepartment;
 import fpt.aptech.springbootapp.entities.Core.TbUser;
 import jakarta.persistence.*;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Size;
-import lombok.Getter;
-import lombok.Setter;
-import org.hibernate.annotations.ColumnDefault;
-import org.hibernate.annotations.Nationalized;
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Index;
+import jakarta.persistence.Table;
+import jakarta.validation.constraints.*;
+import lombok.*;
+import org.hibernate.annotations.*;
 
-import java.math.BigDecimal;
-import java.time.Instant;
-import java.time.LocalDate;
+import java.math.*;
+import java.time.*;
+import java.util.*;
 
 @Getter
 @Setter
 @Entity
-@Table(name = "tbPayroll")
+@NoArgsConstructor
+@AllArgsConstructor
+@Table(name = "tbPayroll", indexes = {
+        @Index(name = "idx_month_status", columnList = "month, status")
+})//payrollRepository.findByMonthAndStatus(LocalDate.of(2025, 10, 1), "approved");
+
 public class TbPayroll {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -25,7 +30,7 @@ public class TbPayroll {
     private Integer id;
 
     @NotNull
-    @Column(name = "\"month\"", nullable = false)
+    @Column(name = "month", nullable = false)
     private LocalDate month;
 
     @NotNull
@@ -34,18 +39,17 @@ public class TbPayroll {
     private TbDepartment department;
 
     @NotNull
-    @Column(name = "total_salary", nullable = false, precision = 12, scale = 2)
+    @Column(name = "total_salary", nullable = false, precision = 15, scale = 2)
     private BigDecimal totalSalary;
 
-    @Nationalized
     @Lob
     @Column(name = "details")
     private String details;
 
-    @Size(max = 20)
+    @Enumerated(EnumType.STRING)
     @ColumnDefault("'pending'")
     @Column(name = "status", length = 20)
-    private String status;
+    private PayrollStatus status = PayrollStatus.pending;
 
     @NotNull
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
@@ -63,5 +67,15 @@ public class TbPayroll {
     @ColumnDefault("getdate()")
     @Column(name = "created_at")
     private Instant createdAt;
+
+    @OneToMany(mappedBy = "payroll", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private List<TbEmployeePayroll> employeePayrolls = new ArrayList<>();
+
+    @OneToMany(mappedBy = "payroll", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private List<TbReservedPayroll> reservedPayrolls = new ArrayList<>();
+
+    public enum PayrollStatus {
+        pending, balanced, approved, rejected
+    }
 
 }

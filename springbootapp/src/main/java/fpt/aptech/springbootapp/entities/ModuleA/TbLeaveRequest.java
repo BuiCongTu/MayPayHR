@@ -1,19 +1,18 @@
 package fpt.aptech.springbootapp.entities.ModuleA;
 
-import fpt.aptech.springbootapp.entities.Core.TbUser;
+import fpt.aptech.springbootapp.entities.Core.*;
 import jakarta.persistence.*;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Size;
-import lombok.Getter;
-import lombok.Setter;
+import jakarta.validation.constraints.*;
+import lombok.*;
 import org.hibernate.annotations.ColumnDefault;
 
-import java.time.Instant;
-import java.time.LocalDate;
+import java.time.*;
 
 @Getter
 @Setter
 @Entity
+@NoArgsConstructor
+@AllArgsConstructor
 @Table(name = "tbLeaveRequest")
 public class TbLeaveRequest {
     @Id
@@ -21,20 +20,22 @@ public class TbLeaveRequest {
     @Column(name = "request_id", nullable = false)
     private Integer id;
 
+    //employee xin nghi N:1
     @NotNull
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "user_id", nullable = false)
     private TbUser user;
 
+    //n:1
     @NotNull
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "leave_reason_id", nullable = false)
     private TbLeaveReason leaveReason;
 
-    @Size(max = 20)
+    @Enumerated(EnumType.STRING)
     @NotNull
     @Column(name = "type", nullable = false, length = 20)
-    private String type;
+    private LeaveType type;
 
     @NotNull
     @Column(name = "start_date", nullable = false)
@@ -52,15 +53,17 @@ public class TbLeaveRequest {
     @Column(name = "comment")
     private String comment;
 
-    @Size(max = 20)
+    @Enumerated(EnumType.STRING)
     @ColumnDefault("'pending'")
     @Column(name = "status", length = 20)
-    private String status;
+    private LeaveStatus status = LeaveStatus.pending;
 
+    //n:1 Manager xac nhan
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "confirmed_by")
     private TbUser confirmedBy;
 
+    //n:1 factory manager duyet
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "approved_by")
     private TbUser approvedBy;
@@ -72,5 +75,13 @@ public class TbLeaveRequest {
     @ColumnDefault("getdate()")
     @Column(name = "created_at")
     private Instant createdAt;
+
+    public enum LeaveType {
+        ShortTerm, LongTerm, Maternity, Accident, Other
+    }
+
+    public enum LeaveStatus {
+        pending, confirmed, approved, rejected
+    }
 
 }

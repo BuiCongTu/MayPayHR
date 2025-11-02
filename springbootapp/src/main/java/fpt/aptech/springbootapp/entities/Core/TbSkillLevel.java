@@ -1,14 +1,16 @@
 package fpt.aptech.springbootapp.entities.Core;
 
 import jakarta.persistence.*;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Size;
-import lombok.Getter;
-import lombok.Setter;
+import jakarta.validation.constraints.*;
+import lombok.*;
+
+import java.util.*;
 
 @Getter
 @Setter
 @Entity
+@NoArgsConstructor
+@AllArgsConstructor
 @Table(name = "tbSkillLevel")
 public class TbSkillLevel {
     @Id
@@ -25,4 +27,7 @@ public class TbSkillLevel {
     @Column(name = "description")
     private String description;
 
+    // TbSkillLevel ──1:N──> TbUser
+    @OneToMany(mappedBy = "skillLevel", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private List<TbUser> users = new ArrayList<>();
 }

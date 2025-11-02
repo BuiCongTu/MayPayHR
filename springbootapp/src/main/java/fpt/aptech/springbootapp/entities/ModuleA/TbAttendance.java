@@ -1,20 +1,18 @@
 package fpt.aptech.springbootapp.entities.ModuleA;
 
-import fpt.aptech.springbootapp.entities.Core.TbUser;
+import fpt.aptech.springbootapp.entities.Core.*;
 import jakarta.persistence.*;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Size;
-import lombok.Getter;
-import lombok.Setter;
+import jakarta.validation.constraints.*;
+import lombok.*;
 import org.hibernate.annotations.ColumnDefault;
 
-import java.time.Instant;
-import java.time.LocalDate;
-import java.time.LocalTime;
+import java.time.*;
 
 @Getter
 @Setter
 @Entity
+@NoArgsConstructor
+@AllArgsConstructor
 @Table(name = "tbAttendance")
 public class TbAttendance {
     @Id
@@ -37,10 +35,10 @@ public class TbAttendance {
     @Column(name = "time_out")
     private LocalTime timeOut;
 
-    @Size(max = 20)
-    @NotNull
+    @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false, length = 20)
-    private String status;
+    private AttendanceStatus status;
+
 
     @Lob
     @Column(name = "reason")
@@ -53,5 +51,9 @@ public class TbAttendance {
     @ColumnDefault("getdate()")
     @Column(name = "created_at")
     private Instant createdAt;
+
+    public enum AttendanceStatus {
+        SUCCESS, LATE, MANUAL, ERROR
+    }
 
 }

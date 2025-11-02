@@ -1,14 +1,16 @@
 package fpt.aptech.springbootapp.entities.Core;
 
 import jakarta.persistence.*;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Size;
-import lombok.Getter;
-import lombok.Setter;
+import jakarta.validation.constraints.*;
+import lombok.*;
+
+import java.util.*;
 
 @Getter
 @Setter
 @Entity
+@AllArgsConstructor
+@NoArgsConstructor
 @Table(name = "tbDepartment")
 public class TbDepartment {
     @Id
@@ -21,11 +23,20 @@ public class TbDepartment {
     @Column(name = "name", nullable = false, length = 100)
     private String name;
 
-    @Column(name = "manager_id")
-    private Integer managerId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "manager_id")
+    private TbUser manager;
 
     @Lob
     @Column(name = "description")
     private String description;
+
+    //TbDepartment ──1:N──> TbUser
+    @OneToMany(mappedBy = "department", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private List<TbUser> users = new ArrayList<>();
+
+    //TbDepartment ──1:N──> TbLine
+    @OneToMany(mappedBy = "department", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private List<TbLine> lines = new ArrayList<>();
 
 }

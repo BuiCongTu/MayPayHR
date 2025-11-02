@@ -3,18 +3,20 @@ package fpt.aptech.springbootapp.entities.ModuleC;
 import fpt.aptech.springbootapp.entities.Core.TbDepartment;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 import org.hibernate.annotations.ColumnDefault;
 
-import java.math.BigDecimal;
-import java.time.Instant;
-import java.time.LocalDate;
+import java.math.*;
+import java.time.*;
 
 @Getter
 @Setter
 @Entity
-@Table(name = "tbProduction")
+@NoArgsConstructor
+@AllArgsConstructor
+@Table(name = "tbProduction", indexes = {
+        @Index(name = "idx_dept_date", columnList = "department_id, DOP")
+})//productionRepository.findByDepartmentAndDop(deptId, date);
 public class TbProduction {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -36,7 +38,7 @@ public class TbProduction {
 
     @ColumnDefault("0")
     @Column(name = "unit_price", precision = 15, scale = 1)
-    private BigDecimal unitPrice;
+    private BigDecimal unitPrice = BigDecimal.ZERO;
 
     @ColumnDefault("getdate()")
     @Column(name = "created_at")

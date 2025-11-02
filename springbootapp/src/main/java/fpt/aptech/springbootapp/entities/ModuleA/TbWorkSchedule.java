@@ -1,18 +1,18 @@
 package fpt.aptech.springbootapp.entities.ModuleA;
 
-import fpt.aptech.springbootapp.entities.Core.TbUser;
+import fpt.aptech.springbootapp.entities.Core.*;
 import jakarta.persistence.*;
-import jakarta.validation.constraints.NotNull;
-import lombok.Getter;
-import lombok.Setter;
+import jakarta.validation.constraints.*;
+import lombok.*;
 import org.hibernate.annotations.ColumnDefault;
 
-import java.time.LocalDate;
-import java.time.LocalTime;
+import java.time.*;
 
 @Getter
 @Setter
 @Entity
+@NoArgsConstructor
+@AllArgsConstructor
 @Table(name = "tbWorkSchedule")
 public class TbWorkSchedule {
     @Id
@@ -37,6 +37,6 @@ public class TbWorkSchedule {
 
     @ColumnDefault("0")
     @Column(name = "is_holiday")
-    private Boolean isHoliday;
+    private Boolean isHoliday = false;
 
 }

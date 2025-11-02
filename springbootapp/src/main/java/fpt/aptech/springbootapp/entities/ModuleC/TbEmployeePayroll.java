@@ -2,18 +2,23 @@ package fpt.aptech.springbootapp.entities.ModuleC;
 
 import fpt.aptech.springbootapp.entities.Core.TbUser;
 import jakarta.persistence.*;
-import jakarta.validation.constraints.NotNull;
-import lombok.Getter;
-import lombok.Setter;
-import org.hibernate.annotations.ColumnDefault;
+import jakarta.persistence.Index;
+import jakarta.persistence.Table;
+import jakarta.validation.constraints.*;
+import lombok.*;
+import org.hibernate.annotations.*;
 
-import java.math.BigDecimal;
-import java.time.Instant;
+import java.math.*;
+import java.time.*;
 
 @Getter
 @Setter
 @Entity
-@Table(name = "tbEmployeePayroll")
+@NoArgsConstructor
+@AllArgsConstructor
+@Table(name = "tbEmployeePayroll", indexes = {
+        @Index(name = "idx_user_payroll", columnList = "user_id, payroll_id")
+})//employeePayrollRepository.findByUserAndPayroll(userId, payrollId);
 public class TbEmployeePayroll {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -31,27 +36,27 @@ public class TbEmployeePayroll {
     private TbUser user;
 
     @NotNull
-    @Column(name = "base_salary", nullable = false, precision = 12, scale = 2)
+    @Column(name = "base_salary", nullable = false, precision = 15, scale = 2)
     private BigDecimal baseSalary;
 
     @ColumnDefault("0")
-    @Column(name = "product_bonus", precision = 12, scale = 2)
-    private BigDecimal productBonus;
+    @Column(name = "product_bonus", precision = 15, scale = 2)
+    private BigDecimal productBonus = BigDecimal.ZERO;
 
     @ColumnDefault("0")
-    @Column(name = "overtime_pay", precision = 12, scale = 2)
-    private BigDecimal overtimePay;
+    @Column(name = "overtime_pay", precision = 15, scale = 2)
+    private BigDecimal overtimePay = BigDecimal.ZERO;
 
     @ColumnDefault("0")
-    @Column(name = "allowance", precision = 12, scale = 2)
-    private BigDecimal allowance;
+    @Column(name = "allowance", precision = 15, scale = 2)
+    private BigDecimal allowance = BigDecimal.ZERO;
 
     @ColumnDefault("0")
-    @Column(name = "deduction", precision = 12, scale = 2)
-    private BigDecimal deduction;
+    @Column(name = "deduction", precision = 15, scale = 2)
+    private BigDecimal deduction = BigDecimal.ZERO;
 
     @NotNull
-    @Column(name = "total_pay", nullable = false, precision = 12, scale = 2)
+    @Column(name = "total_pay", nullable = false, precision = 15, scale = 2)
     private BigDecimal totalPay;
 
     @Lob

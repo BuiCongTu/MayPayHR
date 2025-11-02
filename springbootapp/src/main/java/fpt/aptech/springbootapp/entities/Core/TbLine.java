@@ -1,17 +1,18 @@
 package fpt.aptech.springbootapp.entities.Core;
 
 import jakarta.persistence.*;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Size;
-import lombok.Getter;
-import lombok.Setter;
+import jakarta.validation.constraints.*;
+import lombok.*;
 import org.hibernate.annotations.ColumnDefault;
 
-import java.time.Instant;
+import java.time.*;
+import java.util.*;
 
 @Getter
 @Setter
 @Entity
+@NoArgsConstructor
+@AllArgsConstructor
 @Table(name = "tbLine")
 public class TbLine {
     @Id
@@ -20,7 +21,7 @@ public class TbLine {
     private Integer id;
 
     @NotNull
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @ManyToOne(fetch = FetchType.EAGER, optional = false)
     @JoinColumn(name = "department_id", nullable = false)
     private TbDepartment department;
 
@@ -33,12 +34,15 @@ public class TbLine {
     @Column(name = "description")
     private String description;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "manager_id")
     private TbUser manager;
 
     @ColumnDefault("getdate()")
     @Column(name = "created_at")
     private Instant createdAt;
+
+    @OneToMany(mappedBy = "line", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private List<TbUser> users = new ArrayList<>();
 
 }

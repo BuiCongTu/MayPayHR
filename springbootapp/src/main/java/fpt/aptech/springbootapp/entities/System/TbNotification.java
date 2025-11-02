@@ -25,10 +25,10 @@ public class TbNotification {
     @JoinColumn(name = "recipient_id", nullable = false)
     private TbUser recipient;
 
-    @Size(max = 20)
+    @Enumerated(EnumType.STRING)
     @NotNull
     @Column(name = "type", nullable = false, length = 20)
-    private String type;
+    private NotificationType type;
 
     @NotNull
     @Lob
@@ -39,9 +39,17 @@ public class TbNotification {
     @Column(name = "sent_date")
     private Instant sentDate;
 
-    @Size(max = 10)
+    @Enumerated(EnumType.STRING)
     @ColumnDefault("'sent'")
     @Column(name = "status", length = 10)
-    private String status;
+    private NotificationStatus status = NotificationStatus.sent;
+
+    public enum NotificationType {
+        error, approval, rejection, other
+    }
+
+    public enum NotificationStatus {
+        sent, read
+    }
 
 }

@@ -2,18 +2,18 @@ package fpt.aptech.springbootapp.entities.ModuleB;
 
 import fpt.aptech.springbootapp.entities.Core.TbUser;
 import jakarta.persistence.*;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Size;
-import lombok.Getter;
-import lombok.Setter;
-import org.hibernate.annotations.ColumnDefault;
-import org.hibernate.annotations.Nationalized;
+import jakarta.persistence.Table;
+import jakarta.validation.constraints.*;
+import lombok.*;
+import org.hibernate.annotations.*;
 
-import java.time.Instant;
+import java.time.*;
 
 @Getter
 @Setter
 @Entity
+@NoArgsConstructor
+@AllArgsConstructor
 @Table(name = "tbProposal")
 public class TbProposal {
     @Id
@@ -21,10 +21,10 @@ public class TbProposal {
     @Column(name = "proposal_id", nullable = false)
     private Integer id;
 
-    @Size(max = 30)
+    @Enumerated(EnumType.STRING)
     @NotNull
     @Column(name = "type", nullable = false, length = 30)
-    private String type;
+    private ProposalType type;
 
     @NotNull
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
@@ -36,8 +36,7 @@ public class TbProposal {
     @JoinColumn(name = "target_user_id", nullable = false)
     private TbUser targetUser;
 
-    @Nationalized
-    @Lob
+    @Lob//khai bao dang large text
     @Column(name = "details")
     private String details;
 
@@ -45,10 +44,10 @@ public class TbProposal {
     @Column(name = "reason")
     private String reason;
 
-    @Size(max = 20)
+    @Enumerated(EnumType.STRING)
     @ColumnDefault("'pending'")
     @Column(name = "status", length = 20)
-    private String status;
+    private ProposalStatus status = ProposalStatus.pending;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "approved_by")
@@ -61,5 +60,13 @@ public class TbProposal {
     @ColumnDefault("getdate()")
     @Column(name = "created_at")
     private Instant createdAt;
+
+    public enum ProposalType {
+        SalaryIncrease, PositionChange, SkillLevelChange
+    }
+
+    public enum ProposalStatus {
+        pending, confirmed, approved, rejected
+    }
 
 }

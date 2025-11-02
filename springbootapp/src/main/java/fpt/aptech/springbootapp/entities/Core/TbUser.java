@@ -1,19 +1,18 @@
 package fpt.aptech.springbootapp.entities.Core;
 
 import jakarta.persistence.*;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Size;
-import lombok.Getter;
-import lombok.Setter;
+import jakarta.validation.constraints.*;
+import lombok.*;
 import org.hibernate.annotations.ColumnDefault;
 
-import java.math.BigDecimal;
-import java.time.Instant;
-import java.time.LocalDate;
+import java.math.*;
+import java.time.*;
 
 @Getter
 @Setter
 @Entity
+@NoArgsConstructor
+@AllArgsConstructor
 @Table(name = "tbUser")
 public class TbUser {
     @Id
@@ -35,6 +34,7 @@ public class TbUser {
     @Column(name = "phone", nullable = false, length = 20)
     private String phone;
 
+    //relationships
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "role_id")
     private TbRole role;
@@ -47,33 +47,43 @@ public class TbUser {
     @JoinColumn(name = "line_id")
     private TbLine line;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "skill_level_id")
+    private TbSkillLevel skillLevel;
+
+    //fields
     @Lob
     @Column(name = "face_data")
     private String faceData;
 
-    @Size(max = 20)
+    @Enumerated(EnumType.STRING)
     @ColumnDefault("'TimeBased'")
     @Column(name = "salary_type", length = 20)
-    private String salaryType;
+    private SalaryType salaryType;
 
     @ColumnDefault("0")
     @Column(name = "base_salary", precision = 10, scale = 2)
     private BigDecimal baseSalary;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "skill_level_id")
-    private TbSkillLevel skillLevel;
-
     @Column(name = "hire_date")
     private LocalDate hireDate;
 
-    @Size(max = 20)
+    @Enumerated(EnumType.STRING)
     @ColumnDefault("'Active'")
     @Column(name = "status", length = 20)
-    private String status;
+    private UserStatus status;
 
     @ColumnDefault("getdate()")
     @Column(name = "created_at")
     private Instant createdAt;
+
+    //enum
+    public enum SalaryType {
+        ProductBased, TimeBased
+    }
+
+    public enum UserStatus {
+        Active, Inactive, Terminated
+    }
 
 }

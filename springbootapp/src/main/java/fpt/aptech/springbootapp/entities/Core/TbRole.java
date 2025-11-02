@@ -1,14 +1,16 @@
 package fpt.aptech.springbootapp.entities.Core;
 
 import jakarta.persistence.*;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Size;
-import lombok.Getter;
-import lombok.Setter;
+import jakarta.validation.constraints.*;
+import lombok.*;
+
+import java.util.*;
 
 @Getter
 @Setter
 @Entity
+@NoArgsConstructor
+@AllArgsConstructor
 @Table(name = "tbRole")
 public class TbRole {
     @Id
@@ -24,5 +26,10 @@ public class TbRole {
     @Lob
     @Column(name = "description")
     private String description;
+
+//    TbRole ──1:N──> TbUser
+    @OneToMany(mappedBy = "role", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private List<TbUser> users = new ArrayList<>();
+
 
 }

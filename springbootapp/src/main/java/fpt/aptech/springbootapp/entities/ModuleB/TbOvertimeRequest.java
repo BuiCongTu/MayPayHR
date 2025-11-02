@@ -1,19 +1,19 @@
 package fpt.aptech.springbootapp.entities.ModuleB;
 
-import fpt.aptech.springbootapp.entities.Core.TbDepartment;
-import fpt.aptech.springbootapp.entities.Core.TbUser;
+import fpt.aptech.springbootapp.entities.Core.*;
 import jakarta.persistence.*;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Size;
-import lombok.Getter;
-import lombok.Setter;
+import jakarta.validation.constraints.*;
+import lombok.*;
 import org.hibernate.annotations.ColumnDefault;
 
-import java.time.Instant;
+import java.time.*;
+import java.util.*;
 
 @Getter
 @Setter
 @Entity
+@NoArgsConstructor
+@AllArgsConstructor
 @Table(name = "tbOvertimeRequest")
 public class TbOvertimeRequest {
     @Id
@@ -21,11 +21,13 @@ public class TbOvertimeRequest {
     @Column(name = "request_id", nullable = false)
     private Integer id;
 
+    //n:1 factory manager
     @NotNull
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "factory_manager_id", nullable = false)
     private TbUser factoryManager;
 
+    //n:1 department
     @NotNull
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "department_id", nullable = false)
@@ -39,17 +41,24 @@ public class TbOvertimeRequest {
     @Column(name = "num_employees", nullable = false)
     private Integer numEmployees;
 
-    @Size(max = 20)
+    @Enumerated(EnumType.STRING)
     @ColumnDefault("'pending'")
     @Column(name = "status", length = 20)
-    private String status;
+    private OvertimeRequestStatus status = OvertimeRequestStatus.pending;
 
-    @Lob
+    @Lob //khai bao dang large text
     @Column(name = "details")
     private String details;
 
     @ColumnDefault("getdate()")
     @Column(name = "created_at")
     private Instant createdAt;
+
+    @OneToMany(mappedBy = "overtimeRequest", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private List<TbOvertimeTicket> overtimeTickets = new ArrayList<>();
+
+    public enum OvertimeRequestStatus {
+        pending, processed
+    }
 
 }
