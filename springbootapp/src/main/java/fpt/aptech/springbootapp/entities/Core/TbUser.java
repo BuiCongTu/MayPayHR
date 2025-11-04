@@ -27,6 +27,7 @@ public class TbUser {
 
     @Size(max = 255)
     @Column(name = "email")
+    @Pattern(regexp = "^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+$", message = "Invalid email format")
     private String email;
 
     // thêm passwordhash thay vì password
