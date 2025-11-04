@@ -53,8 +53,8 @@ public class TbOvertimeRequest {
     @ColumnDefault("getdate()")
     @Column(name = "created_at")
     private Instant createdAt;
-
-    @OneToMany(mappedBy = "request", cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
+    //sửa request thành overtimeRequest 
+    @OneToMany(mappedBy = "overtimeRequest", cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
     private List<TbOvertimeTicket> overtimeTickets = new ArrayList<>();
 
     public enum OvertimeRequestStatus {

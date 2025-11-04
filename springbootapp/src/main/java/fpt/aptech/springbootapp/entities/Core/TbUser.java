@@ -40,9 +40,6 @@ public class TbUser {
     @Column(name = "phone", nullable = false, length = 20)
     private String phone;
 
-    @Size(max = 255)
-    @Column(name = "password_hash")
-    private String passwordHash;
 
     //relationships
     @ManyToOne(fetch = FetchType.LAZY)
