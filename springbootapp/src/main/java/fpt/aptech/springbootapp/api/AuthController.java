@@ -56,14 +56,8 @@ public String login(@RequestBody LoginRequest request) {
     TbUser user = existingUser.get();
 
     System.out.println("Found user: " + user.getEmail());
-    System.out.println("Password hash in DB: " + user.getPasswordHash());
+    System.out.println("Password hash: " + user.getPasswordHash());
 
-    if (!passwordEncoder.matches(request.getPassword(), user.getPasswordHash())) {
-        System.out.println("Password does not match!");
-        return "Invalid credentials";
-    }
-
-    System.out.println("Password matched! Generating token...");
 
     String token = jwtUtils.generateToken(
         user.getEmail(),
