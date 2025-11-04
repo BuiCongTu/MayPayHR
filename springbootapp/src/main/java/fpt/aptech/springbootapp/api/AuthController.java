@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import fpt.aptech.springbootapp.dto.LoginRequest;
 import fpt.aptech.springbootapp.entities.Core.TbUser;
 import fpt.aptech.springbootapp.securities.JwtUtils;
 import fpt.aptech.springbootapp.services.interfaces.UserService;
@@ -43,22 +44,37 @@ public class AuthController {
     }
 
     // Login
-    @PostMapping("/login")
-    public String login(@RequestBody TbUser user) {
-        Authentication authentication = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(user.getEmail(), user.getPasswordHash())   // Tạo đối tượng Authentication
-        );
+   @PostMapping("/login")
+public String login(@RequestBody LoginRequest request) {
+    Optional<TbUser> existingUser = userService.findByEmail(request.getEmail());
 
-        if (authentication.isAuthenticated()) {  // Kiểm tra xác thực thành công
-            Optional<TbUser> existingUser = userService.findByEmail(user.getEmail());   // Lấy thông tin user từ database
-            if (existingUser.isPresent()) {   // Kiểm tra user có tồn tại
-                return jwtUtils.generateToken(    // Tạo và trả về JWT token
-                        existingUser.get().getEmail(),  // Email của user
-                        existingUser.get().getRole().getName()    // Role của user
-                );
-            }
-        }
+    if (existingUser.isEmpty()) {
+        System.out.println("User not found: " + request.getEmail());
+        return "User not found";
+    }
+
+    TbUser user = existingUser.get();
+
+    System.out.println("Found user: " + user.getEmail());
+    System.out.println("Password hash in DB: " + user.getPasswordHash());
+
+    if (!passwordEncoder.matches(request.getPassword(), user.getPasswordHash())) {
+        System.out.println("Password does not match!");
         return "Invalid credentials";
     }
+
+    System.out.println("Password matched! Generating token...");
+
+    String token = jwtUtils.generateToken(
+        user.getEmail(),
+        user.getRole().getName()
+    );
+
+    System.out.println("Token generated: " + token);
+
+    return token;
+}
+
+
 }
 
