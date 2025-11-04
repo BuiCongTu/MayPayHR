@@ -1,4 +1,4 @@
-package fpt.aptech.springbootapp.service.user;
+package fpt.aptech.springbootapp.services;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Service;

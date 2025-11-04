@@ -14,7 +14,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import org.springframework.web.cors.CorsConfiguration;
 
 import fpt.aptech.springbootapp.securities.JwtAuthenticationFilter;
-import fpt.aptech.springbootapp.service.user.CustomUserDetailsService;
+import fpt.aptech.springbootapp.services.implementations.CustomUserDetailsService;
 
 @Configuration
 @EnableWebSecurity
@@ -48,7 +48,9 @@ public class SecurityConfig {
             .httpBasic(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(
                         (authorize)->authorize
-                                .requestMatchers("/api/auth/**")
+                                .requestMatchers(
+                                        "/api/auth/**",
+                                        "/api/overtime/**")     //testing only
                                 .permitAll()
                                 .anyRequest()
                                 .authenticated())

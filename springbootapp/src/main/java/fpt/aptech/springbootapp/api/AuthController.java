@@ -5,6 +5,7 @@ import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+
 import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -14,7 +15,10 @@ import org.springframework.web.bind.annotation.RestController;
 
 import fpt.aptech.springbootapp.entities.Core.TbUser;
 import fpt.aptech.springbootapp.securities.JwtUtils;
-import fpt.aptech.springbootapp.service.user.UserService;
+import fpt.aptech.springbootapp.services.interfaces.UserService;
+
+
+
 
 @RestController
 @RequestMapping("/api/auth")

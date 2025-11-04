@@ -1,7 +1,7 @@
-package fpt.aptech.springbootapp.service.user;
+package fpt.aptech.springbootapp.services.implementations;
 
 import fpt.aptech.springbootapp.entities.Core.TbUser;
-import fpt.aptech.springbootapp.repos.UserRepository;
+import fpt.aptech.springbootapp.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;

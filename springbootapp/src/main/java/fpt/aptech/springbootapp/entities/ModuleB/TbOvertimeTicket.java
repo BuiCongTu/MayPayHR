@@ -28,7 +28,7 @@ public class TbOvertimeTicket {
     @JoinColumn(name = "manager_id", nullable = false)
     private TbUser manager;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "request_id")
     private TbOvertimeRequest overtimeRequest;
 

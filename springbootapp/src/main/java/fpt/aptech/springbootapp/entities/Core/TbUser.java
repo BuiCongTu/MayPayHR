@@ -29,14 +29,17 @@ public class TbUser {
     @Column(name = "email")
     private String email;
 
+     //thêm passwordhash thay vì password
+    @Size(max = 255)
+    @Column(name = "password_hash")
+    private String passwordHash;
+
+
     @Size(max = 20)
     @NotNull
     @Column(name = "phone", nullable = false, length = 20)
     private String phone;
 
-    @Size(max = 255)
-    @Column(name = "password_hash")
-    private String passwordHash;
 
     //relationships
     @ManyToOne(fetch = FetchType.LAZY)

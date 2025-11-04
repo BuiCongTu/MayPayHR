@@ -1,9 +1,8 @@
-package fpt.aptech.springbootapp.service.user;
+package fpt.aptech.springbootapp.services.implementations;
 
 import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
-import java.util.OptionalLong;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -11,8 +10,9 @@ import org.springframework.stereotype.Service;
 
 import fpt.aptech.springbootapp.entities.Core.TbRole;
 import fpt.aptech.springbootapp.entities.Core.TbUser;
-import fpt.aptech.springbootapp.repos.RoleRepository;
-import fpt.aptech.springbootapp.repos.UserRepository;
+import fpt.aptech.springbootapp.repository.RoleRepository;
+import fpt.aptech.springbootapp.repository.UserRepository;
+import fpt.aptech.springbootapp.services.interfaces.UserService;
 
 @Service
 public class UserServiceImp implements UserService {
