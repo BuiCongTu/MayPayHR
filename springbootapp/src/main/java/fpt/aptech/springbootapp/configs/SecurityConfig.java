@@ -14,7 +14,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import org.springframework.web.cors.CorsConfiguration;
 
 import fpt.aptech.springbootapp.securities.JwtAuthenticationFilter;
-import fpt.aptech.springbootapp.service.CustomUserDetailsService;
+import fpt.aptech.springbootapp.services.implementations.CustomUserDetailsService;
 
 @Configuration
 @EnableWebSecurity

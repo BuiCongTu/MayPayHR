@@ -2,8 +2,9 @@ package fpt.aptech.springbootapp.configs;
 
 import fpt.aptech.springbootapp.entities.Core.TbRole;
 import fpt.aptech.springbootapp.entities.Core.TbUser;
-import fpt.aptech.springbootapp.repo.RoleRepository;
-import fpt.aptech.springbootapp.repo.UserRepository;
+import fpt.aptech.springbootapp.repository.RoleRepository;
+import fpt.aptech.springbootapp.repository.UserRepository;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.security.crypto.password.PasswordEncoder;

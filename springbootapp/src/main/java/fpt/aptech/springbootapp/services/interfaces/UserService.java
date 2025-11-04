@@ -1,4 +1,4 @@
-package fpt.aptech.springbootapp.service;
+package fpt.aptech.springbootapp.services.interfaces;
 import java.util.List;
 import java.util.Optional;
 import fpt.aptech.springbootapp.entities.Core.TbUser;

@@ -1,4 +1,4 @@
-package fpt.aptech.springbootapp.repo;
+package fpt.aptech.springbootapp.repository;
 
 import java.util.Optional;
 

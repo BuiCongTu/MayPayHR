@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import fpt.aptech.springbootapp.entities.Core.TbUser;
 import fpt.aptech.springbootapp.securities.JwtUtils;
-import fpt.aptech.springbootapp.service.UserService;
+import fpt.aptech.springbootapp.services.interfaces.UserService;
 
 @RestController
 @RequestMapping("/api/auth")
