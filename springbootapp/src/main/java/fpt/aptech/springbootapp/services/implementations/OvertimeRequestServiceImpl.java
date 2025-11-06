@@ -1,9 +1,16 @@
 package fpt.aptech.springbootapp.services.implementations;
 
+import fpt.aptech.springbootapp.dtos.OvertimeRequestDTO;
+import fpt.aptech.springbootapp.filter.OvertimeRequestFilter;
 import fpt.aptech.springbootapp.entities.ModuleB.TbOvertimeRequest;
+import fpt.aptech.springbootapp.mappers.OvertimeRequestMapper;
 import fpt.aptech.springbootapp.repository.OvertimeRequestRepository;
 import fpt.aptech.springbootapp.services.interfaces.OvertimeRequestService;
+import fpt.aptech.springbootapp.specifications.OvertimeRequestSpecification;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
@@ -12,8 +19,8 @@ import java.util.List;
 @Service
 public class OvertimeRequestServiceImpl implements OvertimeRequestService {
     
-    OvertimeRequestRepository overtimeRequestRepository;
-    
+    private final OvertimeRequestRepository overtimeRequestRepository;
+
     @Autowired
     public OvertimeRequestServiceImpl(OvertimeRequestRepository overtimeRequestRepository) {
         this.overtimeRequestRepository = overtimeRequestRepository;
@@ -74,5 +81,12 @@ public class OvertimeRequestServiceImpl implements OvertimeRequestService {
             System.out.println(e.getMessage());
         }
         return null;
+    }
+
+    @Override
+    public Page<OvertimeRequestDTO> getFilteredRequests(OvertimeRequestFilter filter, Pageable pageable) {
+        Specification<TbOvertimeRequest> spec = OvertimeRequestSpecification.build(filter);
+        return overtimeRequestRepository.findAll(spec, pageable)
+                .map(OvertimeRequestMapper::toDTO);
     }
 }
