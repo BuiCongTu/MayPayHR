@@ -3,6 +3,7 @@ package fpt.aptech.springbootapp.configs;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -19,6 +20,7 @@ import fpt.aptech.springbootapp.services.implementations.CustomUserDetailsServic
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
+    
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
     private final CustomUserDetailsService userDetailsService;
 
@@ -32,6 +34,15 @@ public class SecurityConfig {
         return new BCryptPasswordEncoder();
     }
 
+    
+    @Bean
+    public DaoAuthenticationProvider authenticationProvider() {
+        DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
+        authProvider.setUserDetailsService(userDetailsService);
+        authProvider.setPasswordEncoder(passwordEncoder());
+        return authProvider;
+    }
+
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration configuration) throws Exception {
         return configuration.getAuthenticationManager();
@@ -39,21 +50,25 @@ public class SecurityConfig {
 
     @Bean
     SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-         System.out.println(" Loading Security Configuration...");
-        http.csrf(AbstractHttpConfigurer::disable)
+
+        System.out.println("Loading Security Configuration...");
+
+        http
+            .csrf(AbstractHttpConfigurer::disable)
             .cors(cors -> cors.configurationSource(request -> new CorsConfiguration().applyPermitDefaultValues()))
             .formLogin(AbstractHttpConfigurer::disable)
             .httpBasic(AbstractHttpConfigurer::disable)
-                .authorizeHttpRequests(
-                        (authorize)->authorize
-                                .requestMatchers(
-                                        "/api/auth/**",
-                                        "/api/overtime/**")     //testing only
-                                .permitAll()
-                                .anyRequest()
-                                .authenticated())
-                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
-                // .cors(configure -> new CorsConfiguration().applyPermitDefaultValues());
+            .authorizeHttpRequests(auth -> auth
+                .requestMatchers(
+                    "/api/auth/**",   // login, register public
+                    "/api/overtime/**" // test endpoint
+                ).permitAll()
+                .anyRequest().authenticated()
+            )
+            .authenticationProvider(authenticationProvider())
+            .userDetailsService(userDetailsService)
+            .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+
         return http.build();
     }
 }

@@ -50,18 +50,18 @@ public class DataSeeder implements CommandLineRunner {
         }
 
         // Tạo tài khoản user nếu chưa có
-        if (userRepository.findByEmail("user@user.com").isEmpty()) {
-            TbUser user = new TbUser();
-            user.setEmail("user@user.com");
-            user.setFullName("Normal User");
-            user.setPhone("0123456789");
-            user.setPasswordHash(passwordEncoder.encode("123456"));
-            user.setStatus(TbUser.UserStatus.Active);
-            user.setCreatedAt(Instant.now());
-            user.setRole(userRole);
+        // if (userRepository.findByEmail("user@user.com").isEmpty()) {
+        //     TbUser user = new TbUser();
+        //     user.setEmail("user@user.com");
+        //     user.setFullName("Normal User");
+        //     user.setPhone("0123456789");
+        //     user.setPasswordHash(passwordEncoder.encode("123456"));
+        //     user.setStatus(TbUser.UserStatus.Active);
+        //     user.setCreatedAt(Instant.now());
+        //     user.setRole(userRole);
 
-            userRepository.save(user);
-            System.out.println(" User account created: user@user.com / 123456");
-        }
+        //     userRepository.save(user);
+        //     System.out.println(" User account created: user@user.com / 123456");
+        // }
     }
 }

@@ -333,8 +333,17 @@ ModuleC_Payroll/
 | View Personal Payroll | Worker | PayrollService | - | payroll_detail_screen |
 ## API ENDPOINTS CHÍNH (Tóm tắt)
 ### **Authentication**
-- `POST /api/auth/login`
+- `POST /api/auth/login`   POST http://localhost:9999/api/auth/login
+                            {
+                              "email": "cn1@maypro.com",
+                              "password": "123456"
+                            }
+                            Lấy token dán vào:
+                            GET http://localhost:9999/api/auth/getemp/cn1@maypro.com (header: Authorization: Bearer <token>)
+
 - `POST /api/auth/logout`
+- `POST /api/auth/register`
+- `POST /api/auth/forgotpassword`
 - `GET /api/auth/me`
 
 ### **Module A: Time Attendance**

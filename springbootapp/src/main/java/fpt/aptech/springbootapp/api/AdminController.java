@@ -12,3 +12,4 @@ public class AdminController {
         return "Hi Admin";
     }
 }
+

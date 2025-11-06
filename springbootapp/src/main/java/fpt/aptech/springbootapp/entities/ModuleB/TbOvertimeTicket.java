@@ -22,7 +22,7 @@ public class TbOvertimeTicket {
     @Column(name = "ticket_id", nullable = false)
     private Integer id;
 
-    //manager
+    // manager
     @NotNull
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "manager_id", nullable = false)
@@ -33,7 +33,7 @@ public class TbOvertimeTicket {
     private TbOvertimeRequest overtimeRequest;
 
     @NotNull
-    @Lob//khai bao dang large text
+    @Lob // khai bao dang large text
     @Column(name = "employee_list", nullable = false)
     private String employeeList;
 
@@ -41,7 +41,7 @@ public class TbOvertimeTicket {
     @Column(name = "overtime_time", nullable = false, precision = 15, scale = 2)
     private BigDecimal overtimeTime;
 
-    @Lob//khai bao dang large text
+    @Lob // khai bao dang large text
     @Column(name = "reason")
     private String reason;
 

@@ -27,21 +27,21 @@ public class TbUser {
 
     @Size(max = 255)
     @Column(name = "email")
+    @Pattern(regexp = "^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+$", message = "Invalid email format")
     private String email;
 
-     //thêm passwordhash thay vì password
+    // thêm passwordhash thay vì password
     @Size(max = 255)
     @Column(name = "password_hash")
     private String passwordHash;
 
+    
 
     @Size(max = 20)
     @NotNull
     @Column(name = "phone", nullable = false, length = 20)
     private String phone;
 
-
-    //relationships
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "role_id")
     private TbRole role;
@@ -58,7 +58,7 @@ public class TbUser {
     @JoinColumn(name = "skill_level_id")
     private TbSkillLevel skillLevel;
 
-    //fields
+    // fields
     @Lob
     @Column(name = "face_data")
     private String faceData;
@@ -84,7 +84,7 @@ public class TbUser {
     @Column(name = "created_at")
     private Instant createdAt;
 
-    //enum
+    // enum
     public enum SalaryType {
         ProductBased, TimeBased
     }

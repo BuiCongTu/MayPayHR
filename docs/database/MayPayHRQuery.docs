@@ -90,7 +90,8 @@ GO
 CREATE TABLE tbUser (
     user_id INT IDENTITY(199050000,1) PRIMARY KEY,     -- ID nhân viên
     full_name VARCHAR(255) NOT NULL,                   -- Họ tên
-    email VARCHAR(255),                                -- Email
+    email VARCHAR(255),
+    password_hash VARCHAR(255),
     phone VARCHAR(20) NOT NULL,                        -- SĐT
     role_id INT,                                       -- Vai trò
     department_id INT,                                 -- Phòng ban
@@ -115,26 +116,26 @@ GO
 DECLARE @FactoryDirector INT, @FactoryManager1 INT, @FactoryManager2 INT;
 
 -- Tạo quản lý cấp cao
-INSERT INTO tbUser (full_name, email, phone, role_id, department_id, salary_type, base_salary, skill_level_id, hire_date, [status])
-SELECT 'Dương Thị N', 'factorydirector@maypro.com', '0901111000', role_id,
+INSERT INTO tbUser (full_name, email,password_hash, phone, role_id, department_id, salary_type, base_salary, skill_level_id, hire_date, [status])
+SELECT 'Dương Thị N', 'factorydirector@maypro.com','$2a$10$jcw0c1yYkDzTO4XTg/kTmeD3UggCAaQwpw1v1R76VMupvQMwelxwq', '0901111000', role_id,
        (SELECT department_id FROM tbDepartment WHERE name = 'Finishing Center/Trung tâm hoàn thành'),
        'TimeBased', 25000000, (SELECT skill_level_id FROM tbSkillLevel WHERE name = 'Level 7'), '2017-01-10', 'Active'
 FROM tbRole WHERE name = 'Factory Director';
 
-INSERT INTO tbUser (full_name, email, phone, role_id, department_id, salary_type, base_salary, skill_level_id, hire_date, [status])
-SELECT 'Nguyễn Thị A', 'factorymanager1@maypro.com', '0901111022', role_id,
+INSERT INTO tbUser (full_name, email,password_hash, phone, role_id, department_id, salary_type, base_salary, skill_level_id, hire_date, [status])
+SELECT 'Nguyễn Thị A', 'factorymanager1@maypro.com','$2a$10$jcw0c1yYkDzTO4XTg/kTmeD3UggCAaQwpw1v1R76VMupvQMwelxwq', '0901111022', role_id,
        (SELECT department_id FROM tbDepartment WHERE name = 'Finishing Center/Trung tâm hoàn thành'),
        'TimeBased', 20000000, (SELECT skill_level_id FROM tbSkillLevel WHERE name = 'Level 7'), '2018-01-10', 'Active'
 FROM tbRole WHERE name = 'Factory Manager';
 
-INSERT INTO tbUser (full_name, email, phone, role_id, department_id, salary_type, base_salary, skill_level_id, hire_date, [status])
-SELECT 'Trần Thị B', 'manager1@maypro.com', '0901111001', role_id,
+INSERT INTO tbUser (full_name, email,password_hash, phone, role_id, department_id, salary_type, base_salary, skill_level_id, hire_date, [status])
+SELECT 'Trần Thị B', 'manager1@maypro.com','$2a$10$jcw0c1yYkDzTO4XTg/kTmeD3UggCAaQwpw1v1R76VMupvQMwelxwq', '0901111001', role_id,
        (SELECT department_id FROM tbDepartment WHERE name = 'Finishing Center/Trung tâm hoàn thành'),
        'TimeBased', 18000000, (SELECT skill_level_id FROM tbSkillLevel WHERE name = 'Level 6'), '2019-03-15', 'Active'
 FROM tbRole WHERE name = 'Manager';
 
-INSERT INTO tbUser (full_name, email, phone, role_id, department_id, salary_type, base_salary, skill_level_id, hire_date, [status])
-SELECT 'Đoàn Thị C', 'manager2@maypro.com', '0901111033', role_id,
+INSERT INTO tbUser (full_name, email,password_hash, phone, role_id, department_id, salary_type, base_salary, skill_level_id, hire_date, [status])
+SELECT 'Đoàn Thị C', 'manager2@maypro.com','$2a$10$jcw0c1yYkDzTO4XTg/kTmeD3UggCAaQwpw1v1R76VMupvQMwelxwq', '0901111033', role_id,
        (SELECT department_id FROM tbDepartment WHERE name = 'Finishing Center/Trung tâm hoàn thành'),
        'TimeBased', 15000000, (SELECT skill_level_id FROM tbSkillLevel WHERE name = 'Level 5'), '2020-03-15', 'Active'
 FROM tbRole WHERE name = 'Manager';
@@ -194,6 +195,7 @@ DECLARE @L5 INT = (SELECT skill_level_id FROM tbSkillLevel WHERE name = 'Level 5
 WHILE @i <= 200
 BEGIN
     DECLARE @name NVARCHAR(100) = N'CN ' + CAST(@i AS NVARCHAR);
+    DECLARE @password_hash VARCHAR(255) = '$2a$10$jcw0c1yYkDzTO4XTg/kTmeD3UggCAaQwpw1v1R76VMupvQMwelxwq'
     DECLARE @phone VARCHAR(20) = '0905' + RIGHT('0000' + CAST(@i AS VARCHAR(4)), 4);
     DECLARE @email VARCHAR(100) = 'cn' + CAST(@i AS VARCHAR(4)) + '@maypro.com';
     DECLARE @line_id INT;
@@ -214,8 +216,8 @@ BEGIN
 
     SET @salary = 6500000 + (@i % 6) * 250000;
 
-    INSERT INTO tbUser (full_name, email, phone, role_id, department_id, line_id, salary_type, base_salary, skill_level_id, hire_date)
-    VALUES (@name, @email, @phone, @RoleWorker, @DeptHoanThanh, @line_id, 'ProductBased', @salary, @skill_id, DATEADD(DAY, -@i, GETDATE()));
+    INSERT INTO tbUser (full_name, email,password_hash, phone, role_id, department_id, line_id, salary_type, base_salary, skill_level_id, hire_date)
+    VALUES (@name, @email,@password_hash, @phone, @RoleWorker, @DeptHoanThanh, @line_id, 'ProductBased', @salary, @skill_id, DATEADD(DAY, -@i, GETDATE()));
 
     SET @i = @i + 1;
 END
@@ -562,15 +564,6 @@ SELECT TOP 5
 FROM tbUser
 WHERE role_id = (SELECT role_id FROM tbRole WHERE name = 'Worker')
   AND department_id = (SELECT department_id FROM tbDepartment WHERE name = 'Trung tâm hoàn thành');
-GO
-
-
-ALTER TABLE tbUser
-ADD password_hash VARCHAR(255);
-GO
-
-UPDATE tbUser
-SET password_hash = '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy';
 GO
 
 SELECT * FROM tbRole
