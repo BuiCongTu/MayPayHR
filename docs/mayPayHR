@@ -402,3 +402,115 @@ ModuleC_Payroll/
 - **Chỉ cho Worker/Leader**
 - **8+ Screens** (Login, Home, Attendance, Leave, Payroll, Profile)
 - **5+ Services**
+
+
+POST MAN:
+1. test Login -> OK
+Post http://localhost:9999/api/auth/login
+
+{
+  "email": "cn1@maypro.com",
+  "password": "123456"
+}
+
+2. register -> ok
+
+POST http://localhost:9999/api/auth/register
+
+{
+  "fullName": "Test User 1",
+  "email": "testuser@maypro.com",
+  "password": "123456",
+  "phone": "0123456789",
+  "roleId": 199010000
+}
+
+3. Get me -> Ok
+
+GET http://localhost:9999/api/auth/me
+Authorization: chọn Type: Bearer Token và điền token
+
+
+4. get user by email -> ok
+
+GET http://localhost:9999/api/auth/getemp/cn1@maypro.com
+Authorization: chọn Type: Bearer Token và điền token
+
+5. get all users -> còn lỗi
+GET http://localhost:9999/api/auth/getallemp
+Authorization: chọn Type: Bearer Token và điền token
+
+6. update ủe -> ok
+PUT http://localhost:9999/api/auth/updateuser/cn1@maypro.com
+Authorization: chọn Type: Bearer Token và điền token
+-> {
+  "fullName": "CN 1 Updated",
+  "phone": "0905999999",
+  "baseSalary": 7000000
+}
+
+7. change pass -> còn lỗi
+PUT http://localhost:9999/api/auth/change-password?email=cn1@maypro.com
+{
+  "oldPassword": "123456",
+  "newPassword": "newpass123",
+  "confirmPassword": "newpass123"
+}
+
+8. logout -> ok
+
+luồng xly user quên pas:
+┌─────────────────┐
+│  User quên mật  │
+│     khẩu        │
+└────────┬────────┘
+         │
+         ▼
+┌─────────────────┐
+│ POST /forgot-   │
+│   password      │──── Input: email
+└────────┬────────┘
+         │
+         ▼
+┌─────────────────┐
+│ 1. Tìm user     │
+│ 2. Tạo UUID     │
+│ 3. Lưu DB       │
+│ 4. Gửi email    │
+└────────┬────────┘
+         │
+         ▼
+┌─────────────────┐
+│ User nhận email │
+│ Click link với  │
+│     token       │
+└────────┬────────┘
+         │
+         ▼
+┌─────────────────┐
+│ POST /reset-    │
+│   password      │──── Input: token + newPassword
+└────────┬────────┘
+         │
+         ▼
+┌─────────────────┐
+│ 1. Validate     │
+│ 2. Check expiry │
+│ 3. Update pass  │
+│ 4. Mark used    │
+└────────┬────────┘
+         │
+         ▼
+┌─────────────────┐
+│  Login thành    │
+│  công với pass  │
+│       mới       │
+└─────────────────┘
+
+9. ForgotPassword: -> ok
+POST http://localhost:9999/api/auth/forgot-password?email=cn1@maypro.com
+sẽ nhận đc email, đang dặt thời gian hết hạn token là 5 phút.
+đã test quá 5 phút -> ok( dongf 198 trong UserServiceImp)
+
+10. ResetPassword: -> ok
+POST http://localhost:9999/api/auth/reset-password?token=701038c7-b99d-4f3f-afdd-8759047c806e&newPassword=password123

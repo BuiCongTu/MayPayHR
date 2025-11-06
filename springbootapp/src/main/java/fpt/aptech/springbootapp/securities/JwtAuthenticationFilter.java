@@ -27,7 +27,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             HttpServletResponse response,
             FilterChain filterChain) throws ServletException, IOException {
         if (request.getServletPath().contains("/api/auth/login") ||
-                request.getServletPath().contains("/api/auth/register")) {
+                request.getServletPath().contains("/api/auth/register") ||
+        request.getServletPath().contains("/api/auth/forgot-password") ||
+        request.getServletPath().contains("/api/auth/reset-password")) {
             filterChain.doFilter(request, response);
             return;
         }
@@ -37,7 +39,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         String token = null;
         String email = null;
 
-        // Kiểm tra token coi có hợp lệ không
+        // kiem tra token coi có hợp lệ không
         if (authHeader != null && authHeader.startsWith("Bearer ")) {
             token = authHeader.substring(7); // Cắt "Bearer "
             try {
@@ -47,35 +49,35 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             }
         }
 
-        // Nếu lấy được email và chưa có Authentication trong context
+        // nếu lấy được email và chưa có Authentication trong context
         if (email != null && SecurityContextHolder.getContext().getAuthentication() == null) {
 
-            // Kiểm tra tính hợp lệ của token
+            // kiểm tra tính hợp lệ của token
             if (jwtUtils.validateToken(token, email)) {
 
-                // Lấy role từ claim trong token (mặc định: USER)
+                // lấy role từ claim trong token (mặc định: USER)
                 String role = (String) jwtUtils.extractAllClaims(token).get("role");
                 if (role == null)
                     role = "USER";
 
-                // Tạo danh sách quyền hạn
+                // tạo danh sách quyền hạn
                 List<SimpleGrantedAuthority> authorities = List
                         .of(new SimpleGrantedAuthority("ROLE_" + role.toUpperCase()));
 
-                // Tạo Authentication token cho Spring Security
+                // tạo Authentication token cho Spring Security
                 UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(email, null,
                         authorities);
 
                 authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
 
-                // Gắn xác thực vào SecurityContext
+                // gắn xác thực vào SecurityContext
                 SecurityContextHolder.getContext().setAuthentication(authToken);
 
                 System.out.println(" Authenticated: " + email + " | Role: " + role);
             }
         }
 
-        // Tiếp tục filter chain
+        // tiếp tục filter chain
         filterChain.doFilter(request, response);
     }
 }

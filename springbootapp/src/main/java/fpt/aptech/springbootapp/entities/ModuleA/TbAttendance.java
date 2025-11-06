@@ -1,5 +1,6 @@
 package fpt.aptech.springbootapp.entities.ModuleA;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import fpt.aptech.springbootapp.entities.Core.*;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
@@ -14,6 +15,8 @@ import java.time.*;
 @NoArgsConstructor
 @AllArgsConstructor
 @Table(name = "tbAttendance")
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
+
 public class TbAttendance {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

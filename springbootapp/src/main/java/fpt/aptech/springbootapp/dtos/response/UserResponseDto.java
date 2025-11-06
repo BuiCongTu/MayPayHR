@@ -16,10 +16,19 @@ public class UserResponseDto {
     private String fullName;
     private String email;
     private String phone;
+
+    private Integer roleId;
     private String roleName;
+
+    private Integer departmentId;
     private String departmentName;
+
+    private Integer lineId;
     private String lineName;
+
+    private Integer skillLevelId;
     private String skillLevelName;
+
     private String salaryType;
     private BigDecimal baseSalary;
     private LocalDate hireDate;

@@ -1,5 +1,6 @@
 package fpt.aptech.springbootapp.entities.ModuleA;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
 import lombok.*;
@@ -12,6 +13,8 @@ import java.util.*;
 @NoArgsConstructor
 @AllArgsConstructor
 @Table(name = "tbLeaveReason")
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
+
 public class TbLeaveReason {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

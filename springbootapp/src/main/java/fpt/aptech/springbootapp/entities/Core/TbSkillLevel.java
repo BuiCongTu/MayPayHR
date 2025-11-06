@@ -1,5 +1,6 @@
 package fpt.aptech.springbootapp.entities.Core;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
 import lombok.*;
@@ -12,6 +13,8 @@ import java.util.*;
 @NoArgsConstructor
 @AllArgsConstructor
 @Table(name = "tbSkillLevel")
+@JsonIgnoreProperties({"users", "hibernateLazyInitializer"})
+
 public class TbSkillLevel {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
