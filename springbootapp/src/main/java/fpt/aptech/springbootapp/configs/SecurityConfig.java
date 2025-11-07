@@ -55,21 +55,27 @@ public class SecurityConfig {
 
         http
             .csrf(AbstractHttpConfigurer::disable)
-            .cors(cors -> cors.configurationSource(request -> new CorsConfiguration().applyPermitDefaultValues()))
+            .cors(cors
+                    -> cors.configurationSource(
+                            request -> new CorsConfiguration().applyPermitDefaultValues()))
             .formLogin(AbstractHttpConfigurer::disable)
             .httpBasic(AbstractHttpConfigurer::disable)
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers(
                     "/api/auth/**",   // login, register public
                     "/api/overtime-request/**",
-                    "/api/overtime-ticket/**"// test endpoint
+                    "/api/overtime-ticket/**",// test endpoint
+                    "/api/auth/**",
+                    "/api/overtime/**",
+                    "/api/auth/forgot-password",
+                    "/api/auth/reset-password"
+
                 ).permitAll()
                 .anyRequest().authenticated()
             )
             .authenticationProvider(authenticationProvider())
             .userDetailsService(userDetailsService)
             .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
-
         return http.build();
     }
 }

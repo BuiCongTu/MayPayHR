@@ -1,5 +1,6 @@
 package fpt.aptech.springbootapp.entities.ModuleC;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import fpt.aptech.springbootapp.entities.Core.TbDepartment;
 import fpt.aptech.springbootapp.entities.Core.TbUser;
 import jakarta.persistence.*;
@@ -22,6 +23,7 @@ import java.util.*;
 @Table(name = "tbPayroll", indexes = {
         @Index(name = "idx_month_status", columnList = "month, status")
 })//payrollRepository.findByMonthAndStatus(LocalDate.of(2025, 10, 1), "approved");
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 
 public class TbPayroll {
     @Id

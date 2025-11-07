@@ -566,6 +566,23 @@ WHERE role_id = (SELECT role_id FROM tbRole WHERE name = 'Worker')
   AND department_id = (SELECT department_id FROM tbDepartment WHERE name = 'Trung tâm hoàn thành');
 GO
 
+CREATE TABLE tbPasswordResetToken (
+    token_id INT IDENTITY(1,1) PRIMARY KEY,
+    token VARCHAR(500) NOT NULL UNIQUE,
+    user_id INT NOT NULL,
+    expiry_date DATETIME NOT NULL,
+    used BIT NOT NULL DEFAULT 0,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT FK_PasswordResetToken_User
+        FOREIGN KEY (user_id) REFERENCES tbUser(user_id) ON DELETE CASCADE
+);
+
+CREATE INDEX idx_token ON tbPasswordResetToken(token);
+CREATE INDEX idx_user_used ON tbPasswordResetToken(user_id, used);
+GO
+
+
 SELECT * FROM tbRole
 SELECT * FROM tbLeaveReason
 SELECT * FROM tbSkillLevel
