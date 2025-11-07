@@ -61,7 +61,8 @@ public class SecurityConfig {
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers(
                     "/api/auth/**",   // login, register public
-                    "/api/overtime-request/**" // test endpoint
+                    "/api/overtime-request/**",
+                    "/api/overtime-ticket/**"// test endpoint
                 ).permitAll()
                 .anyRequest().authenticated()
             )

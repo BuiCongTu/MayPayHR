@@ -16,12 +16,12 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/overtime-request")
-public class OvertimeController {
+public class OvertimeRequestController {
 
     final OvertimeRequestService overtimeRequestService;
 
     @Autowired
-    public OvertimeController(OvertimeRequestService overtimeRequestService) {
+    public OvertimeRequestController(OvertimeRequestService overtimeRequestService) {
         this.overtimeRequestService = overtimeRequestService;
     }
 
