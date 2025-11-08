@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 @RestController
 @RequestMapping("/api/auth")
 public class AuthController {
@@ -56,6 +57,49 @@ public class AuthController {
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(e.getMessage());
+        }
+    }
+
+    @PostMapping("/register")
+    public ResponseEntity<?> registerUser(@RequestBody TbUser user) {
+        try {
+            // Kiểm tra các trường bắt buộc
+            if (user.getEmail() == null || user.getEmail().trim().isEmpty()) {
+                return ResponseEntity.badRequest().body(createErrorResponse("Email is required"));
+            }
+            if (user.getPasswordHash() == null || user.getPasswordHash().trim().isEmpty()) {
+                return ResponseEntity.badRequest().body(createErrorResponse("Password is required"));
+            }
+            // Thêm kiểm tra các trường not null khác trong TbUser
+            if (user.getFullName() == null || user.getFullName().trim().isEmpty()) {
+                return ResponseEntity.badRequest().body(createErrorResponse("Full Name is required"));
+            }
+            if (user.getPhone() == null || user.getPhone().trim().isEmpty()) {
+                return ResponseEntity.badRequest().body(createErrorResponse("Phone number is required"));
+            }
+
+            // Kiểm tra email đã tồn tại chưa
+            Optional<TbUser> existingUser = userService.findByEmail(user.getEmail());
+            if (existingUser.isPresent()) {
+                return ResponseEntity.status(HttpStatus.CONFLICT)
+                        .body(createErrorResponse("Email already in use"));
+            }
+
+            //  Gọi service để tạo user mới
+            TbUser newUser = userService.createOrUpdateUser(user);
+
+            //  Trả về response thành công 
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", true);
+            response.put("message", "Registration successful. User created with default role.");
+            response.put("email", newUser.getEmail());
+
+            return ResponseEntity.status(HttpStatus.CREATED).body(response);
+
+        } catch (Exception e) {
+            System.err.println("Registration Error: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(createErrorResponse("Registration Error: " + e.getMessage()));
         }
     }
 
