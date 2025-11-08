@@ -514,3 +514,15 @@ sẽ nhận đc email, đang dặt thời gian hết hạn token là 5 phút.
 
 10. ResetPassword: -> ok
 POST http://localhost:9999/api/auth/reset-password?token=701038c7-b99d-4f3f-afdd-8759047c806e&newPassword=password123
+
+11. Filter and get overtime-ticket. Use param to filter (ex: ?status=processed)
+GET http://localhost:9999/api/overtime-ticket/
+
+12. Filter and get overtime-request. Use param to filter (ex: ?status=processed)
+GET http://localhost:9999/api/overtime-request/
+
+13. Filter and get proposal (each type). Use param to filter (ex: ?status=processed)
+GET http://localhost:9999/api/proposal/salary-increase
+GET http://localhost:9999/api/proposal/position-change
+GET http://localhost:9999/api/proposal/skill-level
+
