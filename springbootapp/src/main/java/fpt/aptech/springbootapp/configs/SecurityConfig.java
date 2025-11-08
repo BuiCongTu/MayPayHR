@@ -68,7 +68,8 @@ public class SecurityConfig {
                     "/api/auth/**",
                     "/api/overtime/**",
                     "/api/auth/forgot-password",
-                    "/api/auth/reset-password"
+                    "/api/auth/reset-password",
+                    "/api/proposal/**"
 
                 ).permitAll()
                 .anyRequest().authenticated()
