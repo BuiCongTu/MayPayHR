@@ -64,7 +64,7 @@ public class SecurityConfig {
                 .requestMatchers(
                     "/api/auth/**",   // login, register public
                     "/api/overtime-request/**",
-                    "/api/overtime-ticket/**",// test endpoint
+                    "/api/overtime-ticket/**",
                     "/api/auth/**",
                     "/api/overtime/**",
                     "/api/auth/forgot-password",
