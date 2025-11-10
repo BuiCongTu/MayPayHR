@@ -1,6 +1,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutterapp/screens/auth/AppTheme.dart';
+import 'package:flutterapp/screens/home/home_screen.dart';
 
 final AppTheme appTheme = AppTheme();
 
@@ -32,7 +33,7 @@ class _MyAppState extends State<MyApp> {
       theme: AppTheme.lightTheme,
       darkTheme: AppTheme.darkTheme,
       themeMode: appTheme.currentTheme,
-      home: LoginScreen(),
+      home: HomeScreen(),
     );
   }
 }
