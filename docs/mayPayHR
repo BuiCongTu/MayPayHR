@@ -526,3 +526,17 @@ GET http://localhost:9999/api/proposal/salary-increase
 GET http://localhost:9999/api/proposal/position-change
 GET http://localhost:9999/api/proposal/skill-level
 
+14. GET http://localhost:9999/api/payroll/employee/199050004/history
+[
+    {
+        "id": 199180000,
+        "baseSalary": 6500000.00,
+        "productBonus": 975000.00,
+        "overtimePay": 300000.00,
+        "allowance": 200000.00,
+        "deduction": 0.00,
+        "totalPay": 7975000.00,
+        "note": "Example: auto-inserted payroll detail",
+        "createdAt": "2025-11-09T16:36:11.297Z"
+    }
+]

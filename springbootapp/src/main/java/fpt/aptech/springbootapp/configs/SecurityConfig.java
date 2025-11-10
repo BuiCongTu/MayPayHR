@@ -5,6 +5,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
+import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
@@ -19,8 +20,9 @@ import fpt.aptech.springbootapp.services.implementations.CustomUserDetailsServic
 
 @Configuration
 @EnableWebSecurity
+@EnableGlobalMethodSecurity(prePostEnabled = true)
 public class SecurityConfig {
-    
+
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
     private final CustomUserDetailsService userDetailsService;
 
@@ -34,7 +36,6 @@ public class SecurityConfig {
         return new BCryptPasswordEncoder();
     }
 
-    
     @Bean
     public DaoAuthenticationProvider authenticationProvider() {
         DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
@@ -54,29 +55,30 @@ public class SecurityConfig {
         System.out.println("Loading Security Configuration...");
 
         http
-            .csrf(AbstractHttpConfigurer::disable)
-            .cors(cors
-                    -> cors.configurationSource(
-                            request -> new CorsConfiguration().applyPermitDefaultValues()))
-            .formLogin(AbstractHttpConfigurer::disable)
-            .httpBasic(AbstractHttpConfigurer::disable)
-            .authorizeHttpRequests(auth -> auth
-                .requestMatchers(
-                    "/api/auth/**",   // login, register public
-                    "/api/overtime-request/**",
-                    "/api/overtime-ticket/**",
-                    "/api/auth/**",
-                    "/api/overtime/**",
-                    "/api/auth/forgot-password",
-                    "/api/auth/reset-password",
-                    "/api/proposal/**"
-
-                ).permitAll()
-                .anyRequest().authenticated()
-            )
-            .authenticationProvider(authenticationProvider())
-            .userDetailsService(userDetailsService)
-            .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+                .csrf(AbstractHttpConfigurer::disable)
+                .cors(cors
+                        -> cors.configurationSource(
+                        request -> new CorsConfiguration().applyPermitDefaultValues()))
+                .formLogin(AbstractHttpConfigurer::disable)
+                .httpBasic(AbstractHttpConfigurer::disable)
+                .authorizeHttpRequests(auth -> auth
+                        //không cần token
+                        .requestMatchers(
+                                "/api/auth/**",
+                                "/api/overtime-request/**",
+                                "/api/overtime-ticket/**",
+                                "/api/overtime/**",
+                                "/api/proposal/**",
+                                "/api/payroll/**"
+                        )
+                        .permitAll()
+                        // cần authentication
+                        .anyRequest()
+                        .authenticated()
+                )
+                .authenticationProvider(authenticationProvider())
+                .userDetailsService(userDetailsService)
+                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
         return http.build();
     }
 }

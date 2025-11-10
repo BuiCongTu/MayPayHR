@@ -28,11 +28,17 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             FilterChain filterChain) throws ServletException, IOException {
         if (request.getServletPath().contains("/api/auth/login") ||
                 request.getServletPath().contains("/api/auth/register") ||
-        request.getServletPath().contains("/api/auth/forgot-password") ||
-        request.getServletPath().contains("/api/auth/reset-password")) {
+                request.getServletPath().contains("/api/auth/forgot-password") ||
+                request.getServletPath().contains("/api/auth/reset-password") ||
+                request.getServletPath().contains("/api/payroll/")  ||
+                request.getServletPath().contains("/api/overtime-request/") ||
+                request.getServletPath().contains("/api/overtime-ticket/") ||
+                request.getServletPath().contains("/api/overtime/") ||
+                request.getServletPath().contains("/api/proposal/")) {
             filterChain.doFilter(request, response);
             return;
         }
+
 
         // Lấy token từ header Authorization
         String authHeader = request.getHeader("Authorization");
