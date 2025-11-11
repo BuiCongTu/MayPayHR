@@ -144,7 +144,7 @@ class _PayrollListScreenState extends State<PayrollListScreen> {
           ElevatedButton.icon(
             onPressed: _refreshData,
             icon: const Icon(Icons.refresh),
-            label: const Text('Tải Lại'),
+            label: const Text('Loading'),
           ),
         ],
       ),

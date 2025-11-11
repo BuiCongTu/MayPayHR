@@ -1,6 +1,7 @@
 class ApiConfig {
   // Cấu hình URL backend
-  static const String baseUrl = 'http://localhost:9999';
+  static const String baseUrl = 'http://192.168.2.14:9999';
+  // static const String baseUrl = 'http://172.16.1.92:9999';
 
   // API Timeouts (milliseconds)
   static const int connectionTimeout = 10000;
@@ -20,7 +21,7 @@ class ApiConfig {
   static const String resetPasswordEndpoint = '/api/auth/reset-password';
 
   // Payroll Endpoints
-  static const String payrollHistoryEndpoint = '/api/payroll/employee';
+  static const String payHisEndpoint = '$baseUrl/api/payroll/employee';
   static const String payrollAvailableYearsEndpoint = '/api/payroll/employee/available-years';
   static const String payrollAvailableMonthsEndpoint = '/api/payroll/employee/available-months';
 }
