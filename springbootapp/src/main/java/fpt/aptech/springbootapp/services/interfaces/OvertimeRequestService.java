@@ -1,6 +1,7 @@
 package fpt.aptech.springbootapp.services.interfaces;
 
-import fpt.aptech.springbootapp.dtos.OvertimeRequestDTO;
+import fpt.aptech.springbootapp.dtos.ModuleB.DepartmentDTO;
+import fpt.aptech.springbootapp.dtos.ModuleB.OvertimeRequestDTO;
 import fpt.aptech.springbootapp.filter.OvertimeRequestFilter;
 import fpt.aptech.springbootapp.entities.ModuleB.TbOvertimeRequest;
 import org.springframework.data.domain.Page;

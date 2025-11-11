@@ -1,6 +1,6 @@
-package fpt.aptech.springbootapp.mappers;
+package fpt.aptech.springbootapp.mappers.ModuleB;
 
-import fpt.aptech.springbootapp.dtos.ProposalDTO;
+import fpt.aptech.springbootapp.dtos.ModuleB.ProposalDTO;
 import fpt.aptech.springbootapp.entities.ModuleB.TbProposal;
 
 public class ProposalMapper {

@@ -1,9 +1,9 @@
 package fpt.aptech.springbootapp.services.implementations;
 
-import fpt.aptech.springbootapp.dtos.OvertimeTicketDTO;
+import fpt.aptech.springbootapp.dtos.ModuleB.OvertimeTicketDTO;
 import fpt.aptech.springbootapp.entities.ModuleB.TbOvertimeTicket;
 import fpt.aptech.springbootapp.filter.OvertimeTicketFilter;
-import fpt.aptech.springbootapp.mappers.OvertimeTicketMapper;
+import fpt.aptech.springbootapp.mappers.ModuleB.OvertimeTicketMapper;
 import fpt.aptech.springbootapp.repositories.ModuleB.OvertimeTicketRepository;
 import fpt.aptech.springbootapp.services.interfaces.OvertimeTicketService;
 import fpt.aptech.springbootapp.specifications.OvertimeTicketSpecification;

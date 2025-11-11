@@ -1,4 +1,4 @@
-package fpt.aptech.springbootapp.dtos;
+package fpt.aptech.springbootapp.dtos.ModuleB;
 
 import fpt.aptech.springbootapp.entities.ModuleB.TbProposal.ProposalStatus;
 import fpt.aptech.springbootapp.entities.ModuleB.TbProposal.ProposalType;

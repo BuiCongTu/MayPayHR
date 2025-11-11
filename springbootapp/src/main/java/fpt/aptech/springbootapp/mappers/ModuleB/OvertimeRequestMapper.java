@@ -1,8 +1,8 @@
-package fpt.aptech.springbootapp.mappers;
+package fpt.aptech.springbootapp.mappers.ModuleB;
 
-import fpt.aptech.springbootapp.dtos.*;
+import fpt.aptech.springbootapp.dtos.ModuleB.OvertimeRequestDTO;
 import fpt.aptech.springbootapp.entities.ModuleB.TbOvertimeRequest;
-import fpt.aptech.springbootapp.entities.ModuleB.TbOvertimeTicket;
+
 import java.util.stream.Collectors;
 
 public class OvertimeRequestMapper {

@@ -1,6 +1,6 @@
-package fpt.aptech.springbootapp.mappers;
+package fpt.aptech.springbootapp.mappers.ModuleB;
 
-import fpt.aptech.springbootapp.dtos.OvertimeTicketDTO;
+import fpt.aptech.springbootapp.dtos.ModuleB.OvertimeTicketDTO;
 import fpt.aptech.springbootapp.entities.ModuleB.TbOvertimeTicket;
 
 public class OvertimeTicketMapper {
