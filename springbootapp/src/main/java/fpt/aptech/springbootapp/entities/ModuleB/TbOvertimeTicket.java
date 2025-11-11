@@ -1,5 +1,6 @@
 package fpt.aptech.springbootapp.entities.ModuleB;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import fpt.aptech.springbootapp.entities.Core.*;
 import jakarta.persistence.*;
 import jakarta.persistence.Table;
@@ -16,6 +17,7 @@ import java.time.*;
 @NoArgsConstructor
 @AllArgsConstructor
 @Table(name = "tbOvertimeTicket")
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class TbOvertimeTicket {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

@@ -8,25 +8,24 @@ class AuthProvider extends ChangeNotifier {
 
   bool get isLoading => _isLoading;
   String? get token => _token;
-
-  // Xử lý Login
-  Future<bool> login(String email, String password) async {
+  Future<Map<String, dynamic>?> login(String email, String password) async {
     _isLoading = true;
     notifyListeners();
 
-    final success = await AuthService.login(email, password);
+    final responseMap = await AuthService.login(email, password);
 
     _isLoading = false;
-    if (success != null) {
-      _token = success["token"];
+    
+    if (responseMap != null) {
+      _token = responseMap["token"] as String?; 
     } else {
       _token = null;
     }
+    
     notifyListeners();
-    return success != null;
+    return responseMap;
   }
 
-  // Xử lý Register
   Future<bool> register(Map<String, dynamic> userPayload) async {
     _isLoading = true;
     notifyListeners();
@@ -36,5 +35,10 @@ class AuthProvider extends ChangeNotifier {
     _isLoading = false;
     notifyListeners();
     return success;
+  }
+  Future<void> logout() async {
+    await AuthService.logout();
+    _token = null;
+    notifyListeners();
   }
 }

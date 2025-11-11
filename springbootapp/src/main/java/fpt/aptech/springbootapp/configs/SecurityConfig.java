@@ -17,10 +17,12 @@ import org.springframework.web.cors.CorsConfiguration;
 import fpt.aptech.springbootapp.securities.JwtAuthenticationFilter;
 import fpt.aptech.springbootapp.services.implementations.CustomUserDetailsService;
 
+import java.util.List;
+
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
-    
+
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
     private final CustomUserDetailsService userDetailsService;
 
@@ -34,7 +36,6 @@ public class SecurityConfig {
         return new BCryptPasswordEncoder();
     }
 
-    
     @Bean
     public DaoAuthenticationProvider authenticationProvider() {
         DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
@@ -55,13 +56,20 @@ public class SecurityConfig {
 
         http
             .csrf(AbstractHttpConfigurer::disable)
-            .cors(cors -> cors.configurationSource(request -> new CorsConfiguration().applyPermitDefaultValues()))
+            .cors(cors -> cors.configurationSource(request -> {
+                CorsConfiguration config = new CorsConfiguration();
+                config.setAllowedOrigins(List.of("*")); // hoặc domain Flutter
+                config.setAllowedMethods(List.of("GET","POST","PUT","DELETE","OPTIONS"));
+                config.setAllowedHeaders(List.of("*"));
+                config.setAllowCredentials(true);
+                return config;
+            }))
             .formLogin(AbstractHttpConfigurer::disable)
             .httpBasic(AbstractHttpConfigurer::disable)
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers(
-                    "/api/auth/**",   // login, register public
-                    "/api/overtime/**" // test endpoint
+                    "/api/auth/**",
+                    "/api/overtime/**"
                 ).permitAll()
                 .anyRequest().authenticated()
             )

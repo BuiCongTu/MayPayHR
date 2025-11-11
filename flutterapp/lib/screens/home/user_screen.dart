@@ -1,15 +1,15 @@
 import 'package:flutter/material.dart';
-import '../../services/auth_service.dart';
+import 'package:flutterapp/services/auth_service.dart';
 import '../auth/login_screen.dart';
 
-class AdminHomeScreen extends StatelessWidget {
-  const AdminHomeScreen({super.key});
+class UserHomeScreen extends StatelessWidget {
+  const UserHomeScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Admin Dashboard"),
+        title: const Text("User Dashboard"),
         actions: [
           IconButton(
             icon: const Icon(Icons.logout),
@@ -23,7 +23,7 @@ class AdminHomeScreen extends StatelessWidget {
           ),
         ],
       ),
-      body: const Center(child: Text("Welcome, Admin!")),
+      body: const Center(child: Text("Welcome, User!")),
     );
   }
 }

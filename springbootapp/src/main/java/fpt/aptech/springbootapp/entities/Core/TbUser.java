@@ -1,5 +1,7 @@
 package fpt.aptech.springbootapp.entities.Core;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
 import lombok.*;
@@ -31,6 +33,7 @@ public class TbUser {
     private String email;
 
     // thêm passwordhash thay vì password
+    @JsonIgnore
     @Size(max = 255)
     @Column(name = "password_hash")
     private String passwordHash;
@@ -44,21 +47,26 @@ public class TbUser {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "role_id")
+    @JsonIgnoreProperties({"users"})
     private TbRole role;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "department_id")
+    @JsonIgnoreProperties({"users", "lines", "manager"})
     private TbDepartment department;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "line_id")
+    @JsonIgnoreProperties({"users", "department", "manager"})
     private TbLine line;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "skill_level_id")
+    @JsonIgnoreProperties({"users"})
     private TbSkillLevel skillLevel;
 
     // fields
+    @JsonIgnore
     @Lob
     @Column(name = "face_data")
     private String faceData;

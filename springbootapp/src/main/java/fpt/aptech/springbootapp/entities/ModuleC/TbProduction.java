@@ -1,5 +1,6 @@
 package fpt.aptech.springbootapp.entities.ModuleC;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import fpt.aptech.springbootapp.entities.Core.TbDepartment;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
@@ -17,6 +18,8 @@ import java.time.*;
 @Table(name = "tbProduction", indexes = {
         @Index(name = "idx_dept_date", columnList = "department_id, DOP")
 })//productionRepository.findByDepartmentAndDop(deptId, date);
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
+
 public class TbProduction {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

@@ -1,5 +1,6 @@
 package fpt.aptech.springbootapp.entities.ModuleC;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import fpt.aptech.springbootapp.entities.Core.TbUser;
 import jakarta.persistence.*;
 import jakarta.persistence.Index;
@@ -19,6 +20,8 @@ import java.time.*;
 @Table(name = "tbEmployeePayroll", indexes = {
         @Index(name = "idx_user_payroll", columnList = "user_id, payroll_id")
 })//employeePayrollRepository.findByUserAndPayroll(userId, payrollId);
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
+
 public class TbEmployeePayroll {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
