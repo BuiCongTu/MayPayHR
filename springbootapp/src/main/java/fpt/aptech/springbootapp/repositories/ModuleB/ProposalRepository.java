@@ -1,6 +1,5 @@
-package fpt.aptech.springbootapp.repository;
+package fpt.aptech.springbootapp.repositories.ModuleB;
 
-import fpt.aptech.springbootapp.dtos.ProposalDTO;
 import fpt.aptech.springbootapp.entities.ModuleB.TbProposal;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;

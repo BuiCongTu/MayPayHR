@@ -3,7 +3,7 @@ package fpt.aptech.springbootapp.services.ModuleC_Payroll;
 import fpt.aptech.springbootapp.entities.Core.TbUser;
 import fpt.aptech.springbootapp.entities.ModuleC.TbEmployeePayroll;
 import fpt.aptech.springbootapp.repositories.ModuleC_Payroll.EmployeePayrollRepo;
-import fpt.aptech.springbootapp.repository.UserRepository;
+import fpt.aptech.springbootapp.repositories.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;

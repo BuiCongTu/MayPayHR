@@ -1,4 +1,4 @@
-package fpt.aptech.springbootapp.repository;
+package fpt.aptech.springbootapp.repositories;
 
 import java.util.Optional;
 
@@ -9,5 +9,7 @@ import fpt.aptech.springbootapp.entities.Core.TbUser;
 public interface UserRepository extends JpaRepository<TbUser, Integer> {
     Optional<TbUser> findByEmail(String email);
     // Optional<TbUser> findByResetToken(String phone);
+
+    //check role factory manager
 
 }
