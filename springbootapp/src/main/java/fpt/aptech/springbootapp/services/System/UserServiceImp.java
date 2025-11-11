@@ -6,14 +6,15 @@ import java.util.*;
 import fpt.aptech.springbootapp.dtos.request.Auth.*;
 import fpt.aptech.springbootapp.dtos.response.*;
 import fpt.aptech.springbootapp.entities.System.*;
+import fpt.aptech.springbootapp.repositories.RoleRepository;
 import fpt.aptech.springbootapp.repositories.System.*;
+import fpt.aptech.springbootapp.repositories.UserRepository;
 import fpt.aptech.springbootapp.securities.JwtUtils;
 import org.springframework.beans.factory.annotation.*;
 import org.springframework.security.crypto.password.*;
 import org.springframework.stereotype.Service;
 
 import fpt.aptech.springbootapp.entities.Core.*;
-import fpt.aptech.springbootapp.repository.*;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service

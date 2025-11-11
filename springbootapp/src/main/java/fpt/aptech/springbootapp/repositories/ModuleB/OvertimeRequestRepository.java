@@ -1,4 +1,4 @@
-package fpt.aptech.springbootapp.repository;
+package fpt.aptech.springbootapp.repositories.ModuleB;
 
 import fpt.aptech.springbootapp.entities.ModuleB.TbOvertimeRequest;
 import org.springframework.data.jpa.repository.JpaRepository;

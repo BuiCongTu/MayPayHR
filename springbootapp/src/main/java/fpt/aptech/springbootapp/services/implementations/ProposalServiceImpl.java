@@ -4,7 +4,7 @@ import fpt.aptech.springbootapp.dtos.ProposalDTO;
 import fpt.aptech.springbootapp.entities.ModuleB.TbProposal;
 import fpt.aptech.springbootapp.filter.ProposalFilter;
 import fpt.aptech.springbootapp.mappers.ProposalMapper;
-import fpt.aptech.springbootapp.repository.ProposalRepository;
+import fpt.aptech.springbootapp.repositories.ModuleB.ProposalRepository;
 import fpt.aptech.springbootapp.services.interfaces.ProposalService;
 import fpt.aptech.springbootapp.specifications.ProposalSpecification;
 import org.springframework.beans.factory.annotation.Autowired;
