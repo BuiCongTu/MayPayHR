@@ -1,6 +1,6 @@
 package fpt.aptech.springbootapp.api.ModuleB;
 
-import fpt.aptech.springbootapp.dtos.OvertimeTicketDTO;
+import fpt.aptech.springbootapp.dtos.ModuleB.OvertimeTicketDTO;
 import fpt.aptech.springbootapp.filter.OvertimeTicketFilter;
 import fpt.aptech.springbootapp.services.interfaces.OvertimeTicketService;
 import org.springframework.beans.factory.annotation.Autowired;

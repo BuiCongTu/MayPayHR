@@ -1,4 +1,4 @@
-package fpt.aptech.springbootapp.dtos;
+package fpt.aptech.springbootapp.dtos.ModuleB;
 
 import fpt.aptech.springbootapp.entities.ModuleB.TbOvertimeRequest.OvertimeRequestStatus;
 import lombok.Getter;
