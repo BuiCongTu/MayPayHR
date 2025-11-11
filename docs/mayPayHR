@@ -540,3 +540,12 @@ GET http://localhost:9999/api/proposal/skill-level
         "createdAt": "2025-11-09T16:36:11.297Z"
     }
 ]
+
+//face scan:
+1. FaceScanLog.isMatched = true → Nhân viên được nhận dạng ✅
+2. FaceScanLog.scanDate = HH:MM:SS → Time in/out
+3. TbAttendance.user_id = scan.user_id
+4. TbAttendance.date = TODAY
+5. TbAttendance.time_in = FIRST successful scan
+6. TbAttendance.time_out = LAST successful scan
+7. TbAttendance.status = SUCCESS/LATE
