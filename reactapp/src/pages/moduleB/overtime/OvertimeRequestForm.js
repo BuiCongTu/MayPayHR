@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { createOvertimeRequest } from '../../../services/moduleB/overtimeService';
+import { getAllDepartments } from "../../../services/departmentService";
 import {
     Container,
     Box,
@@ -7,8 +8,16 @@ import {
     TextField,
     Button,
     CircularProgress,
-    Alert
+    Alert,
+    Autocomplete,
+    createFilterOptions
 } from '@mui/material';
+
+const filter = createFilterOptions({
+    matchFrom: 'any',
+    ignoreCase: true,
+    stringify: (option) => `${option.id} ${option.name}`,
+});
 
 function OvertimeRequestForm() {
     const [formData, setFormData] = useState({
@@ -22,6 +31,19 @@ function OvertimeRequestForm() {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
     const [success, setSuccess] = useState(null);
+    const [departments, setDepartments] = useState([]);
+
+    useEffect(() => {
+        async function loadData() {
+            try {
+                const data = await getAllDepartments();
+                setDepartments(data || []);
+            } catch (err) {
+                setError("Failed to fetch departments, please refresh the page");
+            }
+        }
+        loadData();
+    }, [])
 
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -89,16 +111,36 @@ function OvertimeRequestForm() {
                     name="factoryManagerId"
                     value={formData.factoryManagerId}
                     onChange={handleChange}
-                    required
                     fullWidth
                 />
-                <TextField
-                    label="Department ID"
-                    name="departmentId"
-                    value={formData.departmentId}
-                    onChange={handleChange}
-                    required
-                    fullWidth
+
+                {/* auto complete department */}
+                <Autocomplete
+                    id="department-autocomplete"
+                    options={departments}
+                    getOptionLabel={(option) => option.id + " - " + option.name || ''}
+
+                    filterOptions={filter}
+
+                    value={departments.find(dept => dept.id === formData.departmentId) || null}
+
+                    onChange={(event, newValue) => {
+                        setFormData(prev => ({
+                            ...prev,
+                            departmentId: newValue ? newValue.id : ''
+                        }));
+                    }}
+
+                    // This renders the text field
+                    renderInput={(params) => (
+                        <TextField
+                            {...params}
+                            label="Department (search by name or id)"
+                            fullWidth
+                            // Show error if departments failed to load
+                            error={!departments.length > 0}
+                        />
+                    )}
                 />
 
                 <TextField

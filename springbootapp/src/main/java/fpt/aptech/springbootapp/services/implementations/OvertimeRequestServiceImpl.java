@@ -44,11 +44,15 @@ public class OvertimeRequestServiceImpl implements OvertimeRequestService {
             throw new IllegalArgumentException("Overtime request cannot be null");
         }
 
-        //factory manager
-        TbUser factoryManager = userRepository.findById(overtimeRequest.getFactoryManager().getId()).orElse(null);
         if (overtimeRequest.getFactoryManager() == null) {
             throw new IllegalArgumentException("Factory manager is required");
         }
+        if (overtimeRequest.getFactoryManager().getId() == null) {
+            throw new IllegalArgumentException("Factory manager id is required");
+        }
+
+        //factory manager
+        TbUser factoryManager = userRepository.findById(overtimeRequest.getFactoryManager().getId()).orElse(null);
         if (factoryManager == null) {
             throw new IllegalArgumentException("Factory manager not found");
         }
@@ -59,6 +63,9 @@ public class OvertimeRequestServiceImpl implements OvertimeRequestService {
         //department
         if (overtimeRequest.getDepartment() == null) {
             throw new IllegalArgumentException("Department is required");
+        }
+        if (overtimeRequest.getDepartment().getId() == null) {
+            throw new IllegalArgumentException("Department id is required");
         }
         if (departmentRepository.findById(overtimeRequest.getDepartment().getId()).isEmpty()) {
             throw new IllegalArgumentException("Department not found");
