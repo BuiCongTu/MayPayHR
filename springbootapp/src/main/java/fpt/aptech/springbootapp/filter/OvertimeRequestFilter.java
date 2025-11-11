@@ -10,7 +10,9 @@ import java.time.Instant;
 @Getter
 public class OvertimeRequestFilter {
     private Integer factoryManagerId;
+    private String factoryManagerName;
     private Integer departmentId;
+    private String departmentName;
     private OvertimeRequestStatus status;
     private Instant createdAfter;
     private Instant createdBefore;

@@ -18,8 +18,16 @@ public class OvertimeRequestSpecification {
                 predicates.add(cb.equal(root.get("factoryManager").get("id"), filter.getFactoryManagerId()));
             }
 
+            if(filter.getFactoryManagerName() != null){
+                predicates.add(cb.like(root.get("factoryManager").get("fullName"), "%" + filter.getFactoryManagerName() + "%"));
+            }
+
             if (filter.getDepartmentId() != null) {
                 predicates.add(cb.equal(root.get("department").get("id"), filter.getDepartmentId()));
+            }
+
+            if(filter.getDepartmentName() != null){
+                predicates.add(cb.like(root.get("department").get("name"), "%" + filter.getDepartmentName() + "%"));
             }
 
             if (filter.getStatus() != null) {

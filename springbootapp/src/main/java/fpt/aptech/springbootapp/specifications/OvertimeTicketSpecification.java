@@ -18,6 +18,10 @@ public class OvertimeTicketSpecification {
                 predicates.add(cb.equal(root.get("manager").get("id"), filter.getManagerId()));
             }
 
+            if(filter.getManagerName() != null){
+                predicates.add(cb.like(root.get("manager").get("fullName"), "%" + filter.getManagerName() + "%"));
+            }
+
             if(filter.getRequestId() != null){
                 predicates.add(cb.equal(root.get("overtimeRequest").get("id"), filter.getRequestId()));
             }
@@ -30,8 +34,16 @@ public class OvertimeTicketSpecification {
                 predicates.add(cb.equal(root.get("confirmedBy").get("id"), filter.getConfirmedById()));
             }
 
+            if(filter.getConfirmedByName() != null){
+                predicates.add(cb.like(root.get("confirmedBy").get("fullName"), "%" + filter.getConfirmedByName() + "%"));
+            }
+
             if(filter.getApprovedById() != null){
                 predicates.add(cb.equal(root.get("approvedBy").get("id"), filter.getApprovedById()));
+            }
+
+            if(filter.getApprovedByName() != null){
+                predicates.add(cb.like(root.get("approvedBy").get("fullName"), "%" + filter.getApprovedByName() + "%"));
             }
 
             if(filter.getCreatedAfter() != null){

@@ -10,10 +10,13 @@ import java.time.Instant;
 @Setter
 public class OvertimeTicketFilter {
     private Integer managerId;
+    private String managerName;
     private Integer requestId;
     private OvertimeTicketStatus status;
     private Integer confirmedById;
+    private String confirmedByName;
     private Integer approvedById;
+    private String approvedByName;
     private Instant createdAfter;
     private Instant createdBefore;
 }
