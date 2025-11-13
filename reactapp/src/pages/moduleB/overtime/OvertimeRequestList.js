@@ -297,7 +297,7 @@ function OvertimeRequestList() {
                 </Button>
             </Paper>
 
-            <Paper sx={{width: '100%', mb: 2, overflow: 'auto'}}>
+            <Paper sx={{width: '100%', mb: 2}}>
                 <TableContainer>
                     <Table
                         aria-labelledby="tableTitle"
