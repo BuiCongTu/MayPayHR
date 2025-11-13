@@ -1,15 +1,16 @@
 import React from 'react';
 import { Outlet } from 'react-router-dom';
 import Navbar from './Navbar';
+import { Container, Box } from '@mui/material';
 
 const Layout = ({ role }) => {
     return (
-        <div>
+        <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
             <Navbar role={role} />
-            <main className="layout-content">
+            <Container component="main" maxWidth="lg" sx={{ py: 3, flexGrow: 1 }}>
                 <Outlet />
-            </main>
-        </div>
+            </Container>
+        </Box>
     );
 };
 
