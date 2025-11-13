@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import OvertimeRequestList from "./pages/moduleB/overtime/OvertimeRequestList";
 import OvertimeRequestForm from "./pages/moduleB/overtime/OvertimeRequestForm";
 import Layout from "./components/layout/Layout";
+import './App.css';
 
 function App() {
 

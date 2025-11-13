@@ -36,3 +36,7 @@
     transform: rotate(360deg);
   }
 }
+
+.layout-content {
+    padding: 1.5rem; /* Or whatever spacing you want */
+}

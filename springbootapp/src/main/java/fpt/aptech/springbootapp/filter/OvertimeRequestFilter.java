@@ -13,6 +13,8 @@ public class OvertimeRequestFilter {
     private String factoryManagerName;
     private Integer departmentId;
     private String departmentName;
+    private Integer numEmployees;
+    private Double overtimeTime;
     private OvertimeRequestStatus status;
     private Instant createdAfter;
     private Instant createdBefore;
