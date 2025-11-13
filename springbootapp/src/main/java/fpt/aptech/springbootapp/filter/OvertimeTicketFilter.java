@@ -12,6 +12,7 @@ public class OvertimeTicketFilter {
     private Integer managerId;
     private String managerName;
     private Integer requestId;
+    private String requesterName;
     private OvertimeTicketStatus status;
     private Integer confirmedById;
     private String confirmedByName;

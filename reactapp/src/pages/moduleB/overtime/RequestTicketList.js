@@ -1,11 +1,13 @@
 import React, {useState, useEffect} from 'react';
-import {getFilteredOvertimeTickets} from "../../../services/moduleB/overtimeService";
-import {useNavigate} from "react-router-dom";
+import {
+    getFilteredOvertimeTickets,
+    confirmOvertimeTicket,
+    rejectOvertimeTicket
+} from "../../../services/moduleB/overtimeService";
 
 import {
     Box,
     Typography,
-    Button,
     Paper,
     TextField,
     InputAdornment,
@@ -20,30 +22,22 @@ import {
     TableSortLabel,
     Collapse,
     Chip,
-    colors
+    colors,
+    Button,
+    ButtonGroup,
+    Stack
 } from '@mui/material';
 
-// Import MUI Icons
 import SearchIcon from '@mui/icons-material/Search';
-import AddIcon from '@mui/icons-material/Add';
 import {visuallyHidden} from '@mui/utils';
 
-//TODO: Replace this with your actual auth context hook
-const useAuth = () => {
-    // This is a mock. Replace it.
-    return {user: {id: 199050002}}; //user with role Manager
-};
-// -----------------------------
-
-
-// --- HeadCells for Manager's Standalone View ---
+// --- HeadCells for Factory Manager's Embedded View ---
 const headCells = [
-    {id: 'id', label: 'Ticket ID', numeric: false, width: '15%'},
-    {id: 'requesterName', label: 'Requested By', numeric: false, width: '15%'},
-    {id: 'confirmedByName', label: 'Confirmed By', numeric: false, width: '15%'},
-    {id: 'approvedByName', label: 'Approved By', numeric: false, width: '15%'},
+    {id: 'id', label: 'Ticket ID', numeric: false, width: '10%'},
+    {id: 'managerName', label: 'Manager', numeric: false, width: '10%'},
+    {id: 'createdAt', label: 'Created At', numeric: false, width: '15%'},
     {id: 'overtimeTime', label: 'Overtime (h)', numeric: true, width: '10%'},
-    {id: 'status', label: 'Status', numeric: false, width: '15%'},
+    {id: 'status', label: 'Status', numeric: false, width: '10%'},
 ];
 
 function EnhancedTableHead(props) {
@@ -57,7 +51,7 @@ function EnhancedTableHead(props) {
             <TableRow sx={{
                 "& th": {
                     fontWeight: 'bold',
-                    backgroundColor: colors.blue[50],
+                    backgroundColor: colors.blue[100],
                 }
             }}>
                 {headCells.map((headCell) => (
@@ -86,34 +80,36 @@ function EnhancedTableHead(props) {
                         </TableSortLabel>
                     </TableCell>
                 ))}
+                {/* Manual Actions Column Header */}
+                <TableCell align="center" sx={{width: '15%'}}>Actions</TableCell>
             </TableRow>
         </TableHead>
     );
 }
 
 function TicketRow(props) {
-    const {ticket, isExpanded, onToggle} = props;
+    const {ticket, isExpanded, onToggle, onAction} = props;
 
     const getStatusChip = (status) => {
         let color;
         let label = status ? status.charAt(0).toUpperCase() + status.slice(1).toLowerCase() : 'Unknown';
         switch (status) {
-            case 'pending':
-                color = 'warning';
-                break;
-            case 'confirmed':
-                color = 'info';
-                break;
-            case 'approved':
-                color = 'success';
-                break;
-            case 'rejected':
-                color = 'error';
-                break;
-            default:
-                color = 'default';
+            case 'pending': color = 'warning'; break;
+            case 'confirmed': color = 'info'; break;
+            case 'approved': color = 'success'; break;
+            case 'rejected': color = 'error'; break;
+            default: color = 'default';
         }
         return <Chip label={label} color={color} size="small" sx={{minWidth: 90}}/>;
+    };
+
+    const formatDate = (dateString) => {
+        if (!dateString) return 'N/A';
+        try {
+            return new Date(dateString).toLocaleString();
+        } catch (e) {
+            return dateString;
+        }
     };
 
     const cellTruncateStyle = {
@@ -123,31 +119,47 @@ function TicketRow(props) {
         maxWidth: 0,
     };
 
+    // A ticket can only be actioned if it's pending
+    const isActionable = ticket.status === 'pending';
+
     return (
         <React.Fragment>
             <TableRow
                 hover
-                onClick={onToggle}
                 sx={{
                     '& > *': {borderBottom: 'unset'},
-                    cursor: 'pointer'
                 }}
             >
-                <TableCell component="th" scope="row" sx={cellTruncateStyle}>
+                <TableCell
+                    component="th"
+                    scope="row"
+                    sx={cellTruncateStyle}
+                    onClick={onToggle}
+                >
                     {ticket.id}
                 </TableCell>
-                <TableCell align="left" sx={cellTruncateStyle}>
-                    {ticket.requesterName || 'N/A'}
-                </TableCell>
-                <TableCell align="left" sx={cellTruncateStyle}>
-                    {ticket.confirmedByName || 'N/A'}
-                </TableCell>
-                <TableCell align="left" sx={cellTruncateStyle}>
-                    {ticket.approvedByName || 'N/A'}
-                </TableCell>
+                <TableCell align="left" sx={cellTruncateStyle}>{ticket.managerName || 'N/A'}</TableCell>
+                <TableCell align="left" sx={cellTruncateStyle}>{formatDate(ticket.createdAt)}</TableCell>
                 <TableCell align="right">{ticket.overtimeTime || 0}</TableCell>
                 <TableCell align="left">
                     {getStatusChip(ticket.status)}
+                </TableCell>
+                {/* Actions Cell */}
+                <TableCell align="center">
+                    <ButtonGroup size="small" variant="outlined" disabled={!isActionable}>
+                        <Button
+                            color="success"
+                            onClick={() => onAction(ticket.id, 'confirm')}
+                        >
+                            Confirm
+                        </Button>
+                        <Button
+                            color="error"
+                            onClick={() => onAction(ticket.id, 'reject')}
+                        >
+                            Reject
+                        </Button>
+                    </ButtonGroup>
                 </TableCell>
             </TableRow>
 
@@ -159,16 +171,10 @@ function TicketRow(props) {
                                 Ticket Details
                             </Typography>
                             <Typography variant="body2" sx={{mb: 1}}>
-                                <strong>Request ID:</strong> {ticket.requestId || 'N/A'}
-                            </Typography>
-                            <Typography variant="body2" sx={{mb: 1}}>
                                 <strong>Reason:</strong> {ticket.reason || 'No reason provided.'}
                             </Typography>
                             <Typography variant="body2" sx={{mb: 1, wordBreak: 'break-all'}}>
                                 <strong>Employee List:</strong> {ticket.employeeList || 'N/A'}
-                            </Typography>
-                            <Typography variant="body2" sx={{mb: 1}}>
-                                <strong>Created At:</strong> {new Date(ticket.createdAt).toLocaleString() || 'N/A'}
                             </Typography>
                         </Box>
                     </Collapse>
@@ -179,57 +185,46 @@ function TicketRow(props) {
 }
 
 
-// --- Main List Component (Standalone Manager View) ---
-function OvertimeTicketList() {
+// --- Main List Component (Embedded Factory Manager View) ---
+// This component expects to receive a `request` object as a prop
+function RequestTicketList({ request }) {
     const [tickets, setTickets] = useState([]);
-    const [page, setPage] = useState(0);
     const [expanded, setExpanded] = useState(false);
-    const navigate = useNavigate();
     const [order, setOrder] = useState('desc');
     const [orderBy, setOrderBy] = useState('id');
 
     const [statusFilter, setStatusFilter] = useState('');
-    const [requesterNameSearch, setRequesterNameSearch] = useState('');
-    const [confirmedByNameSearch, setConfirmedByNameSearch] = useState('');
-    const [approvedByNameSearch, setApprovedByNameSearch] = useState('');
+    const [managerNameSearch, setManagerNameSearch] = useState('');
+    const [debouncedManagerName, setDebouncedManagerName] = useState(managerNameSearch);
 
-    // --- Debounced values for searching ---
-    const [debouncedRequester, setDebouncedRequester] = useState(requesterNameSearch);
-    const [debouncedConfirmed, setDebouncedConfirmed] = useState(confirmedByNameSearch);
-    const [debouncedApproved, setDebouncedApproved] = useState(approvedByNameSearch);
+    const requestId = request?.id;
 
-    //TODO: Replace this with your actual auth context hook
-    const {user: currentUser} = useAuth();
-
-    // Debounce search inputs
+    // Debounce search input
     useEffect(() => {
         const handler = setTimeout(() => {
-            setDebouncedRequester(requesterNameSearch);
-            setDebouncedConfirmed(confirmedByNameSearch);
-            setDebouncedApproved(approvedByNameSearch);
-            setPage(0);
+            setDebouncedManagerName(managerNameSearch);
         }, 500);
         return () => clearTimeout(handler);
-    }, [requesterNameSearch, confirmedByNameSearch, approvedByNameSearch]);
+    }, [managerNameSearch]);
 
     // Main data fetching effect
     useEffect(() => {
         async function loadData() {
-            if (!currentUser?.id) return;
+            if (!requestId) {
+                setTickets([]);
+                return;
+            }
 
             const filter = {
-                managerId: currentUser.id,
+                requestId: requestId,
 
-                // Filters from the UI
                 status: statusFilter || null,
-                requesterName: debouncedRequester || null,
-                confirmedByName: debouncedConfirmed || null,
-                approvedByName: debouncedApproved || null,
+                managerName: debouncedManagerName || null,
             };
 
             const pageable = {
-                page,
-                size: 10,
+                page: 0,
+                size: 100,
                 sort: `${orderBy},${order}`
             };
 
@@ -243,7 +238,7 @@ function OvertimeTicketList() {
         }
 
         loadData();
-    }, [page, statusFilter, debouncedRequester, debouncedConfirmed, debouncedApproved, order, orderBy, currentUser?.id]);
+    }, [requestId, statusFilter, debouncedManagerName, order, orderBy]);
 
     const handleExpandChange = (panelId) => {
         setExpanded(isExpanded => (isExpanded === panelId ? false : panelId));
@@ -251,81 +246,88 @@ function OvertimeTicketList() {
 
     const handleStatusChange = (event, newStatus) => {
         setStatusFilter(newStatus || '');
-        setPage(0);
     };
 
     const handleSortRequest = (event, property) => {
         const isAsc = orderBy === property && order === 'asc';
         setOrder(isAsc ? 'desc' : 'asc');
         setOrderBy(property);
-        setPage(0);
     };
 
-    const commonSearchFieldProps = {
-        variant: "outlined",
-        size: "small",
-        sx: {
-            width: 250,
-            backgroundColor: 'white',
-            borderRadius: 1,
-            '& .MuiOutlinedInput-root': {borderRadius: 1}
-        },
-        InputProps: {
-            startAdornment: (
-                <InputAdornment position="start">
-                    <SearchIcon/>
-                </InputAdornment>
-            ),
+    const handleTicketAction = async (ticketId, action) => {
+        const newStatus = action === 'confirm' ? 'confirmed' : 'rejected';
+        setTickets(prevTickets =>
+            prevTickets.map(t =>
+                t.id === ticketId ? { ...t, status: newStatus } : t
+            )
+        );
+
+        try {
+            if (action === 'confirm') {
+                await confirmOvertimeTicket(ticketId);
+            } else {
+                await rejectOvertimeTicket(ticketId);
+            }
+            // TODO: show a success toast
+        } catch (err) {
+            setTickets(prevTickets =>
+                prevTickets.map(t =>
+                    t.id === ticketId ? { ...t, status: 'pending' } : t
+                )
+            );
+            // TODO: show an error toast
+            console.error(`Failed to ${action} ticket:`, err);
         }
     };
 
     return (
-        <Box>
-            <Paper
-                elevation={1}
-                sx={{
-                    p: 2,
-                    mb: 4,
-                    bgcolor: 'grey.50',
-                    display: 'flex',
-                    alignItems: 'center',
-                    flexWrap: 'wrap',
-                    gap: 2,
-                }}
+        <Box sx={{
+            my: 2,
+            p: 2,
+            border: '1px solid',
+            borderColor: 'grey.300',
+            borderRadius: 2,
+            backgroundColor: 'grey.50'
+        }}>
+            {/* --- Filter Bar --- */}
+            <Stack
+                direction={{ xs: 'column', sm: 'row' }}
+                spacing={2}
+                alignItems="center"
+                sx={{ mb: 2 }}
             >
                 <Typography
-                    variant="h5"
-                    component="h2"
-                    sx={{fontWeight: 'bold', mr: 1, width: '100%'}}
+                    variant="h6"
+                    component="h3"
+                    sx={{fontWeight: 'bold', mr: 1, flexShrink: 0}}
                 >
-                    My Overtime Tickets
+                    Associated Tickets
                 </Typography>
 
-                {/* --- Updated Search Fields --- */}
                 <TextField
-                    id="requesterSearch"
-                    placeholder="Search by Requester..."
-                    value={requesterNameSearch}
-                    onChange={e => setRequesterNameSearch(e.target.value)}
-                    {...commonSearchFieldProps}
-                />
-                <TextField
-                    id="confirmedBySearch"
-                    placeholder="Search by Confirmed By..."
-                    value={confirmedByNameSearch}
-                    onChange={e => setConfirmedByNameSearch(e.target.value)}
-                    {...commonSearchFieldProps}
-                />
-                <TextField
-                    id="approvedBySearch"
-                    placeholder="Search by Approved By..."
-                    value={approvedByNameSearch}
-                    onChange={e => setApprovedByNameSearch(e.target.value)}
-                    {...commonSearchFieldProps}
+                    id="managerSearch"
+                    placeholder="Search by Manager..."
+                    value={managerNameSearch}
+                    onChange={e => setManagerNameSearch(e.target.value)}
+                    variant="outlined"
+                    size="small"
+                    sx={{
+                        width: 240,
+                        backgroundColor: 'white',
+                        borderRadius: 1,
+                        '& .MuiOutlinedInput-root': {borderRadius: 1}
+                    }}
+                    InputProps={{
+                        startAdornment: (
+                            <InputAdornment position="start">
+                                <SearchIcon/>
+                            </InputAdornment>
+                        ),
+                    }}
                 />
 
-                <Box sx={{display: 'flex', alignItems: 'center', gap: 1}}>
-                    <Typography variant="body2" sx={{fontWeight: 'medium', ml: 1}}>
+                <Box sx={{display: 'flex', alignItems: 'center', gap: 1, flexShrink: 0}}>
+                    <Typography variant="body2" sx={{fontWeight: 'medium'}}>
                         Status:
                     </Typography>
                     <Box sx={{backgroundColor: 'white', borderRadius: 1, overflow: 'hidden'}}>
@@ -343,30 +345,18 @@ function OvertimeTicketList() {
                         </ToggleButtonGroup>
                     </Box>
                 </Box>
-
-                <Box sx={{flexGrow: 1}}/>
-
-                <Button
-                    variant="contained"
-                    color="primary"
-                    startIcon={<AddIcon/>}
-                    onClick={() => navigate("/overtime-ticket/create")}
-                    sx={{minWidth: 'auto'}}
-                >
-                    Create
-                </Button>
-            </Paper>
+            </Stack>
 
             {/* --- Table Section --- */}
-            <Paper sx={{width: '100%', mb: 2}}>
+            <Paper sx={{width: '100%', mb: 0, border: '1px solid', borderColor: 'grey.300'}}>
                 <TableContainer>
                     <Table
-                        aria-labelledby="tableTitle"
-                        size={"medium"}
+                        aria-labelledby="ticketTableTitle"
+                        size={"small"} // Small table for embedded view
                         sx={{
                             tableLayout: 'fixed',
                             width: '100%',
-                            minWidth: '900px',
+                            minWidth: '750px',
                         }}
                     >
                         <EnhancedTableHead
@@ -377,9 +367,9 @@ function OvertimeTicketList() {
                         <TableBody>
                             {tickets.length === 0 ? (
                                 <TableRow>
-                                    <TableCell colSpan={6} align="center" sx={{py: 6}}>
-                                        <Typography variant="h6" color="text.secondary">
-                                            No overtime tickets found.
+                                    <TableCell colSpan={6} align="center" sx={{py: 4}}>
+                                        <Typography variant="body1" color="text.secondary">
+                                            No tickets found for this request.
                                         </Typography>
                                     </TableCell>
                                 </TableRow>
@@ -390,6 +380,7 @@ function OvertimeTicketList() {
                                         ticket={ticket}
                                         isExpanded={expanded === ticket.id}
                                         onToggle={() => handleExpandChange(ticket.id)}
+                                        onAction={handleTicketAction}
                                     />
                                 ))
                             )}
@@ -397,12 +388,8 @@ function OvertimeTicketList() {
                     </Table>
                 </TableContainer>
             </Paper>
-
-            <Box>
-                {/* TODO: Add Pagination controls here */}
-            </Box>
         </Box>
     );
 }
 
-export default OvertimeTicketList;
+export default RequestTicketList;

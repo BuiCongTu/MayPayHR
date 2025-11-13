@@ -25,6 +25,10 @@ public class OvertimeTicketMapper {
             dto.setRequestId(entity.getOvertimeRequest().getId());
         }
 
+        if(entity.getOvertimeRequest() != null && entity.getOvertimeRequest().getFactoryManager() != null){
+            dto.setRequesterName(entity.getOvertimeRequest().getFactoryManager().getFullName());
+        }
+
         if (entity.getConfirmedBy() != null) {
             dto.setConfirmedById(entity.getConfirmedBy().getId());
             dto.setConfirmedByName(entity.getConfirmedBy().getFullName());

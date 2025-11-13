@@ -27,6 +27,7 @@ import {
 import SearchIcon from '@mui/icons-material/Search';
 import AddIcon from '@mui/icons-material/Add';
 import {visuallyHidden} from '@mui/utils';
+import RequestTicketList from './RequestTicketList';
 
 const headCells = [
     {id: 'id', label: 'ID', numeric: false, width: '15%'},
@@ -104,12 +105,34 @@ function RequestRow(props) {
         return <Chip label={label} color={color} size="small" sx={{minWidth: 80}}/>;
     };
 
-    const formatDate = (dateString) => {
+    const formatDate = (dateString, option) => {
         if (!dateString) return 'N/A';
-        try {
-            return new Date(dateString).toLocaleDateString();
-        } catch (e) {
-            return dateString;
+        if (option === 'date') {
+            try {
+                return new Date(dateString).toLocaleDateString("default", {
+                    day: "2-digit",
+                    month: "short",
+                    year: "numeric"
+                });
+            } catch (e) {
+                return dateString;
+            }
+        } else if (option === 'datetime') {
+            try {
+                return new Date(dateString).toLocaleString("default", {
+                    day: "2-digit",
+                    month: "short",
+                    year: "numeric",
+                    hour: "2-digit",
+                    minute: "2-digit"
+                });
+            } catch (e) {
+                return dateString;
+            }
+        }
+        else{
+            //default format
+            return new Date(dateString).toLocaleString("default");
         }
     };
 
@@ -140,7 +163,7 @@ function RequestRow(props) {
                 <TableCell align="right">{request.numEmployees || 'N/A'}</TableCell>
                 <TableCell align="right">{request.overtimeTime || 0}</TableCell>
                 <TableCell align="left" sx={cellTruncateStyle}>
-                    {formatDate(request.createdAt)}
+                    {formatDate(request.createdAt, 'date')}
                 </TableCell>
                 <TableCell align="left">
                     {getStatusChip(request.status)}
@@ -158,8 +181,11 @@ function RequestRow(props) {
                                 <strong>Details:</strong> {request.details || 'No details provided.'}
                             </Typography>
                             <Typography variant="body2">
-                                <strong>Date:</strong> {request.createdAt || 'N/A'}
+                                <strong>Date:</strong> {formatDate(request.createdAt, 'datetime') || 'N/A'}
                             </Typography>
+
+                            {/* Overtime Ticket List Section for each Request*/}
+                            <RequestTicketList request={request}/>
                         </Box>
                     </Collapse>
                 </TableCell>
