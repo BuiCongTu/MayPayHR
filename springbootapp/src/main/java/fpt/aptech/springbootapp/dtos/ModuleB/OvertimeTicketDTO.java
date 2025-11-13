@@ -16,6 +16,7 @@ public class OvertimeTicketDTO {
     private String managerName;
 
     private Integer requestId;
+    private String requesterName;
 
     private String employeeList;
     private BigDecimal overtimeTime;

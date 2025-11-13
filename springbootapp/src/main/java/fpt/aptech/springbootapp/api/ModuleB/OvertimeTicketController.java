@@ -25,4 +25,16 @@ public class OvertimeTicketController {
     public Page<OvertimeTicketDTO> getFiltered(@ModelAttribute OvertimeTicketFilter filter, Pageable pageable){
         return overtimeTicketService.getFilteredTicket(filter, pageable);
     }
+
+    @PostMapping("/{id}/confirm")
+    @ResponseStatus(code = HttpStatus.OK)
+    public OvertimeTicketDTO confirmTicket(@PathVariable Integer id) {
+        return overtimeTicketService.confirmTicket(id);
+    }
+
+    @PostMapping("/{id}/reject")
+    @ResponseStatus(code = HttpStatus.OK)
+    public OvertimeTicketDTO rejectTicket(@PathVariable Integer id) {
+        return overtimeTicketService.rejectTicket(id);
+    }
 }
