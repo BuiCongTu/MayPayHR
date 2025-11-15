@@ -1,3 +1,5 @@
+CREATE DATABASE MayPayHR;
+GO
 
 USE MayPayHR;
 GO
@@ -365,7 +367,6 @@ CREATE TABLE tbOvertimeTicket (
     ticket_id INT IDENTITY(199120000,1) PRIMARY KEY,     
     manager_id INT NOT NULL,                           
     request_id INT,                                    
-    employee_list NVARCHAR(MAX) NOT NULL,              
     overtime_time DECIMAL(15,2) NOT NULL,              
     reason TEXT,                                       
     [status] VARCHAR(20) DEFAULT 'pending' 
@@ -380,14 +381,41 @@ CREATE TABLE tbOvertimeTicket (
 );
 GO
 
-INSERT INTO tbOvertimeTicket (manager_id, request_id, employee_list, overtime_time, reason, status, confirmed_by, approved_by)
+INSERT INTO tbOvertimeTicket (manager_id, request_id, overtime_time, reason, status, confirmed_by, approved_by)
 VALUES (
     (SELECT user_id FROM tbUser WHERE full_name = 'Trần Thị B'),
     (SELECT MAX(request_id) FROM tbOvertimeRequest),
-    N'CN 1, CN 2, CN 3, ...', 3.5, 'Hoàn thành đơn hàng', 'approved',
+    3.5, 'Hoàn thành đơn hàng', 'approved',
     (SELECT user_id FROM tbUser WHERE full_name = 'Nguyễn Thị A'),
     (SELECT user_id FROM tbUser WHERE full_name = 'Dương Thị N')
 );
+GO
+
+-- =============================================
+-- 12.1. tb_overtime_ticket_employees - Chi tiết nhân viên tăng ca
+-- =============================================
+CREATE TABLE tb_overtime_ticket_employees (
+    overtime_ticket_id INT NOT NULL,
+    user_id INT NOT NULL,
+    
+    -- Composite primary key
+    PRIMARY KEY (overtime_ticket_id, user_id),
+    
+    -- Foreign keys
+    CONSTRAINT FK_OvertimeEmployees_Ticket FOREIGN KEY (overtime_ticket_id) 
+        REFERENCES tbOvertimeTicket(ticket_id) ON DELETE CASCADE,
+    CONSTRAINT FK_OvertimeEmployees_User FOREIGN KEY (user_id) 
+        REFERENCES tbUser(user_id) ON DELETE CASCADE
+);
+GO
+
+INSERT INTO tb_overtime_ticket_employees (overtime_ticket_id, user_id)
+SELECT TOP 3
+    (SELECT MAX(ticket_id) FROM tbOvertimeTicket),
+    user_id
+FROM tbUser
+WHERE role_id = (SELECT role_id FROM tbRole WHERE name = 'Worker')
+ORDER BY user_id;
 GO
 
 -- =============================================
