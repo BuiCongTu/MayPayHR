@@ -3,53 +3,51 @@ import 'package:flutterapp/services/auth_service.dart';
 
 class RegisterScreen extends StatefulWidget {
   @override
-  _RegisterScreenState createState() => _RegisterScreenState();
+  RegisterScreenState createState() => RegisterScreenState();
 }
 
-class _RegisterScreenState extends State<RegisterScreen> {
-  final _emailController = TextEditingController();
-  final _passwordController = TextEditingController();
-  final _fullNameController = TextEditingController();
-  final _phoneController = TextEditingController();
-  String _selectedSalaryType = 'TimeBased';
+class RegisterScreenState extends State<RegisterScreen> {
+  final emailController = TextEditingController();
+  final passwordController = TextEditingController();
+  final fullNameController = TextEditingController();
+  final phoneController = TextEditingController();
+  String selectedSalaryType = 'TimeBased';
+  bool isLoading = false;
+  final formKey = GlobalKey<FormState>();
 
-  bool _isLoading = false; // trạng thái loading
+  // Validate phone 10-11 digits
+  String? validatePhone(String? value) {
+    if (value == null || value.isEmpty) return 'Phone is required';
+    final regex = RegExp(r'^[0-9]{10,11}$');
+    if (!regex.hasMatch(value)) return 'Phone must be 10-11 digits';
+    return null;
+  }
 
   Future<void> handleRegister() async {
-    setState(() {
-      _isLoading = true; // bắt đầu loading
-    });
+    if (!formKey.currentState!.validate()) return;
+
+    setState(() => isLoading = true);
 
     final userPayload = {
-      "fullName": _fullNameController.text.trim(),
-      "email": _emailController.text.trim(),
-      "password": _passwordController.text.trim(), // đổi thành "password"
-      "phone": _phoneController.text.trim(),
-      "salaryType": _selectedSalaryType,
-      "roleId": 2, // thêm roleId để tránh lỗi NotNull
+      "fullName": fullNameController.text.trim(),
+      "email": emailController.text.trim(),
+      "password": passwordController.text.trim(),
+      "phone": phoneController.text.trim(),
+      "salaryType": selectedSalaryType,
+      "roleId":199010006,// USER
     };
 
-    try {
-      bool success = await AuthService.register(userPayload);
+    final errorMessage = await AuthService.register(userPayload);
 
-      if (success) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Đăng ký thành công!")),
-        );
-        Navigator.pop(context); // quay về login
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Đăng ký thất bại.")),
-        );
-      }
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Lỗi: $e")),
-      );
-    } finally {
-      setState(() {
-        _isLoading = false; // kết thúc loading
-      });
+    setState(() => isLoading = false);
+
+    if (errorMessage == null) {
+      ScaffoldMessenger.of(context)
+          .showSnackBar(const SnackBar(content: Text("Đăng ký thành công!")));
+      Navigator.pop(context);
+    } else {
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text("Đăng ký thất bại: $errorMessage")));
     }
   }
 
@@ -61,35 +59,64 @@ class _RegisterScreenState extends State<RegisterScreen> {
         children: [
           Padding(
             padding: const EdgeInsets.all(16.0),
-            child: ListView(
-              children: [
-                TextField(controller: _fullNameController, decoration: const InputDecoration(labelText: 'Full Name')),
-                TextField(controller: _emailController, decoration: const InputDecoration(labelText: 'Email')),
-                TextField(controller: _passwordController, decoration: const InputDecoration(labelText: 'Password'), obscureText: true),
-                TextField(controller: _phoneController, decoration: const InputDecoration(labelText: 'Phone')),
-                const SizedBox(height: 10),
-                DropdownButton<String>(
-                  value: _selectedSalaryType,
-                  onChanged: (newValue) => setState(() => _selectedSalaryType = newValue!),
-                  items: const [
-                    DropdownMenuItem(value: 'TimeBased', child: Text('Time Based')),
-                    DropdownMenuItem(value: 'ProductBased', child: Text('Product Based')),
-                  ],
-                ),
-                const SizedBox(height: 20),
-                ElevatedButton(
-                  onPressed: _isLoading ? null : handleRegister, // disable khi loading
-                  child: const Text('Register'),
-                ),
-              ],
+            child: Form(
+              key: formKey,
+              child: ListView(
+                children: [
+                  TextFormField(
+                    controller: fullNameController,
+                    decoration: const InputDecoration(labelText: 'Full Name'),
+                    validator: (v) => v == null || v.isEmpty ? 'Full Name is required' : null,
+                  ),
+                  TextFormField(
+                    controller: emailController,
+                    decoration: const InputDecoration(labelText: 'Email'),
+                    keyboardType: TextInputType.emailAddress,
+                    validator: (v) {
+                      if (v == null || v.isEmpty) return 'Email is required';
+                      final regex = RegExp(r'^[^@]+@[^@]+\.[^@]+');
+                      if (!regex.hasMatch(v)) return 'Invalid email';
+                      return null;
+                    },
+                  ),
+                  TextFormField(
+                    controller: passwordController,
+                    decoration: const InputDecoration(labelText: 'Password'),
+                    obscureText: true,
+                    validator: (v) => v == null || v.isEmpty ? 'Password is required' : null,
+                  ),
+                  TextFormField(
+                    controller: phoneController,
+                    decoration: const InputDecoration(labelText: 'Phone'),
+                    keyboardType: TextInputType.number,
+                    maxLength: 11,
+                    validator: validatePhone,
+                  ),
+                  const SizedBox(height: 10),
+                  DropdownButtonFormField<String>(
+                    value: selectedSalaryType,
+                    decoration: const InputDecoration(labelText: 'Salary Type'),
+                    onChanged: (v) => setState(() => selectedSalaryType = v!),
+                    items: const [
+                      DropdownMenuItem(value: 'TimeBased', child: Text('Time Based')),
+                      DropdownMenuItem(value: 'ProductBased', child: Text('Product Based')),
+                    ],
+                  ),
+                  const SizedBox(height: 20),
+                  ElevatedButton(
+                    onPressed: isLoading ? null : handleRegister,
+                    child: const Text('Register'),
+                  ),
+                ],
+              ),
             ),
           ),
-          if (_isLoading)
+          if (isLoading)
             const Opacity(
               opacity: 0.6,
               child: ModalBarrier(dismissible: false, color: Colors.black),
             ),
-          if (_isLoading)
+          if (isLoading)
             const Center(child: CircularProgressIndicator()),
         ],
       ),

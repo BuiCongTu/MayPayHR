@@ -5,7 +5,7 @@ import '../configs/api_config.dart';
 
 class AuthService {
 
-
+  // Login
   static Future<Map<String, dynamic>?> login(String email, String password) async {
     final url = Uri.parse("${ApiConfig.baseUrl}/api/auth/login");
 
@@ -22,21 +22,12 @@ class AuthService {
         final token = data["token"];
         final userDto = data["user"];
 
-        // Lấy roleName từ backend, nếu không có thì map từ roleId
+        // Xác định role
         String role = "";
         if (userDto["roleName"] != null) {
           role = userDto["roleName"].toString().toUpperCase();
         } else if (userDto["roleId"] != null) {
-          switch (userDto["roleId"]) {
-            case 1:
-              role = "ADMIN";
-              break;
-            case 2:
-              role = "USER";
-              break;
-            default:
-              role = "USER";
-          }
+          role = userDto["roleId"] == 1 ? "ADMIN" : "USER";
         } else {
           role = "USER";
         }
@@ -47,11 +38,7 @@ class AuthService {
         await prefs.setString("email", email);
         await prefs.setString("role", role);
 
-        return {
-          "token": token,
-          "user": userDto,
-          "role": role,
-        };
+        return {"token": token, "user": userDto, "role": role};
       } else {
         print("Login Failed: ${response.statusCode} - ${response.body}");
       }
@@ -60,9 +47,12 @@ class AuthService {
     }
     return null;
   }
-  static Future<bool> register(Map<String, dynamic> userData) async {
+
+  // Register
+  static Future<String?> register(Map<String, dynamic> userData) async {
     try {
       final url = Uri.parse('${ApiConfig.baseUrl}/api/auth/register');
+      print('Register payload: ${jsonEncode(userData)}');
 
       final response = await http.post(
         url,
@@ -70,22 +60,29 @@ class AuthService {
         body: jsonEncode(userData),
       );
 
-      if (response.statusCode == 201) {
-        // Registration thành công
-        return true;
+      print('Response: ${response.statusCode}, Body: ${response.body}');
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        return null; // null nghĩa là đăng ký thành công
       } else {
-        // Lấy message lỗi từ backend (nếu có)
-        final Map<String, dynamic> resBody = jsonDecode(response.body);
-        final message = resBody['message'] ?? 'Unknown error';
-        print('Register failed: ${response.statusCode}, message: $message');
-        return false;
+        String message = 'Unknown error';
+        if (response.body.isNotEmpty) {
+          try {
+            final Map<String, dynamic> resBody = jsonDecode(response.body);
+            message = resBody['message'] ?? message;
+          } catch (e) {
+            message = 'Invalid response format';
+          }
+        }
+        return message; // trả về message lỗi để hiển thị
       }
     } catch (e) {
-      print('Register exception: $e');
-      return false;
+      return 'Exception: $e';
     }
   }
 
+
+  // Logout
   static Future<void> logout() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.clear();

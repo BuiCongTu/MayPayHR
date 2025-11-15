@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutterapp/screens/home/admin_screen.dart';
 import 'package:flutterapp/screens/home/user_screen.dart';
+import 'package:flutterapp/screens/auth/register_screen.dart';
 import 'package:flutterapp/services/auth_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-
 
 class LoginScreen extends StatefulWidget {
   @override
@@ -21,7 +21,7 @@ class _LoginScreenState extends State<LoginScreen> {
     _checkAutoLogin();
   }
 
-  // Tự động chuyển sang trang đúng nếu đã login
+  // Auto-login nếu đã lưu token
   Future<void> _checkAutoLogin() async {
     final prefs = await SharedPreferences.getInstance();
     final token = prefs.getString("token");
@@ -29,9 +29,15 @@ class _LoginScreenState extends State<LoginScreen> {
 
     if (token != null && role != null) {
       if (role == "ADMIN") {
-        Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const AdminHomeScreen()));
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => const AdminHomeScreen()),
+        );
       } else {
-        Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const UserHomeScreen()));
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => const UserHomeScreen()),
+        );
       }
     }
   }
@@ -53,9 +59,15 @@ class _LoginScreenState extends State<LoginScreen> {
         );
 
         if (role == "ADMIN") {
-          Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const AdminHomeScreen()));
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (_) => const AdminHomeScreen()),
+          );
         } else {
-          Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const UserHomeScreen()));
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (_) => const UserHomeScreen()),
+          );
         }
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -82,12 +94,32 @@ class _LoginScreenState extends State<LoginScreen> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                TextField(controller: _emailController, decoration: const InputDecoration(labelText: "Email")),
-                TextField(controller: _passwordController, decoration: const InputDecoration(labelText: "Password"), obscureText: true),
+                TextField(
+                  controller: _emailController,
+                  decoration: const InputDecoration(labelText: "Email"),
+                ),
+                TextField(
+                  controller: _passwordController,
+                  decoration: const InputDecoration(labelText: "Password"),
+                  obscureText: true,
+                ),
                 const SizedBox(height: 20),
                 ElevatedButton(
                   onPressed: _isLoading ? null : _handleLogin,
                   child: const Text("Login"),
+                ),
+                const SizedBox(height: 10),
+                TextButton(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => RegisterScreen()),
+                    );
+                  },
+                  child: const Text(
+                    "Chưa có tài khoản? Đăng ký ngay",
+                    style: TextStyle(color: Colors.blueAccent),
+                  ),
                 ),
               ],
             ),
@@ -97,8 +129,7 @@ class _LoginScreenState extends State<LoginScreen> {
               opacity: 0.6,
               child: ModalBarrier(dismissible: false, color: Colors.black),
             ),
-          if (_isLoading)
-            const Center(child: CircularProgressIndicator()),
+          if (_isLoading) const Center(child: CircularProgressIndicator()),
         ],
       ),
     );
