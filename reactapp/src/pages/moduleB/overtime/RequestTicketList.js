@@ -20,25 +20,35 @@ import {
     TableHead,
     TableRow,
     TableSortLabel,
-    Collapse,
     Chip,
     colors,
     Button,
-    ButtonGroup,
-    Stack
+    Stack,
+    Dialog,
+    DialogTitle,
+    DialogContent,
+    Tooltip,
+    IconButton
 } from '@mui/material';
 
 import SearchIcon from '@mui/icons-material/Search';
-import {visuallyHidden} from '@mui/utils';
+import CloseIcon from '@mui/icons-material/Close';
+import CheckIcon from '@mui/icons-material/Check';
 
-// --- HeadCells for Factory Manager's Embedded View ---
+import {visuallyHidden} from '@mui/utils';
+import ViewOnlyEmployeeList from './ViewOnlyEmployeeList';
+import ActionReasonModal from './ActionReasonModal';
+
 const headCells = [
     {id: 'id', label: 'Ticket ID', numeric: false, width: '10%'},
     {id: 'managerName', label: 'Manager', numeric: false, width: '10%'},
-    {id: 'createdAt', label: 'Created At', numeric: false, width: '15%'},
+    {id: 'employeeList', label: 'Employees', numeric: false, width: '10%'},
+    {id: 'reason', label: 'Reason', numeric: false, width: '7%'},
     {id: 'overtimeTime', label: 'Overtime (h)', numeric: true, width: '10%'},
-    {id: 'status', label: 'Status', numeric: false, width: '10%'},
+    {id: 'status', label: 'Status', numeric: false, width: '7%'},
+    {id: 'actions', label: 'Actions', numeric: false, width: '5%'},
 ];
+
 
 function EnhancedTableHead(props) {
     const {order, orderBy, onRequestSort} = props;
@@ -48,17 +58,12 @@ function EnhancedTableHead(props) {
 
     return (
         <TableHead>
-            <TableRow sx={{
-                "& th": {
-                    fontWeight: 'bold',
-                    backgroundColor: colors.blue[100],
-                }
-            }}>
+            <TableRow sx={{"& th": {fontWeight: 'bold', backgroundColor: colors.blue[100]}}}>
                 {headCells.map((headCell) => (
                     <TableCell
                         key={headCell.id}
                         sx={{
-                            width: headCell.width,
+                            width: headCell.width, // Use percentage width
                             whiteSpace: 'nowrap',
                             overflow: 'hidden',
                             textOverflow: 'ellipsis'
@@ -70,6 +75,7 @@ function EnhancedTableHead(props) {
                             active={orderBy === headCell.id}
                             direction={orderBy === headCell.id ? order : 'asc'}
                             onClick={createSortHandler(headCell.id)}
+                            disabled={headCell.id === 'actions' || headCell.id === 'employeeList'}
                         >
                             {headCell.label}
                             {orderBy === headCell.id ? (
@@ -80,122 +86,27 @@ function EnhancedTableHead(props) {
                         </TableSortLabel>
                     </TableCell>
                 ))}
-                {/* Manual Actions Column Header */}
-                <TableCell align="center" sx={{width: '15%'}}>Actions</TableCell>
             </TableRow>
         </TableHead>
     );
 }
 
-function TicketRow(props) {
-    const {ticket, isExpanded, onToggle, onAction} = props;
-
-    const getStatusChip = (status) => {
-        let color;
-        let label = status ? status.charAt(0).toUpperCase() + status.slice(1).toLowerCase() : 'Unknown';
-        switch (status) {
-            case 'pending': color = 'warning'; break;
-            case 'confirmed': color = 'info'; break;
-            case 'approved': color = 'success'; break;
-            case 'rejected': color = 'error'; break;
-            default: color = 'default';
-        }
-        return <Chip label={label} color={color} size="small" sx={{minWidth: 90}}/>;
-    };
-
-    const formatDate = (dateString) => {
-        if (!dateString) return 'N/A';
-        try {
-            return new Date(dateString).toLocaleString();
-        } catch (e) {
-            return dateString;
-        }
-    };
-
-    const cellTruncateStyle = {
-        whiteSpace: 'nowrap',
-        overflow: 'hidden',
-        textOverflow: 'ellipsis',
-        maxWidth: 0,
-    };
-
-    // A ticket can only be actioned if it's pending
-    const isActionable = ticket.status === 'pending';
-
-    return (
-        <React.Fragment>
-            <TableRow
-                hover
-                sx={{
-                    '& > *': {borderBottom: 'unset'},
-                }}
-            >
-                <TableCell
-                    component="th"
-                    scope="row"
-                    sx={cellTruncateStyle}
-                    onClick={onToggle}
-                >
-                    {ticket.id}
-                </TableCell>
-                <TableCell align="left" sx={cellTruncateStyle}>{ticket.managerName || 'N/A'}</TableCell>
-                <TableCell align="left" sx={cellTruncateStyle}>{formatDate(ticket.createdAt)}</TableCell>
-                <TableCell align="right">{ticket.overtimeTime || 0}</TableCell>
-                <TableCell align="left">
-                    {getStatusChip(ticket.status)}
-                </TableCell>
-                {/* Actions Cell */}
-                <TableCell align="center">
-                    <ButtonGroup size="small" variant="outlined" disabled={!isActionable}>
-                        <Button
-                            color="success"
-                            onClick={() => onAction(ticket.id, 'confirm')}
-                        >
-                            Confirm
-                        </Button>
-                        <Button
-                            color="error"
-                            onClick={() => onAction(ticket.id, 'reject')}
-                        >
-                            Reject
-                        </Button>
-                    </ButtonGroup>
-                </TableCell>
-            </TableRow>
-
-            <TableRow>
-                <TableCell style={{paddingBottom: 0, paddingTop: 0}} colSpan={6}>
-                    <Collapse in={isExpanded} timeout="auto" unmountOnExit>
-                        <Box sx={{margin: 2, padding: 2, backgroundColor: 'grey.100', borderRadius: 2}}>
-                            <Typography variant="h6" gutterBottom component="div">
-                                Ticket Details
-                            </Typography>
-                            <Typography variant="body2" sx={{mb: 1}}>
-                                <strong>Reason:</strong> {ticket.reason || 'No reason provided.'}
-                            </Typography>
-                            <Typography variant="body2" sx={{mb: 1, wordBreak: 'break-all'}}>
-                                <strong>Employee List:</strong> {ticket.employeeList || 'N/A'}
-                            </Typography>
-                        </Box>
-                    </Collapse>
-                </TableCell>
-            </TableRow>
-        </React.Fragment>
-    );
-}
-
-
 // --- Main List Component (Embedded Factory Manager View) ---
-// This component expects to receive a `request` object as a prop
-function RequestTicketList({ request }) {
+function RequestTicketList({request}) {
     const [tickets, setTickets] = useState([]);
-    const [expanded, setExpanded] = useState(false);
     const [order, setOrder] = useState('desc');
     const [orderBy, setOrderBy] = useState('id');
 
     const [statusFilter, setStatusFilter] = useState('');
     const [managerNameSearch, setManagerNameSearch] = useState('');
     const [debouncedManagerName, setDebouncedManagerName] = useState(managerNameSearch);
+
+    // --- State for Modals ---
+    const [employeeModalOpen, setEmployeeModalOpen] = useState(false);
+    const [selectedEmployees, setSelectedEmployees] = useState([]);
+
+    const [rejectModalOpen, setRejectModalOpen] = useState(false);
+    const [ticketToReject, setTicketToReject] = useState(null);
 
     const requestId = request?.id;
 
@@ -214,20 +125,12 @@ function RequestTicketList({ request }) {
                 setTickets([]);
                 return;
             }
-
             const filter = {
                 requestId: requestId,
-
                 status: statusFilter || null,
                 managerName: debouncedManagerName || null,
             };
-
-            const pageable = {
-                page: 0,
-                size: 100,
-                sort: `${orderBy},${order}`
-            };
-
+            const pageable = {page: 0, size: 100, sort: `${orderBy},${order}`};
             try {
                 const data = await getFilteredOvertimeTickets(filter, pageable);
                 setTickets(data?.content || []);
@@ -240,9 +143,6 @@ function RequestTicketList({ request }) {
         loadData();
     }, [requestId, statusFilter, debouncedManagerName, order, orderBy]);
 
-    const handleExpandChange = (panelId) => {
-        setExpanded(isExpanded => (isExpanded === panelId ? false : panelId));
-    };
 
     const handleStatusChange = (event, newStatus) => {
         setStatusFilter(newStatus || '');
@@ -254,88 +154,118 @@ function RequestTicketList({ request }) {
         setOrderBy(property);
     };
 
-    const handleTicketAction = async (ticketId, action) => {
-        const newStatus = action === 'confirm' ? 'confirmed' : 'rejected';
-        setTickets(prevTickets =>
-            prevTickets.map(t =>
-                t.id === ticketId ? { ...t, status: newStatus } : t
-            )
-        );
+    // --- Modal Handlers ---
+    const handleOpenEmployeeModal = (employees) => {
+        setSelectedEmployees(employees || []);
+        setEmployeeModalOpen(true);
+    };
+    const handleCloseEmployeeModal = () => {
+        setEmployeeModalOpen(false);
+    };
 
+    const handleOpenRejectModal = (ticket) => {
+        setTicketToReject(ticket);
+        setRejectModalOpen(true);
+    };
+    const handleCloseRejectModal = () => {
+        setTicketToReject(null);
+        setRejectModalOpen(false);
+    };
+
+    // --- Action Handlers ---
+    const handleConfirm = async (ticketId) => {
         try {
-            if (action === 'confirm') {
-                await confirmOvertimeTicket(ticketId);
-            } else {
-                await rejectOvertimeTicket(ticketId);
-            }
-            // TODO: show a success toast
-        } catch (err) {
-            setTickets(prevTickets =>
-                prevTickets.map(t =>
-                    t.id === ticketId ? { ...t, status: 'pending' } : t
+            await confirmOvertimeTicket(ticketId);
+            setTickets(prev =>
+                prev.map(t =>
+                    t.id === ticketId ? {...t, status: 'confirmed', reason: null} : t
                 )
             );
+            // TODO: show a success toast
+        } catch (err) {
+            console.error(`Failed to confirm ticket:`, err);
             // TODO: show an error toast
-            console.error(`Failed to ${action} ticket:`, err);
         }
+    };
+
+    const handleSubmitRejection = async (reason) => {
+        if (!ticketToReject) return;
+
+        try {
+            await rejectOvertimeTicket(ticketToReject.id, reason);
+            setTickets(prev =>
+                prev.map(t =>
+                    t.id === ticketToReject.id
+                        ? {...t, status: 'rejected', reason: reason}
+                        : t
+                )
+            );
+            handleCloseRejectModal();
+            // TODO: show a success toast
+        } catch (err) {
+            console.error(`Failed to reject ticket:`, err);
+            // TODO: show an error toast (the modal will close, so a snackbar is ideal)
+        }
+    };
+
+    // --- Helper Functions ---
+    const getStatusChip = (status) => {
+        let color;
+        let label = status ? status.charAt(0).toUpperCase() + status.slice(1).toLowerCase() : 'Unknown';
+        switch (status) {
+            case 'pending':
+                color = 'warning';
+                break;
+            case 'confirmed':
+                color = 'info';
+                break;
+            case 'approved':
+                color = 'success';
+                break;
+            case 'rejected':
+                color = 'error';
+                break;
+            default:
+                color = 'default';
+        }
+        return <Chip label={label} color={color} size="small" sx={{minWidth: 70}}/>;
+    };
+
+    const cellTruncateStyle = {
+        whiteSpace: 'nowrap',
+        overflow: 'hidden',
+        textOverflow: 'ellipsis',
     };
 
     return (
         <Box sx={{
-            my: 2,
-            p: 2,
-            border: '1px solid',
-            borderColor: 'grey.300',
-            borderRadius: 2,
-            backgroundColor: 'grey.50'
+            my: 2, p: 2, border: '1px solid',
+            borderColor: 'grey.300', borderRadius: 2, backgroundColor: 'grey.50'
         }}>
             {/* --- Filter Bar --- */}
-            <Stack
-                direction={{ xs: 'column', sm: 'row' }}
-                spacing={2}
-                alignItems="center"
-                sx={{ mb: 2 }}
-            >
-                <Typography
-                    variant="h6"
-                    component="h3"
-                    sx={{fontWeight: 'bold', mr: 1, flexShrink: 0}}
-                >
+            <Stack direction={{xs: 'column', sm: 'row'}} spacing={2} alignItems="center" sx={{mb: 2}}>
+                <Typography variant="h6" component="h3" sx={{fontWeight: 'bold', mr: 1, flexShrink: 0}}>
                     Associated Tickets
                 </Typography>
-
                 <TextField
                     id="managerSearch"
                     placeholder="Search by Manager..."
                     value={managerNameSearch}
                     onChange={e => setManagerNameSearch(e.target.value)}
-                    variant="outlined"
-                    size="small"
+                    variant="outlined" size="small"
                     sx={{
-                        width: 240,
-                        backgroundColor: 'white',
-                        borderRadius: 1,
+                        width: 240, backgroundColor: 'white', borderRadius: 1,
                         '& .MuiOutlinedInput-root': {borderRadius: 1}
                     }}
                     InputProps={{
-                        startAdornment: (
-                            <InputAdornment position="start">
-                                <SearchIcon/>
-                            </InputAdornment>
-                        ),
+                        startAdornment: (<InputAdornment position="start"><SearchIcon/></InputAdornment>),
                     }}
                 />
-
                 <Box sx={{display: 'flex', alignItems: 'center', gap: 1, flexShrink: 0}}>
-                    <Typography variant="body2" sx={{fontWeight: 'medium'}}>
-                        Status:
-                    </Typography>
+                    <Typography variant="body2" sx={{fontWeight: 'medium'}}>Status:</Typography>
                     <Box sx={{backgroundColor: 'white', borderRadius: 1, overflow: 'hidden'}}>
                         <ToggleButtonGroup
-                            value={statusFilter}
-                            exclusive
-                            onChange={handleStatusChange}
-                            size="small"
+                            value={statusFilter} exclusive onChange={handleStatusChange} size="small"
                         >
                             <ToggleButton value="">All</ToggleButton>
                             <ToggleButton value="pending">Pending</ToggleButton>
@@ -348,15 +278,14 @@ function RequestTicketList({ request }) {
             </Stack>
 
             {/* --- Table Section --- */}
-            <Paper sx={{width: '100%', mb: 0, border: '1px solid', borderColor: 'grey.300'}}>
+            <Paper sx={{width: '100%', mb: 0, border: '1px solid', borderColor: 'grey.300', overflow: 'hidden'}}>
                 <TableContainer>
                     <Table
                         aria-labelledby="ticketTableTitle"
-                        size={"small"} // Small table for embedded view
+                        size={"small"}
                         sx={{
-                            tableLayout: 'fixed',
                             width: '100%',
-                            minWidth: '750px',
+                            tableLayout: 'fixed'
                         }}
                     >
                         <EnhancedTableHead
@@ -367,27 +296,108 @@ function RequestTicketList({ request }) {
                         <TableBody>
                             {tickets.length === 0 ? (
                                 <TableRow>
-                                    <TableCell colSpan={6} align="center" sx={{py: 4}}>
+                                    <TableCell colSpan={headCells.length} align="center" sx={{py: 4}}>
                                         <Typography variant="body1" color="text.secondary">
                                             No tickets found for this request.
                                         </Typography>
                                     </TableCell>
                                 </TableRow>
                             ) : (
-                                tickets.map((ticket) => (
-                                    <TicketRow
-                                        key={ticket.id}
-                                        ticket={ticket}
-                                        isExpanded={expanded === ticket.id}
-                                        onToggle={() => handleExpandChange(ticket.id)}
-                                        onAction={handleTicketAction}
-                                    />
-                                ))
+                                tickets.map((ticket) => {
+                                    const isActionable = ticket.status === 'pending';
+                                    return (
+                                        <TableRow hover key={ticket.id}>
+                                            <TableCell sx={cellTruncateStyle}>{ticket.id}</TableCell>
+                                            <TableCell sx={cellTruncateStyle}>{ticket.managerName || 'N/A'}</TableCell>
+                                            <TableCell>
+                                                <Button
+                                                    size="small"
+                                                    variant="text"
+                                                    onClick={() => handleOpenEmployeeModal(ticket.employeeList)}
+                                                    sx={{p: 0.5, minWidth: 'auto'}} // Smaller button
+                                                >
+                                                    View ({ticket.employeeList?.length || 0})
+                                                </Button>
+                                            </TableCell>
+                                            <TableCell>
+                                                <Tooltip title={ticket.reason || ''} arrow>
+                                                    <Box sx={cellTruncateStyle}>
+                                                        {ticket.reason || 'N/A'}
+                                                    </Box>
+                                                </Tooltip>
+                                            </TableCell>
+                                            <TableCell align="right">{ticket.overtimeTime || 0}</TableCell>
+                                            <TableCell>{getStatusChip(ticket.status)}</TableCell>
+                                            <TableCell align="center">
+                                                <Box sx={{display: 'flex', justifyContent: 'center'}}>
+                                                    <Tooltip title="Confirm" arrow>
+                                                        <span>
+                                                            <IconButton
+                                                                color="success"
+                                                                onClick={() => handleConfirm(ticket.id)}
+                                                                disabled={!isActionable}
+                                                                size="small"
+                                                            >
+                                                                <CheckIcon/>
+                                                            </IconButton>
+                                                        </span>
+                                                    </Tooltip>
+                                                    <Tooltip title="Reject" arrow>
+                                                        <span>
+                                                            <IconButton
+                                                                color="error"
+                                                                onClick={() => handleOpenRejectModal(ticket)}
+                                                                disabled={!isActionable}
+                                                                size="small"
+                                                            >
+                                                                <CloseIcon/>
+                                                            </IconButton>
+                                                        </span>
+                                                    </Tooltip>
+                                                </Box>
+                                            </TableCell>
+                                        </TableRow>
+                                    );
+                                })
                             )}
                         </TableBody>
                     </Table>
                 </TableContainer>
             </Paper>
+
+            {/* --- Employee List Modal --- */}
+            <Dialog
+                open={employeeModalOpen}
+                onClose={handleCloseEmployeeModal}
+                maxWidth="md"
+                fullWidth
+            >
+                <DialogTitle sx={{m: 0, p: 2}}>
+                    Employee List
+                    <IconButton
+                        aria-label="close"
+                        onClick={handleCloseEmployeeModal}
+                        sx={{position: 'absolute', right: 8, top: 8, color: (theme) => theme.palette.grey[500]}}
+                    >
+                        <CloseIcon/>
+                    </IconButton>
+                </DialogTitle>
+                <DialogContent dividers sx={{p: 0}}>
+                    <ViewOnlyEmployeeList employees={selectedEmployees}/>
+                </DialogContent>
+            </Dialog>
+
+            {/* --- Rejection Reason Modal --- */}
+            <ActionReasonModal
+                open={rejectModalOpen}
+                onClose={handleCloseRejectModal}
+                onSubmit={handleSubmitRejection}
+                title="Reason for Rejection"
+                label="Rejection Reason"
+                submitText="Submit Rejection"
+                submitColor="error"
+            />
+
         </Box>
     );
 }

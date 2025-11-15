@@ -34,7 +34,13 @@ public class OvertimeTicketController {
 
     @PostMapping("/{id}/reject")
     @ResponseStatus(code = HttpStatus.OK)
-    public OvertimeTicketDTO rejectTicket(@PathVariable Integer id) {
-        return overtimeTicketService.rejectTicket(id);
+    public OvertimeTicketDTO rejectTicket(@PathVariable Integer id, @RequestParam String reason) {
+        return overtimeTicketService.rejectTicket(id, reason);
+    }
+
+    @PostMapping("/{id}/approve")
+    @ResponseStatus(code = HttpStatus.OK)
+    public OvertimeTicketDTO approveTicket(@PathVariable Integer id, @RequestParam String reason) {
+        return overtimeTicketService.approveTicket(id, reason);
     }
 }

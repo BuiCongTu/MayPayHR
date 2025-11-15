@@ -8,6 +8,6 @@ import org.springframework.data.domain.Pageable;
 public interface OvertimeTicketService {
     Page<OvertimeTicketDTO> getFilteredTicket(OvertimeTicketFilter filter, Pageable pageable);
     OvertimeTicketDTO confirmTicket(Integer id);
-    OvertimeTicketDTO rejectTicket(Integer id);
-    OvertimeTicketDTO approveTicket(Integer id);
+    OvertimeTicketDTO rejectTicket(Integer id, String reason);
+    OvertimeTicketDTO approveTicket(Integer id, String reason);
 }

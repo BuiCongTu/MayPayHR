@@ -143,7 +143,6 @@ function RequestRow(props) {
         maxWidth: 0,
     };
 
-
     return (
         <React.Fragment>
             <TableRow

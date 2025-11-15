@@ -27,7 +27,7 @@ import {
 import SearchIcon from '@mui/icons-material/Search';
 import AddIcon from '@mui/icons-material/Add';
 import {visuallyHidden} from '@mui/utils';
-import {blue} from "@mui/material/colors";
+import EmployeeListTable from './EmployeeList';
 
 //TODO: Replace this with your actual auth context hook
 const useAuth = () => {
@@ -40,114 +40,12 @@ const useAuth = () => {
 // --- HeadCells for Manager's Standalone View ---
 const headCells = [
     {id: 'id', label: 'Ticket ID', numeric: false, width: '15%'},
-    {id: 'requesterName', label: 'Requested By', numeric: false, width: '15%'},
-    {id: 'confirmedByName', label: 'Confirmed By', numeric: false, width: '15%'},
-    {id: 'approvedByName', label: 'Approved By', numeric: false, width: '15%'},
+    {id: 'overtimeRequest.factoryManager.fullName', label: 'Requested By', numeric: false, width: '15%'},
+    {id: 'confirmedBy.fullName', label: 'Confirmed By', numeric: false, width: '15%'},
+    {id: 'approvedBy.fullName', label: 'Approved By', numeric: false, width: '15%'},
     {id: 'overtimeTime', label: 'Overtime (h)', numeric: true, width: '10%'},
     {id: 'status', label: 'Status', numeric: false, width: '15%'},
 ];
-
-function EmployeeListTable({employees}) {
-    const [searchTerm, setSearchTerm] = useState('');
-
-    if (!employees || employees.length === 0) {
-        return (
-            <Typography variant="body2" sx={{ml: 2, fontStyle: 'italic'}}>
-                No employees assigned to this ticket.
-            </Typography>
-        );
-    }
-
-    // Filter employees based on search term
-    const filteredEmployees = employees.filter(emp =>
-        emp.fullName?.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-
-    const tableHeadStyle = {
-        fontWeight: 'bold',
-        backgroundColor: blue[100],
-        py: 0.5,
-    };
-
-    const tableCellStyle = {
-        py: 0.5,
-    };
-
-    return (
-        <Box>
-            <TextField
-                id="employeeNameSearch"
-                placeholder="Search by Employee Name..."
-                value={searchTerm}
-                onChange={e => setSearchTerm(e.target.value)}
-                variant="outlined"
-                size="small"
-                sx={{
-                    mb: 1,
-                    width: '100%',
-                    maxWidth: '300px',
-                    backgroundColor: 'white',
-                    '& .MuiInputBase-input': {
-                        paddingTop: '4px',
-                        paddingBottom: '4px',
-                    },
-                }}
-                InputProps={{
-                    startAdornment: (
-                        <InputAdornment position="start">
-                            <SearchIcon fontSize="small"/>
-                        </InputAdornment>
-                    ),
-                }}
-            />
-            <TableContainer
-                component={Paper}
-                variant="outlined"
-                sx={{
-                    mt: 1,
-                    mb: 1,
-                    border: '1px solid',
-                    borderColor: 'divider',
-                }}
-            >
-                <Table size="small" aria-label="employee list">
-                    <TableHead>
-                        <TableRow>
-                            <TableCell sx={tableHeadStyle}>ID</TableCell>
-                            <TableCell sx={tableHeadStyle}>Full Name</TableCell>
-                            <TableCell sx={tableHeadStyle}>Email</TableCell>
-                            <TableCell sx={tableHeadStyle}>Phone</TableCell>
-                            <TableCell sx={tableHeadStyle}>Line</TableCell>
-                            <TableCell sx={tableHeadStyle}>Skill Level</TableCell>
-                        </TableRow>
-                    </TableHead>
-                    <TableBody>
-                        {filteredEmployees.length > 0 ? (
-                            filteredEmployees.map((emp) => (
-                                <TableRow key={emp.id} sx={{'&:last-child td, &:last-child th': {border: 0}}}>
-                                    <TableCell sx={tableCellStyle}>{emp.id}</TableCell>
-                                    <TableCell sx={tableCellStyle}>{emp.fullName || 'N/A'}</TableCell>
-                                    <TableCell sx={tableCellStyle}>{emp.email || 'N/A'}</TableCell>
-                                    <TableCell sx={tableCellStyle}>{emp.phone || 'N/A'}</TableCell>
-                                    <TableCell sx={tableCellStyle}>{emp.lineName || 'N/A'}</TableCell>
-                                    <TableCell sx={tableCellStyle}>{emp.skillLevelName || 'N/A'}</TableCell>
-                                </TableRow>
-                            ))
-                        ) : (
-                            <TableRow>
-                                <TableCell colSpan={6} align="center" sx={{py: 2}}>
-                                    No employees found matching "{searchTerm}".
-                                </TableCell>
-                            </TableRow>
-                        )}
-                    </TableBody>
-                </Table>
-            </TableContainer>
-        </Box>
-    );
-}
-// --- END OF UPDATE ---
-
 
 function EnhancedTableHead(props) {
     const {order, orderBy, onRequestSort} = props;

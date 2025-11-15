@@ -41,20 +41,22 @@ public class OvertimeTicketServiceImpl implements OvertimeTicketService {
     }
 
     @Override
-    public OvertimeTicketDTO rejectTicket(Integer id) {
+    public OvertimeTicketDTO rejectTicket(Integer id, String reason) {
         TbOvertimeTicket overtimeTicket = overtimeTicketRepository.findById(id).orElse(null);
         if(overtimeTicket != null){
             overtimeTicket.setStatus(OvertimeTicketStatus.rejected);
+            overtimeTicket.setReason(reason);
             return OvertimeTicketMapper.toDTO(overtimeTicketRepository.save(overtimeTicket));
         }
         throw new IllegalArgumentException("Overtime ticket not found");
     }
 
     @Override
-    public OvertimeTicketDTO approveTicket(Integer id) {
+    public OvertimeTicketDTO approveTicket(Integer id, String reason) {
         TbOvertimeTicket overtimeTicket = overtimeTicketRepository.findById(id).orElse(null);
         if(overtimeTicket != null){
             overtimeTicket.setStatus(OvertimeTicketStatus.approved);
+            overtimeTicket.setReason(reason);
             return OvertimeTicketMapper.toDTO(overtimeTicketRepository.save(overtimeTicket));
         }
         throw new IllegalArgumentException("Overtime ticket not found");
