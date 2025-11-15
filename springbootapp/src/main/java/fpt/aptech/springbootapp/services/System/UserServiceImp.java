@@ -126,6 +126,7 @@ public class UserServiceImp implements UserService {
 
     }
 
+    //Anh Tú có thể dùng UserMapper
     private UserResponseDto buildUserResponseDto(TbUser user) {
         return UserResponseDto.builder()
                 .id(user.getId())
@@ -140,10 +141,10 @@ public class UserServiceImp implements UserService {
                 .lineName(user.getLine() != null ? user.getLine().getName() : null)
                 .skillLevelId(user.getSkillLevel() != null ? user.getSkillLevel().getId() : null)
                 .skillLevelName(user.getSkillLevel() != null ? user.getSkillLevel().getName() : null)
-                .salaryType(user.getSalaryType() != null ? user.getSalaryType().name() : null)
+                .salaryType(user.getSalaryType() != null ? user.getSalaryType() : null)
                 .baseSalary(user.getBaseSalary())
                 .hireDate(user.getHireDate())
-                .status(user.getStatus() != null ? user.getStatus().name() : null)
+                .status(user.getStatus() != null ? user.getStatus() : null)
                 .createdAt(user.getCreatedAt())
                 .build();
     }

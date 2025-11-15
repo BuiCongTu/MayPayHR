@@ -1,16 +1,24 @@
 package fpt.aptech.springbootapp.mappers.ModuleB;
 
 import fpt.aptech.springbootapp.dtos.ModuleB.OvertimeTicketDTO;
+import fpt.aptech.springbootapp.dtos.response.UserResponseDto;
 import fpt.aptech.springbootapp.entities.ModuleB.TbOvertimeTicket;
+import fpt.aptech.springbootapp.mappers.UserMapper;
+
+import java.util.Collections;
+import java.util.List;
+import java.util.stream.Collectors;
 
 public class OvertimeTicketMapper {
 
     public static OvertimeTicketDTO toDTO(TbOvertimeTicket entity) {
-        if (entity == null) return null;
+        if (entity == null) {
+            return null;
+        }
 
         OvertimeTicketDTO dto = new OvertimeTicketDTO();
+
         dto.setId(entity.getId());
-        dto.setEmployeeList(entity.getEmployeeIdList());
         dto.setOvertimeTime(entity.getOvertimeTime());
         dto.setReason(entity.getReason());
         dto.setStatus(entity.getStatus());
@@ -23,10 +31,9 @@ public class OvertimeTicketMapper {
 
         if (entity.getOvertimeRequest() != null) {
             dto.setRequestId(entity.getOvertimeRequest().getId());
-        }
-
-        if(entity.getOvertimeRequest() != null && entity.getOvertimeRequest().getFactoryManager() != null){
-            dto.setRequesterName(entity.getOvertimeRequest().getFactoryManager().getFullName());
+            if (entity.getOvertimeRequest().getFactoryManager() != null) {
+                dto.setRequesterName(entity.getOvertimeRequest().getFactoryManager().getFullName());
+            }
         }
 
         if (entity.getConfirmedBy() != null) {
@@ -37,6 +44,15 @@ public class OvertimeTicketMapper {
         if (entity.getApprovedBy() != null) {
             dto.setApprovedById(entity.getApprovedBy().getId());
             dto.setApprovedByName(entity.getApprovedBy().getFullName());
+        }
+
+        if (entity.getEmployees() != null) {
+            List<UserResponseDto> employeeDTO = entity.getEmployees().stream()
+                    .map(UserMapper::toDTO)
+                    .collect(Collectors.toList());
+            dto.setEmployeeList(employeeDTO);
+        } else {
+            dto.setEmployeeList(Collections.emptyList());
         }
 
         return dto;

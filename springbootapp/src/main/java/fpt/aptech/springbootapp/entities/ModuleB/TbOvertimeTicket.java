@@ -10,10 +10,8 @@ import org.hibernate.annotations.*;
 
 import java.math.*;
 import java.time.*;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import java.util.stream.Collectors;
+import java.util.Set;
+import java.util.HashSet;
 
 @Getter
 @Setter
@@ -34,14 +32,17 @@ public class TbOvertimeTicket {
     @JoinColumn(name = "manager_id", nullable = false)
     private TbUser manager;
 
-     @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "request_id")
     private TbOvertimeRequest overtimeRequest;
 
-    @NotNull
-    @Lob // khai bao dang large text
-    @Column(name = "employee_list", nullable = false)
-    private String employeeList; //ex: "CN1, CN2, CN3"
+    @ManyToMany(fetch = FetchType.LAZY)
+    @JoinTable(
+            name = "tb_overtime_ticket_employees", // The new conjunction table
+            joinColumns = @JoinColumn(name = "overtime_ticket_id"),
+            inverseJoinColumns = @JoinColumn(name = "user_id")
+    )
+    private Set<TbUser> employees = new HashSet<>();
 
     @NotNull
     @Column(name = "overtime_time", nullable = false, precision = 15, scale = 2)
@@ -70,52 +71,5 @@ public class TbOvertimeTicket {
 
     public enum OvertimeTicketStatus {
         pending, confirmed, approved, rejected
-    }
-
-    @Transient
-    private List<String> employeeIdList;
-
-    public List<String> toEmployeeIdList(String employeeListStr) {
-        if (employeeListStr == null || employeeListStr.trim().isEmpty()) {
-            return Collections.emptyList();
-        }
-
-        final String VALID_ID_PATTERN = "^[a-zA-Z0-9]+$";
-
-        return Arrays.stream(employeeListStr.split(","))
-                .map(String::trim)
-                .filter(id -> !id.isEmpty())
-                .filter(id -> id.matches(VALID_ID_PATTERN))
-
-                .collect(Collectors.toList());
-    }
-
-    public String fromEmployeeIdList(List<String> idList) {
-        if (idList == null || idList.isEmpty()) {
-            return "";
-        }
-        return String.join(", ", idList);
-    }
-
-    @PostLoad
-    void populateEmployeeIdList() {
-        this.employeeIdList = this.toEmployeeIdList(this.employeeList);
-    }
-
-    @PrePersist
-    void populateEmployeeListString() {
-        this.employeeList = this.fromEmployeeIdList(this.employeeIdList);
-    }
-
-    @PreUpdate
-    void populateEmployeeListStringOnUpdate() {
-        this.employeeList = this.fromEmployeeIdList(this.employeeIdList);
-    }
-
-    public List<String> getEmployeeIdList() {
-        if (this.employeeIdList == null) {
-            this.employeeIdList = this.toEmployeeIdList(this.employeeList);
-        }
-        return this.employeeIdList;
     }
 }
