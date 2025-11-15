@@ -39,7 +39,7 @@ class _MyAppState extends State<MyApp> {
       theme:AppTheme.lightTheme,
       darkTheme: AppTheme.darkTheme,
       themeMode: appTheme.currentTheme,
-      home: HomeScreen(),
+      home: LoginScreen(),
       routes: {
         '/home': (context) => HomeScreen(),
         '/login': (context) => LoginScreen(),

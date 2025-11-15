@@ -1,15 +1,8 @@
-
-//service goij:
 import 'dart:convert';
-import 'package:flutterapp/configs/api_config.dart';
-
 import 'package:http/http.dart' as http;
 import '../models/payroll_model.dart';
 
 class PayrollService {
-  final String baseUrl = ApiConfig.baseUrl;
-  final String history = ApiConfig.payHisEndpoint;
-  late final url = Uri.parse('$history/$userId/history');
   final String baseUrl = 'http://192.168.2.14:9999';
 
   Future<List<PayrollModel>> getPayrollHistory({
@@ -18,6 +11,7 @@ class PayrollService {
   }) async {
     try {
       final url = Uri.parse('$baseUrl/api/payroll/employee/$userId/history');
+
       final response = await http.get(
         url,
         headers: {
@@ -67,7 +61,7 @@ class PayrollService {
         throw Exception('Lỗi HTTP: ${response.statusCode} - ${response.body}');
       }
     } catch (e) {
-      throw Exception('Lỗi kết nối: $e'); 
+      throw Exception('Lỗi kết nối: $e');
     }
   }
 
@@ -98,7 +92,7 @@ class PayrollService {
       }
     } catch (e) {
       throw Exception('Lỗi kết nối: $e');
-            }
+    }
   }
 
   Future<List<int>> getAvailableMonths({
@@ -109,13 +103,6 @@ class PayrollService {
     try {
       final url = Uri.parse(
         '$baseUrl/api/payroll/employee/$userId/available-months?year=$year',
-      );
-
-      final response = await http.get(
-          url,
-          headers: {
-            'Authorization': 'Bearer $token',
-          },
       );
 
       final response = await http.get(

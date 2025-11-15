@@ -513,4 +513,34 @@ sẽ nhận đc email, đang dặt thời gian hết hạn token là 5 phút.
 đã test quá 5 phút -> ok( dongf 198 trong UserServiceImp)
 
 10. ResetPassword: -> ok
+<<<<<<< HEAD
 POST http://localhost:9999/api/auth/reset-password?token=701038c7-b99d-4f3f-afdd-8759047c806e&newPassword=password123
+=======
+POST http://localhost:9999/api/auth/reset-password?token=701038c7-b99d-4f3f-afdd-8759047c806e&newPassword=password123
+
+11. Filter and get overtime-ticket. Use param to filter (ex: ?status=processed)
+GET http://localhost:9999/api/overtime-ticket/
+
+12. Filter and get overtime-request. Use param to filter (ex: ?status=processed)
+GET http://localhost:9999/api/overtime-request/
+
+13. Filter and get proposal (each type). Use param to filter (ex: ?status=processed)
+GET http://localhost:9999/api/proposal/salary-increase
+GET http://localhost:9999/api/proposal/position-change
+GET http://localhost:9999/api/proposal/skill-level
+
+14. GET http://localhost:9999/api/payroll/employee/199050004/history
+[
+    {
+        "id": 199180000,
+        "baseSalary": 6500000.00,
+        "productBonus": 975000.00,
+        "overtimePay": 300000.00,
+        "allowance": 200000.00,
+        "deduction": 0.00,
+        "totalPay": 7975000.00,
+        "note": "Example: auto-inserted payroll detail",
+        "createdAt": "2025-11-09T16:36:11.297Z"
+    }
+]
+>>>>>>> 1a26befbfffb3d2a94ff642c9595e7e4525fc357

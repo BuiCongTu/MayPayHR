@@ -14,9 +14,7 @@ class ThemeConfig extends ChangeNotifier {
     scaffoldBackgroundColor: Colors.white,
     appBarTheme: AppBarTheme(color: Colors.white),
     elevatedButtonTheme: ElevatedButtonThemeData(
-      style: ElevatedButton.styleFrom(
-        backgroundColor: Colors.red,
-      ),
+      style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
     ),
     textTheme: TextTheme(
       bodyMedium: TextStyle(color: Colors.black),
@@ -29,9 +27,7 @@ class ThemeConfig extends ChangeNotifier {
     scaffoldBackgroundColor: Colors.black54,
     appBarTheme: AppBarTheme(color: Colors.white),
     elevatedButtonTheme: ElevatedButtonThemeData(
-      style: ElevatedButton.styleFrom(
-        backgroundColor: Colors.red,
-      ),
+      style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
     ),
     textTheme: TextTheme(
       bodyMedium: TextStyle(color: Colors.white),
@@ -39,3 +35,4 @@ class ThemeConfig extends ChangeNotifier {
       bodyLarge: TextStyle(color: Colors.white),
     ),
   );
+}
