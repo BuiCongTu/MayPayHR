@@ -1,6 +1,7 @@
 package fpt.aptech.springbootapp.dtos.ModuleB;
 
 import fpt.aptech.springbootapp.entities.ModuleB.TbOvertimeTicket.OvertimeTicketStatus;
+import fpt.aptech.springbootapp.dtos.response.UserResponseDto;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -19,7 +20,7 @@ public class OvertimeTicketDTO {
     private Integer requestId;
     private String requesterName;
 
-    private List<String> employeeList;
+    private List<UserResponseDto> employeeList;
 
     private BigDecimal overtimeTime;
     private String reason;
