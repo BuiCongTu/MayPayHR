@@ -65,10 +65,10 @@ export async function confirmOvertimeTicket(ticketId) {
     }
 }
 
-export async function rejectOvertimeTicket(ticketId) {
+export async function rejectOvertimeTicket(ticketId, reason) {
     const API_URL = `${BASE_API}${OVERTIME_TICKET_API}${ticketId}/reject`;
     try {
-        const response = await axios.post(API_URL);
+        const response = await axios.post(API_URL + '?reason=' + reason);
         return response.data;
     } catch (err) {
         console.error("Failed to reject overtime ticket:", err);
