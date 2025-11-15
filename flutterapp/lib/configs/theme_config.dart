@@ -39,4 +39,3 @@ class ThemeConfig extends ChangeNotifier {
       bodyLarge: TextStyle(color: Colors.white),
     ),
   );
-}

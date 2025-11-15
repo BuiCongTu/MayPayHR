@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+
 @RestController
 @RequestMapping("/api/auth")
 public class AuthController {
@@ -24,7 +25,8 @@ public class AuthController {
     @Autowired
     public AuthController(
             JwtUtils jwtUtils,
-            UserService userService) {
+            UserService userService)
+    {
         this.jwtUtils = jwtUtils;
         this.userService = userService;
     }
@@ -68,6 +70,7 @@ public class AuthController {
         }
     }
 
+
     @GetMapping("/getemp/{email}")
     public ResponseEntity<ApiResponse<UserResponseDto>> getUserByEmail(@PathVariable String email) {
         try {
@@ -83,6 +86,7 @@ public class AuthController {
                     .body(ApiResponse.error(e.getMessage()));
         }
     }
+
 
     @PutMapping("/updateuser/{email}")
     public ResponseEntity<ApiResponse<UserResponseDto>> updateUser(
@@ -148,7 +152,7 @@ public class AuthController {
         }
     }
 
-    // lay thong tin user hiện tại từ JWT token
+        //lay thong tin user hiện tại từ JWT token
     @GetMapping("/me")
     public ResponseEntity<ApiResponse<UserResponseDto>> getCurrentUser() {
         try {

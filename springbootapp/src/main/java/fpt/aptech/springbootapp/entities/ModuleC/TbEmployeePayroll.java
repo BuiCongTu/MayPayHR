@@ -1,6 +1,8 @@
 package fpt.aptech.springbootapp.entities.ModuleC;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import fpt.aptech.springbootapp.entities.Core.TbUser;
 import jakarta.persistence.*;
 import jakarta.persistence.Index;
@@ -19,9 +21,9 @@ import java.time.*;
 @AllArgsConstructor
 @Table(name = "tbEmployeePayroll", indexes = {
         @Index(name = "idx_user_payroll", columnList = "user_id, payroll_id")
-})//employeePayrollRepository.findByUserAndPayroll(userId, payrollId);
-@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
-
+})
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler", "payroll", "user"})
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class TbEmployeePayroll {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -31,11 +33,13 @@ public class TbEmployeePayroll {
     @NotNull
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "payroll_id", nullable = false)
+    @JsonBackReference
     private TbPayroll payroll;
 
     @NotNull
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "user_id", nullable = false)
+    @JsonBackReference
     private TbUser user;
 
     @NotNull
