@@ -10,7 +10,7 @@ public class OvertimeTicketMapper {
 
         OvertimeTicketDTO dto = new OvertimeTicketDTO();
         dto.setId(entity.getId());
-        dto.setEmployeeList(entity.getEmployeeList());
+        dto.setEmployeeList(entity.getEmployeeIdList());
         dto.setOvertimeTime(entity.getOvertimeTime());
         dto.setReason(entity.getReason());
         dto.setStatus(entity.getStatus());

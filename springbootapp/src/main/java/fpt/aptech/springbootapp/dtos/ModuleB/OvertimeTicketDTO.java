@@ -6,6 +6,7 @@ import lombok.Setter;
 
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.util.List;
 
 @Getter
 @Setter
@@ -18,7 +19,8 @@ public class OvertimeTicketDTO {
     private Integer requestId;
     private String requesterName;
 
-    private String employeeList;
+    private List<String> employeeList;
+
     private BigDecimal overtimeTime;
     private String reason;
     private OvertimeTicketStatus status;
