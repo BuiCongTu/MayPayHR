@@ -4,6 +4,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../configs/api_config.dart';
 
 class AuthService {
+
+
   static Future<Map<String, dynamic>?> login(String email, String password) async {
     final url = Uri.parse("${ApiConfig.baseUrl}/api/auth/login");
 
@@ -57,6 +59,31 @@ class AuthService {
       print("Login Error: $e");
     }
     return null;
+  }
+  static Future<bool> register(Map<String, dynamic> userData) async {
+    try {
+      final url = Uri.parse('${ApiConfig.baseUrl}/api/auth/register');
+
+      final response = await http.post(
+        url,
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode(userData),
+      );
+
+      if (response.statusCode == 201) {
+        // Registration thành công
+        return true;
+      } else {
+        // Lấy message lỗi từ backend (nếu có)
+        final Map<String, dynamic> resBody = jsonDecode(response.body);
+        final message = resBody['message'] ?? 'Unknown error';
+        print('Register failed: ${response.statusCode}, message: $message');
+        return false;
+      }
+    } catch (e) {
+      print('Register exception: $e');
+      return false;
+    }
   }
 
   static Future<void> logout() async {
