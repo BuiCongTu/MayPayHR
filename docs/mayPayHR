@@ -549,3 +549,7 @@ GET http://localhost:9999/api/proposal/skill-level
 5. TbAttendance.time_in = FIRST successful scan
 6. TbAttendance.time_out = LAST successful scan
 7. TbAttendance.status = SUCCESS/LATE
+
+
+POST /api/face-training/train: Train gương mặt
+
