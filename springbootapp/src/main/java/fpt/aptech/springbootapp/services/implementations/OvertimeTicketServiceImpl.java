@@ -2,13 +2,14 @@ package fpt.aptech.springbootapp.services.implementations;
 
 import fpt.aptech.springbootapp.dtos.ModuleB.OvertimeTicketDTO;
 import fpt.aptech.springbootapp.entities.Core.TbUser;
+import fpt.aptech.springbootapp.entities.ModuleB.TbOvertimeRequest;
 import fpt.aptech.springbootapp.entities.ModuleB.TbOvertimeTicket;
 import fpt.aptech.springbootapp.entities.ModuleB.TbOvertimeTicket.OvertimeTicketStatus;
 import fpt.aptech.springbootapp.filter.OvertimeTicketFilter;
 import fpt.aptech.springbootapp.mappers.ModuleB.OvertimeTicketMapper;
+import fpt.aptech.springbootapp.repositories.ModuleB.OvertimeRequestRepository;
 import fpt.aptech.springbootapp.repositories.ModuleB.OvertimeTicketRepository;
 import fpt.aptech.springbootapp.repositories.UserRepository;
-import fpt.aptech.springbootapp.services.interfaces.OvertimeTicketEmployeeService;
 import fpt.aptech.springbootapp.services.interfaces.OvertimeTicketService;
 import fpt.aptech.springbootapp.specifications.OvertimeTicketSpecification;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,19 +19,21 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.util.HashSet;
+import java.util.Set;
 
 @Service
 public class OvertimeTicketServiceImpl implements OvertimeTicketService {
 
     private final OvertimeTicketRepository overtimeTicketRepository;
     private final UserRepository userRepository;
-    private final OvertimeTicketEmployeeService overtimeTicketEmployeeService;
+    private final OvertimeRequestRepository overtimeRequestRepository;
 
     @Autowired
-    public OvertimeTicketServiceImpl(OvertimeTicketRepository overtimeTicketRepository, UserRepository userRepository, OvertimeTicketEmployeeService overtimeTicketEmployeeService) {
+    public OvertimeTicketServiceImpl(OvertimeTicketRepository overtimeTicketRepository, UserRepository userRepository, OvertimeRequestRepository overtimeRequestRepository) {
         this.overtimeTicketRepository = overtimeTicketRepository;
         this.userRepository = userRepository;
-        this.overtimeTicketEmployeeService = overtimeTicketEmployeeService;
+        this.overtimeRequestRepository = overtimeRequestRepository;
     }
 
     @Override
@@ -99,7 +102,7 @@ public class OvertimeTicketServiceImpl implements OvertimeTicketService {
         if(overtimeTicket.getOvertimeRequest().getId() == null){
             throw new IllegalArgumentException("Overtime request id is required");
         }
-        TbOvertimeTicket request = overtimeTicketRepository.findById(overtimeTicket.getOvertimeRequest().getId()).orElse(null);
+        TbOvertimeRequest request = overtimeRequestRepository.findById(overtimeTicket.getOvertimeRequest().getId()).orElse(null);
         if(request == null){
             throw new IllegalArgumentException("Overtime request not found");
         }
@@ -108,7 +111,20 @@ public class OvertimeTicketServiceImpl implements OvertimeTicketService {
             throw new IllegalArgumentException("Valid overtime time is required");
         }
 
-        //TODO: add employee
+        if (overtimeTicket.getEmployees() == null || overtimeTicket.getEmployees().isEmpty()) {
+            throw new IllegalArgumentException("At least one employee is required for the overtime ticket");
+        }
+
+        Set<TbUser> managedEmployees = new HashSet<>();
+        for (TbUser employee : overtimeTicket.getEmployees()) {
+            if (employee == null || employee.getId() == null) {
+                throw new IllegalArgumentException("Employee and employee ID are required");
+            }
+            TbUser managedEmployee = userRepository.findById(employee.getId())
+                    .orElseThrow(() -> new IllegalArgumentException("Employee not found with id: " + employee.getId()));
+            managedEmployees.add(managedEmployee);
+        }
+        overtimeTicket.setEmployees(managedEmployees);
 
         overtimeTicket.setCreatedAt(java.time.Instant.now());
         overtimeTicketRepository.save(overtimeTicket);
