@@ -11,7 +11,8 @@ import {
     TableHead,
     TableRow,
     TableSortLabel,
-    Paper
+    Paper,
+    Chip
 } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
 import {visuallyHidden} from '@mui/utils';
@@ -20,8 +21,13 @@ import {blue} from "@mui/material/colors";
 function descendingComparator(a, b, orderBy) {
     const valA = a[orderBy] || '';
     const valB = b[orderBy] || '';
-    if (valB < valA) return -1;
-    if (valB > valA) return 1;
+
+    if (valB < valA) {
+        return -1;
+    }
+    if (valB > valA) {
+        return 1;
+    }
     return 0;
 }
 
@@ -35,7 +41,9 @@ function stableSort(array, comparator) {
     const stabilizedThis = array.map((el, index) => [el, index]);
     stabilizedThis.sort((a, b) => {
         const order = comparator(a[0], b[0]);
-        if (order !== 0) return order;
+        if (order !== 0) {
+            return order;
+        }
         return a[1] - b[1];
     });
     return stabilizedThis.map((el) => el[0]);
@@ -43,12 +51,13 @@ function stableSort(array, comparator) {
 
 // --- HeadCells for Employee Table ---
 const employeeHeadCells = [
-    {id: 'id', label: 'ID', numeric: false},
-    {id: 'fullName', label: 'Full Name', numeric: false},
-    {id: 'email', label: 'Email', numeric: false},
-    {id: 'phone', label: 'Phone', numeric: false},
+    {id: 'employeeId', label: 'ID', numeric: false},
+    {id: 'employeeName', label: 'Full Name', numeric: false},
+    {id: 'employeeEmail', label: 'Email', numeric: false},
+    {id: 'employeePhone', label: 'Phone', numeric: false},
     {id: 'lineName', label: 'Line', numeric: false},
     {id: 'skillLevelName', label: 'Skill Level', numeric: false},
+    {id: 'status', label: 'Status', numeric: false}, // Already present
 ];
 
 function EmployeeTableHead(props) {
@@ -60,7 +69,7 @@ function EmployeeTableHead(props) {
     const headStyle = {
         fontWeight: 'bold',
         backgroundColor: blue[100],
-        py: 0.5,
+        py: 1, // A bit more padding for modal
     };
 
     return (
@@ -92,11 +101,12 @@ function EmployeeTableHead(props) {
     );
 }
 
-// This is the View-Only Employee List Component
+// --- Renamed component to ViewOnlyEmployeeList ---
 function ViewOnlyEmployeeList({employees}) {
     const [searchTerm, setSearchTerm] = useState('');
     const [order, setOrder] = useState('asc');
-    const [orderBy, setOrderBy] = useState('id');
+    // --- MODIFIED default sort to 'employeeName' ---
+    const [orderBy, setOrderBy] = useState('employeeName');
 
     if (!employees || employees.length === 0) {
         return (
@@ -112,22 +122,37 @@ function ViewOnlyEmployeeList({employees}) {
         setOrderBy(property);
     };
 
-    // Filter employees
     const filteredEmployees = employees.filter(emp =>
-        (emp.fullName || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (emp.email || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (emp.id || '').toString().toLowerCase().includes(searchTerm.toLowerCase())
+        (emp.employeeName || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (emp.employeeEmail || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (emp.employeeId || '').toString().toLowerCase().includes(searchTerm.toLowerCase())
     );
 
     // Sort the filtered employees
     const sortedEmployees = stableSort(filteredEmployees, getComparator(order, orderBy));
 
-    const tableCellStyle = {
-        py: 0.5,
+    // --- NEW Helper Function for status chip ---
+    const getStatusChip = (status) => {
+        let color;
+        let label = (status || 'pending').charAt(0).toUpperCase() + (status || 'pending').slice(1);
+
+        switch (status) {
+            case 'ok':
+                color = 'success';
+                break;
+            case 'rejected':
+                color = 'error';
+                break;
+            case 'pending':
+            default:
+                color = 'warning';
+                label = 'Pending';
+        }
+        return <Chip label={label} color={color} size="small" sx={{minWidth: 70}}/>;
     };
 
     return (
-        <Box>
+        <Box sx={{ p: 2 }}> {/* Added padding to the Box */}
             <TextField
                 id="employeeNameSearch"
                 placeholder="Search by Employee (Name, ID, Email)..."
@@ -136,15 +161,15 @@ function ViewOnlyEmployeeList({employees}) {
                 variant="outlined"
                 size="small"
                 sx={{
-                    m: 2,
-                    width: 'calc(100% - 32px)',
+                    mb: 2, // More margin
+                    width: '100%',
                     maxWidth: '400px',
                     backgroundColor: 'white',
                 }}
                 InputProps={{
                     startAdornment: (
                         <InputAdornment position="start">
-                            <SearchIcon fontSize="small"/>
+                            <SearchIcon/>
                         </InputAdornment>
                     ),
                 }}
@@ -153,9 +178,8 @@ function ViewOnlyEmployeeList({employees}) {
                 component={Paper}
                 variant="outlined"
                 sx={{
-                    mt: 1,
-                    mb: 1,
-                    border: 'none',
+                    border: '1px solid',
+                    borderColor: 'divider',
                 }}
             >
                 <Table size="small" aria-label="employee list">
@@ -167,18 +191,22 @@ function ViewOnlyEmployeeList({employees}) {
                     <TableBody>
                         {sortedEmployees.length > 0 ? (
                             sortedEmployees.map((emp) => (
-                                <TableRow key={emp.id} sx={{'&:last-child td, &:last-child th': {border: 0}}}>
-                                    <TableCell sx={tableCellStyle}>{emp.id}</TableCell>
-                                    <TableCell sx={tableCellStyle}>{emp.fullName || 'N/A'}</TableCell>
-                                    <TableCell sx={tableCellStyle}>{emp.email || 'N/A'}</TableCell>
-                                    <TableCell sx={tableCellStyle}>{emp.phone || 'N/A'}</TableCell>
-                                    <TableCell sx={tableCellStyle}>{emp.lineName || 'N/A'}</TableCell>
-                                    <TableCell sx={tableCellStyle}>{emp.skillLevelName || 'N/A'}</TableCell>
+                                <TableRow key={emp.employeeId} sx={{'&:last-child td, &:last-child th': {border: 0}}}>
+                                    <TableCell>{emp.employeeId || 'N/A'}</TableCell>
+                                    <TableCell>{emp.employeeName || 'N/A'}</TableCell>
+                                    <TableCell>{emp.employeeEmail || 'N/A'}</TableCell>
+                                    <TableCell>{emp.employeePhone || 'N/A'}</TableCell>
+                                    <TableCell>{emp.lineName || 'N/A'}</TableCell>
+                                    <TableCell>{emp.skillLevelName || 'N/A'}</TableCell>
+                                    <TableCell>
+                                        {getStatusChip(emp.status)}
+                                    </TableCell>
                                 </TableRow>
                             ))
                         ) : (
                             <TableRow>
-                                <TableCell colSpan={6} align="center" sx={{py: 2}}>
+                                {/* --- MODIFIED colSpan --- */}
+                                <TableCell colSpan={employeeHeadCells.length} align="center" sx={{py: 3}}>
                                     No employees found matching "{searchTerm}".
                                 </TableCell>
                             </TableRow>

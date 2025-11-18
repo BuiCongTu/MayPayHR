@@ -11,14 +11,14 @@ import {
     TableHead,
     TableRow,
     TableSortLabel,
-    Paper
+    Paper,
+    Chip
 } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
 import {visuallyHidden} from '@mui/utils';
 import {blue} from "@mui/material/colors";
 
 function descendingComparator(a, b, orderBy) {
-    // Ensure values are comparable, falling back to an empty string
     const valA = a[orderBy] || '';
     const valB = b[orderBy] || '';
 
@@ -57,7 +57,7 @@ const employeeHeadCells = [
     {id: 'employeePhone', label: 'Phone', numeric: false},
     {id: 'lineName', label: 'Line', numeric: false},
     {id: 'skillLevelName', label: 'Skill Level', numeric: false},
-    {id: 'status', label: 'Status', numeric: false, width: '10%'},
+    {id: 'status', label: 'Status', numeric: false, width: '10%'}, // Already present
 ];
 
 function EmployeeTableHead(props) {
@@ -104,11 +104,11 @@ function EmployeeTableHead(props) {
 function EmployeeListTable({employees}) {
     const [searchTerm, setSearchTerm] = useState('');
     const [order, setOrder] = useState('asc');
-    const [orderBy, setOrderBy] = useState('id');
+    const [orderBy, setOrderBy] = useState('employeeName');
 
     if (!employees || employees.length === 0) {
         return (
-            <Typography variant="body2" sx={{ml: 2, fontStyle: 'italic'}}>
+            <Typography variant="body2" sx={{p: 2, fontStyle: 'italic'}}> {/* Added padding */}
                 No employees assigned to this ticket.
             </Typography>
         );
@@ -120,11 +120,10 @@ function EmployeeListTable({employees}) {
         setOrderBy(property);
     };
 
-    // Filter employees based on search term
     const filteredEmployees = employees.filter(emp =>
-        (emp.fullName || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (emp.email || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (emp.id || '').toString().toLowerCase().includes(searchTerm.toLowerCase())
+        (emp.employeeName || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (emp.employeeEmail || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (emp.employeeId || '').toString().toLowerCase().includes(searchTerm.toLowerCase())
     );
 
     // Sort the filtered employees
@@ -134,8 +133,28 @@ function EmployeeListTable({employees}) {
         py: 0.5,
     };
 
+    // --- NEW Helper Function for status chip ---
+    const getStatusChip = (status) => {
+        let color;
+        let label = (status || 'pending').charAt(0).toUpperCase() + (status || 'pending').slice(1);
+
+        switch (status) {
+            case 'ok':
+                color = 'success';
+                break;
+            case 'rejected':
+                color = 'error';
+                break;
+            case 'pending':
+            default:
+                color = 'warning';
+                label = 'Pending';
+        }
+        return <Chip label={label} color={color} size="small" sx={{minWidth: 70}}/>;
+    };
+
     return (
-        <Box>
+        <Box sx={{p: 2}}>
             <TextField
                 id="employeeNameSearch"
                 placeholder="Search by Employee (Name, ID, Email)..."
@@ -144,19 +163,19 @@ function EmployeeListTable({employees}) {
                 variant="outlined"
                 size="small"
                 sx={{
-                    mb: 1,
+                    mb: 2,
                     width: '100%',
                     maxWidth: '400px',
                     backgroundColor: 'white',
                     '& .MuiInputBase-input': {
-                        paddingTop: '4px',
-                        paddingBottom: '4px',
+                        paddingTop: '8px',
+                        paddingBottom: '8px',
                     },
                 }}
                 InputProps={{
                     startAdornment: (
                         <InputAdornment position="start">
-                            <SearchIcon fontSize="small"/>
+                            <SearchIcon/>
                         </InputAdornment>
                     ),
                 }}
@@ -180,18 +199,22 @@ function EmployeeListTable({employees}) {
                     <TableBody>
                         {sortedEmployees.length > 0 ? (
                             sortedEmployees.map((emp) => (
-                                <TableRow key={emp.id} sx={{'&:last-child td, &:last-child th': {border: 0}}}>
-                                    <TableCell sx={tableCellStyle}>{emp.id}</TableCell>
-                                    <TableCell sx={tableCellStyle}>{emp.fullName || 'N/A'}</TableCell>
-                                    <TableCell sx={tableCellStyle}>{emp.email || 'N/A'}</TableCell>
-                                    <TableCell sx={tableCellStyle}>{emp.phone || 'N/A'}</TableCell>
+                                <TableRow key={emp.employeeId} sx={{'&:last-child td, &:last-child th': {border: 0}}}>
+                                    <TableCell sx={tableCellStyle}>{emp.employeeId || 'N/A'}</TableCell>
+                                    <TableCell sx={tableCellStyle}>{emp.employeeName || 'N/A'}</TableCell>
+                                    <TableCell sx={tableCellStyle}>{emp.employeeEmail || 'N/A'}</TableCell>
+                                    <TableCell sx={tableCellStyle}>{emp.employeePhone || 'N/A'}</TableCell>
                                     <TableCell sx={tableCellStyle}>{emp.lineName || 'N/A'}</TableCell>
                                     <TableCell sx={tableCellStyle}>{emp.skillLevelName || 'N/A'}</TableCell>
+                                    {/* --- NEW TableCell for Status Chip --- */}
+                                    <TableCell sx={tableCellStyle}>
+                                        {getStatusChip(emp.status)}
+                                    </TableCell>
                                 </TableRow>
                             ))
                         ) : (
                             <TableRow>
-                                <TableCell colSpan={6} align="center" sx={{py: 2}}>
+                                <TableCell colSpan={employeeHeadCells.length} align="center" sx={{py: 2}}>
                                     No employees found matching "{searchTerm}".
                                 </TableCell>
                             </TableRow>

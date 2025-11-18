@@ -41,12 +41,11 @@ import ActionReasonModal from './ActionReasonModal';
 
 const headCells = [
     {id: 'id', label: 'Ticket ID', numeric: false, width: '10%'},
-    {id: 'managerName', label: 'Manager', numeric: false, width: '10%'},
-    {id: 'employeeList', label: 'Employees', numeric: false, width: '10%'},
-    {id: 'reason', label: 'Reason', numeric: false, width: '7%'},
-    {id: 'overtimeTime', label: 'Overtime (h)', numeric: true, width: '10%'},
-    {id: 'status', label: 'Status', numeric: false, width: '7%'},
-    {id: 'actions', label: 'Actions', numeric: false, width: '5%'},
+    {id: 'managerName', label: 'Manager', numeric: false, width: '15%'},
+    {id: 'employeeList', label: 'Employees', numeric: false, width: '15%'},
+    {id: 'reason', label: 'Reason', numeric: false, width: '20%'},
+    {id: 'status', label: 'Status', numeric: false, width: '10%'},
+    {id: 'actions', label: 'Actions', numeric: false, width: '10%'},
 ];
 
 
@@ -75,6 +74,7 @@ function EnhancedTableHead(props) {
                             active={orderBy === headCell.id}
                             direction={orderBy === headCell.id ? order : 'asc'}
                             onClick={createSortHandler(headCell.id)}
+                            // 'overtimeTime' removed from disabled list as it's gone
                             disabled={headCell.id === 'actions' || headCell.id === 'employeeList'}
                         >
                             {headCell.label}
@@ -296,6 +296,7 @@ function RequestTicketList({request}) {
                         <TableBody>
                             {tickets.length === 0 ? (
                                 <TableRow>
+                                    {/* --- MODIFIED colSpan --- */}
                                     <TableCell colSpan={headCells.length} align="center" sx={{py: 4}}>
                                         <Typography variant="body1" color="text.secondary">
                                             No tickets found for this request.
@@ -305,6 +306,13 @@ function RequestTicketList({request}) {
                             ) : (
                                 tickets.map((ticket) => {
                                     const isActionable = ticket.status === 'pending';
+
+                                    // Calculate employee acceptance status
+                                    const totalEmployees = ticket.employeeList?.length || 0;
+                                    const acceptedEmployees = ticket.employeeList?.filter(
+                                        emp => emp.status === 'ok'
+                                    ).length || 0;
+
                                     return (
                                         <TableRow hover key={ticket.id}>
                                             <TableCell sx={cellTruncateStyle}>{ticket.id}</TableCell>
@@ -316,7 +324,8 @@ function RequestTicketList({request}) {
                                                     onClick={() => handleOpenEmployeeModal(ticket.employeeList)}
                                                     sx={{p: 0.5, minWidth: 'auto'}} // Smaller button
                                                 >
-                                                    View ({ticket.employeeList?.length || 0})
+                                                    {/* Shows X / Y OK */}
+                                                    View ({acceptedEmployees} / {totalEmployees} OK)
                                                 </Button>
                                             </TableCell>
                                             <TableCell>
@@ -326,7 +335,9 @@ function RequestTicketList({request}) {
                                                     </Box>
                                                 </Tooltip>
                                             </TableCell>
-                                            <TableCell align="right">{ticket.overtimeTime || 0}</TableCell>
+
+                                            {/* --- 'overtimeTime' TableCell REMOVED --- */}
+
                                             <TableCell>{getStatusChip(ticket.status)}</TableCell>
                                             <TableCell align="center">
                                                 <Box sx={{display: 'flex', justifyContent: 'center'}}>
