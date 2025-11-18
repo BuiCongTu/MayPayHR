@@ -1,9 +1,11 @@
 package fpt.aptech.springbootapp.mappers.ModuleB;
 
+import fpt.aptech.springbootapp.dtos.ModuleB.OvertimeEmployeeDTO;
 import fpt.aptech.springbootapp.dtos.ModuleB.OvertimeTicketDTO;
-import fpt.aptech.springbootapp.dtos.response.UserResponseDto;
+import fpt.aptech.springbootapp.entities.Core.TbLine;
+import fpt.aptech.springbootapp.entities.Core.TbUser;
 import fpt.aptech.springbootapp.entities.ModuleB.TbOvertimeTicket;
-import fpt.aptech.springbootapp.mappers.UserMapper;
+import fpt.aptech.springbootapp.entities.ModuleB.TbOvertimeTicketEmployee;
 
 import java.util.Collections;
 import java.util.List;
@@ -19,7 +21,7 @@ public class OvertimeTicketMapper {
         OvertimeTicketDTO dto = new OvertimeTicketDTO();
 
         dto.setId(entity.getId());
-        dto.setOvertimeTime(entity.getOvertimeTime());
+
         dto.setReason(entity.getReason());
         dto.setStatus(entity.getStatus());
         dto.setCreatedAt(entity.getCreatedAt());
@@ -46,15 +48,43 @@ public class OvertimeTicketMapper {
             dto.setApprovedByName(entity.getApprovedBy().getFullName());
         }
 
-        if (entity.getEmployees() != null) {
-            List<UserResponseDto> employeeDTO = entity.getEmployees().stream()
-                    .map(UserMapper::toDTO)
+        if (entity.getOvertimeEmployees() != null) {
+            List<OvertimeEmployeeDTO> employeeDTOList = entity.getOvertimeEmployees().stream()
+                    .map(OvertimeTicketMapper::toEmployeeDTO)
                     .collect(Collectors.toList());
-            dto.setEmployeeList(employeeDTO);
+            dto.setEmployeeList(employeeDTOList);
         } else {
             dto.setEmployeeList(Collections.emptyList());
         }
 
         return dto;
+    }
+
+    private static OvertimeEmployeeDTO toEmployeeDTO(TbOvertimeTicketEmployee association) {
+        if (association == null) {
+            return null;
+        }
+
+        OvertimeEmployeeDTO empDto = new OvertimeEmployeeDTO();
+        empDto.setAssociationId(association.getId());
+        empDto.setStatus(association.getStatus());
+
+        if (association.getOvertimeTicket() != null) {
+            empDto.setOvertimeTicketId(association.getOvertimeTicket().getId());
+        }
+
+        TbUser employee = association.getEmployee();
+        if (employee != null) {
+            empDto.setEmployeeId(employee.getId());
+            empDto.setEmployeeName(employee.getFullName());
+        }
+
+        TbLine line = association.getLine();
+        if (line != null) {
+            empDto.setLineId(line.getId());
+            empDto.setLineName(line.getName());
+        }
+
+        return empDto;
     }
 }
