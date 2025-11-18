@@ -3,12 +3,12 @@ package fpt.aptech.springbootapp.entities.ModuleB;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import fpt.aptech.springbootapp.entities.Core.*;
 import jakarta.persistence.*;
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.*;
 import lombok.*;
 import org.hibernate.annotations.*;
 
-import java.math.*;
 import java.time.*;
 import java.util.Set;
 import java.util.HashSet;
@@ -36,17 +36,8 @@ public class TbOvertimeTicket {
     @JoinColumn(name = "request_id")
     private TbOvertimeRequest overtimeRequest;
 
-    @ManyToMany(fetch = FetchType.LAZY)
-    @JoinTable(
-            name = "tb_overtime_ticket_employees", // The new conjunction table
-            joinColumns = @JoinColumn(name = "overtime_ticket_id"),
-            inverseJoinColumns = @JoinColumn(name = "user_id")
-    )
-    private Set<TbUser> employees = new HashSet<>();
-
-    @NotNull
-    @Column(name = "overtime_time", nullable = false, precision = 15, scale = 2)
-    private BigDecimal overtimeTime;
+    @OneToMany(mappedBy = "overtimeTicket", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<TbOvertimeTicketEmployee> overtimeEmployees = new HashSet<>();
 
     @Lob // khai bao dang large text
     @Column(name = "reason")

@@ -1,12 +1,15 @@
 package fpt.aptech.springbootapp.services.implementations;
 
 import fpt.aptech.springbootapp.dtos.ModuleB.OvertimeTicketDTO;
+import fpt.aptech.springbootapp.entities.Core.TbLine;
 import fpt.aptech.springbootapp.entities.Core.TbUser;
 import fpt.aptech.springbootapp.entities.ModuleB.TbOvertimeRequest;
 import fpt.aptech.springbootapp.entities.ModuleB.TbOvertimeTicket;
 import fpt.aptech.springbootapp.entities.ModuleB.TbOvertimeTicket.OvertimeTicketStatus;
+import fpt.aptech.springbootapp.entities.ModuleB.TbOvertimeTicketEmployee;
 import fpt.aptech.springbootapp.filter.OvertimeTicketFilter;
 import fpt.aptech.springbootapp.mappers.ModuleB.OvertimeTicketMapper;
+import fpt.aptech.springbootapp.repositories.LineRepository;
 import fpt.aptech.springbootapp.repositories.ModuleB.OvertimeRequestRepository;
 import fpt.aptech.springbootapp.repositories.ModuleB.OvertimeTicketRepository;
 import fpt.aptech.springbootapp.repositories.UserRepository;
@@ -18,7 +21,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
-import java.math.BigDecimal;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -28,12 +30,17 @@ public class OvertimeTicketServiceImpl implements OvertimeTicketService {
     private final OvertimeTicketRepository overtimeTicketRepository;
     private final UserRepository userRepository;
     private final OvertimeRequestRepository overtimeRequestRepository;
+    private final LineRepository lineRepository;
 
     @Autowired
-    public OvertimeTicketServiceImpl(OvertimeTicketRepository overtimeTicketRepository, UserRepository userRepository, OvertimeRequestRepository overtimeRequestRepository) {
+    public OvertimeTicketServiceImpl(OvertimeTicketRepository overtimeTicketRepository,
+                                     UserRepository userRepository,
+                                     OvertimeRequestRepository overtimeRequestRepository,
+                                     LineRepository lineRepository) {
         this.overtimeTicketRepository = overtimeTicketRepository;
         this.userRepository = userRepository;
         this.overtimeRequestRepository = overtimeRequestRepository;
+        this.lineRepository = lineRepository;
     }
 
     @Override
@@ -91,7 +98,8 @@ public class OvertimeTicketServiceImpl implements OvertimeTicketService {
         if(manager == null){
             throw new IllegalArgumentException("Manager not found");
         }
-        if(manager.getRole().getId() != 199010001){
+
+        if(!manager.getRole().getName().equals("Manager")){
             throw new IllegalArgumentException("Not a manager");
         }
 
@@ -107,25 +115,38 @@ public class OvertimeTicketServiceImpl implements OvertimeTicketService {
             throw new IllegalArgumentException("Overtime request not found");
         }
 
-        if(overtimeTicket.getOvertimeTime().compareTo(BigDecimal.ZERO) <= 0){ //overtime time must be greater than 0
-            throw new IllegalArgumentException("Valid overtime time is required");
-        }
-
-        if (overtimeTicket.getEmployees() == null || overtimeTicket.getEmployees().isEmpty()) {
+        if (overtimeTicket.getOvertimeEmployees() == null || overtimeTicket.getOvertimeEmployees().isEmpty()) {
             throw new IllegalArgumentException("At least one employee is required for the overtime ticket");
         }
 
-        Set<TbUser> managedEmployees = new HashSet<>();
-        for (TbUser employee : overtimeTicket.getEmployees()) {
-            if (employee == null || employee.getId() == null) {
-                throw new IllegalArgumentException("Employee and employee ID are required");
+        Set<TbOvertimeTicketEmployee> managedOvertimeEmployees = new HashSet<>();
+        for (TbOvertimeTicketEmployee association : overtimeTicket.getOvertimeEmployees()) {
+            if (association == null) {
+                throw new IllegalArgumentException("Employee association cannot be null");
             }
-            TbUser managedEmployee = userRepository.findById(employee.getId())
-                    .orElseThrow(() -> new IllegalArgumentException("Employee not found with id: " + employee.getId()));
-            managedEmployees.add(managedEmployee);
-        }
-        overtimeTicket.setEmployees(managedEmployees);
+            if (association.getEmployee() == null || association.getEmployee().getId() == null) {
+                throw new IllegalArgumentException("Employee and employee ID are required in the association");
+            }
+            if (association.getLine() == null || association.getLine().getId() == null) {
+                throw new IllegalArgumentException("Line and line ID are required in the association");
+            }
 
+            // Fetch the managed employee
+            TbUser managedEmployee = userRepository.findById(association.getEmployee().getId())
+                    .orElseThrow(() -> new IllegalArgumentException("Employee not found with id: " + association.getEmployee().getId()));
+
+            // Fetch the managed line
+            TbLine managedLine = lineRepository.findById(association.getLine().getId())
+                    .orElseThrow(() -> new IllegalArgumentException("Line not found with id: " + association.getLine().getId()));
+
+            // Create new, managed association object
+            TbOvertimeTicketEmployee managedAssociation = new TbOvertimeTicketEmployee();
+            managedAssociation.setEmployee(managedEmployee);
+            managedAssociation.setLine(managedLine);
+            managedAssociation.setOvertimeTicket(overtimeTicket);
+            managedOvertimeEmployees.add(managedAssociation);
+        }
+        overtimeTicket.setOvertimeEmployees(managedOvertimeEmployees);
         overtimeTicket.setCreatedAt(java.time.Instant.now());
         overtimeTicketRepository.save(overtimeTicket);
     }
