@@ -129,8 +129,7 @@ function RequestRow(props) {
             } catch (e) {
                 return dateString;
             }
-        }
-        else{
+        } else {
             //default format
             return new Date(dateString).toLocaleString("default");
         }
@@ -260,7 +259,8 @@ function OvertimeRequestList() {
                     mb: 4,
                     bgcolor: 'grey.50',
                     display: 'flex',
-                    alignItems: 'center',
+                    flexDirection: {xs: 'column', sm: 'row'},
+                    alignItems: {sm: 'center'},
                     flexWrap: 'wrap',
                     gap: 2,
                 }}
@@ -280,7 +280,7 @@ function OvertimeRequestList() {
                     variant="outlined"
                     size="small"
                     sx={{
-                        width: 250,
+                        width: {xs: '100%', sm: 250},
                         backgroundColor: 'white',
                         borderRadius: 1,
                         '& .MuiOutlinedInput-root': {borderRadius: 1}
@@ -293,7 +293,12 @@ function OvertimeRequestList() {
                         ),
                     }}
                 />
-                <Box sx={{display: 'flex', alignItems: 'center', gap: 1}}>
+                <Box sx={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 1,
+                    width: {xs: '100%', sm: 'auto'}
+                }}>
                     <Typography variant="body2" sx={{fontWeight: 'medium', ml: 1}}>
                         Status:
                     </Typography>
@@ -310,13 +315,16 @@ function OvertimeRequestList() {
                         </ToggleButtonGroup>
                     </Box>
                 </Box>
-                <Box sx={{flexGrow: 1}}/>
+                <Box sx={{flexGrow: 1, display: {xs: 'none', sm: 'block'}}}/>
                 <Button
                     variant="contained"
                     color="primary"
                     startIcon={<AddIcon/>}
                     onClick={() => navigate("/overtime-request/create")}
-                    sx={{minWidth: 'auto'}}
+                    sx={{
+                        minWidth: 'auto',
+                        width: {xs: '100%', sm: 'auto'}
+                    }}
                 >
                     Create
                 </Button>
@@ -330,7 +338,6 @@ function OvertimeRequestList() {
                         sx={{
                             tableLayout: 'fixed',
                             width: '100%',
-                            minWidth: '750px',
                         }}
                     >
                         <EnhancedTableHead

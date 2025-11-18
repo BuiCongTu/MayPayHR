@@ -39,9 +39,9 @@ const useAuth = () => {
 
 const headCells = [
     {id: 'id', label: 'Ticket ID', numeric: false, width: '15%'},
-    {id: 'requesterName', label: 'Requested By', numeric: false, width: '15%'},
-    {id: 'confirmedByName', label: 'Confirmed By', numeric: false, width: '15%'},
-    {id: 'approvedByName', label: 'Approved By', numeric: false, width: '15%'},
+    {id: 'overtimeRequest.factoryManager.fullName', label: 'Requested By', numeric: false, width: '15%'},
+    {id: 'confirmedBy.fullName', label: 'Confirmed By', numeric: false, width: '15%'},
+    {id: 'approvedBy.fullName', label: 'Approved By', numeric: false, width: '15%'},
     {id: 'status', label: 'Status', numeric: false, width: '15%'},
 ];
 
