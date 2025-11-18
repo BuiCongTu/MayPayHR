@@ -27,15 +27,18 @@ public class OvertimeRequestServiceImpl implements OvertimeRequestService {
     private final OvertimeRequestRepository overtimeRequestRepository;
     private final DepartmentRepository departmentRepository;
     private final UserRepository userRepository;
+    private final OvertimeRequestMapper overtimeRequestMapper;
 
     @Autowired
     public OvertimeRequestServiceImpl(
             OvertimeRequestRepository overtimeRequestRepository,
             DepartmentRepository departmentRepository,
-            UserRepository userRepository) {
+            UserRepository userRepository,
+            OvertimeRequestMapper overtimeRequestMapper) {
         this.overtimeRequestRepository = overtimeRequestRepository;
         this.departmentRepository = departmentRepository;
         this.userRepository = userRepository;
+        this.overtimeRequestMapper = overtimeRequestMapper;
     }
 
     @Override
@@ -116,6 +119,6 @@ public class OvertimeRequestServiceImpl implements OvertimeRequestService {
     public Page<OvertimeRequestDTO> getFilteredRequests(OvertimeRequestFilter filter, Pageable pageable) {
         Specification<TbOvertimeRequest> spec = OvertimeRequestSpecification.build(filter);
         return overtimeRequestRepository.findAll(spec, pageable)
-                .map(OvertimeRequestMapper::toDTO);
+                .map(overtimeRequestMapper::toDTO);
     }
 }

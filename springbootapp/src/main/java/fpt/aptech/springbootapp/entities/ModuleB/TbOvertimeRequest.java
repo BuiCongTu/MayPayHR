@@ -33,7 +33,6 @@ public class TbOvertimeRequest {
     @JoinColumn(name = "department_id", nullable = false)
     private TbDepartment department;
 
-    // [NEW] Date and Time Fields
     @NotNull
     @Column(name = "overtime_date", nullable = false)
     private LocalDate overtimeDate;
@@ -50,6 +49,23 @@ public class TbOvertimeRequest {
     @NotNull
     @Column(name = "overtime_time", nullable = false)
     private Double overtimeTime;
+
+    @PrePersist
+    @PreUpdate
+    private void calculateDuration() {
+        if (this.startTime != null && this.endTime != null) {
+            // Calculate duration in minutes
+            long minutes = java.time.Duration.between(this.startTime, this.endTime).toMinutes();
+
+            // Handle edge case (crossing midnight)
+            if (minutes < 0) {
+                minutes += 1440; // Add 24 hours
+            }
+
+            // Convert to hours (e.g., 90 min -> 1.5 hours)
+            this.overtimeTime = Math.round((minutes / 60.0) * 100.0) / 100.0;
+        }
+    }
 
     @NotNull
     @Column(name = "num_employees", nullable = false)

@@ -5,6 +5,8 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.time.Instant;
+import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.List;
 
 @Getter
@@ -12,6 +14,9 @@ import java.util.List;
 public class OvertimeRequestDTO {
     private Integer id;
     private OvertimeRequestStatus status;
+    private LocalDate overtimeDate;
+    private LocalTime startTime;
+    private LocalTime endTime;
     private Double overtimeTime;
     private Integer numEmployees;
     private String details;
