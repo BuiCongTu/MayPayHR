@@ -621,6 +621,28 @@ CREATE INDEX idx_user_used ON tbPasswordResetToken(user_id, used);
 GO
 
 
+--some additional changes
+ALTER TABLE tbOvertimeTicket
+DROP COLUMN overtime_time;
+GO
+
+ALTER TABLE tb_overtime_ticket_employees
+ADD 
+    line_id INT NULL, 
+    [status] VARCHAR(20) NOT NULL DEFAULT 'pending';
+GO
+
+ALTER TABLE tb_overtime_ticket_employees
+ADD CONSTRAINT FK_OvertimeEmployees_Line 
+    FOREIGN KEY (line_id) REFERENCES tbLine(line_id);
+GO
+
+ALTER TABLE tb_overtime_ticket_employees
+ADD CONSTRAINT CHK_OvertimeEmployee_Status
+    CHECK ([status] IN ('pending', 'ok', 'rejected'));
+GO
+
+
 SELECT * FROM tbRole
 SELECT * FROM tbLeaveReason
 SELECT * FROM tbSkillLevel
