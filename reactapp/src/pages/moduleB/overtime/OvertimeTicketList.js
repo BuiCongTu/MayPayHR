@@ -37,13 +37,11 @@ const useAuth = () => {
 // -----------------------------
 
 
-// --- HeadCells for Manager's Standalone View ---
 const headCells = [
     {id: 'id', label: 'Ticket ID', numeric: false, width: '15%'},
-    {id: 'overtimeRequest.factoryManager.fullName', label: 'Requested By', numeric: false, width: '15%'},
-    {id: 'confirmedBy.fullName', label: 'Confirmed By', numeric: false, width: '15%'},
-    {id: 'approvedBy.fullName', label: 'Approved By', numeric: false, width: '15%'},
-    // {id: 'overtimeTime', label: 'Overtime (h)', numeric: true, width: '10%'},
+    {id: 'requesterName', label: 'Requested By', numeric: false, width: '15%'},
+    {id: 'confirmedByName', label: 'Confirmed By', numeric: false, width: '15%'},
+    {id: 'approvedByName', label: 'Approved By', numeric: false, width: '15%'},
     {id: 'status', label: 'Status', numeric: false, width: '15%'},
 ];
 
@@ -146,14 +144,13 @@ function TicketRow(props) {
                 <TableCell align="left" sx={cellTruncateStyle}>
                     {ticket.approvedByName || 'N/A'}
                 </TableCell>
-                {/*<TableCell align="right">{ticket.overtimeTime || 0}</TableCell>*/}
                 <TableCell align="left">
                     {getStatusChip(ticket.status)}
                 </TableCell>
             </TableRow>
 
             <TableRow>
-                <TableCell style={{paddingBottom: 0, paddingTop: 0}} colSpan={6}>
+                <TableCell style={{paddingBottom: 0, paddingTop: 0}} colSpan={5}>
                     <Collapse in={isExpanded} timeout="auto" unmountOnExit>
                         <Box sx={{margin: 2, padding: 2, backgroundColor: 'grey.100', borderRadius: 2}}>
                             <Typography variant="h6" gutterBottom component="div">
@@ -380,7 +377,7 @@ function OvertimeTicketList() {
                         <TableBody>
                             {tickets.length === 0 ? (
                                 <TableRow>
-                                    <TableCell colSpan={6} align="center" sx={{py: 6}}>
+                                    <TableCell colSpan={5} align="center" sx={{py: 6}}>
                                         <Typography variant="h6" color="text.secondary">
                                             No overtime tickets found.
                                         </Typography>
