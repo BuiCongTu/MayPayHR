@@ -1,73 +1,40 @@
 import React, {useState, useEffect} from 'react';
 import {getFilteredOvertimeRequest} from "../../../services/moduleB/overtimeService";
 import {useNavigate} from "react-router-dom";
-
 import {
-    Box,
-    Typography,
-    Button,
-    Paper,
-    TextField,
-    InputAdornment,
-    ToggleButton,
-    ToggleButtonGroup,
-    Table,
-    TableBody,
-    TableCell,
-    TableContainer,
-    TableHead,
-    TableRow,
-    TableSortLabel,
-    Collapse,
-    Chip,
-    colors
+    Box, Typography, Button, Paper, TextField, InputAdornment, ToggleButton, ToggleButtonGroup,
+    Table, TableBody, TableCell, TableContainer, TableHead, TableRow, TableSortLabel, Collapse, Chip, colors
 } from '@mui/material';
-
-// Import MUI Icons
 import SearchIcon from '@mui/icons-material/Search';
 import AddIcon from '@mui/icons-material/Add';
 import {visuallyHidden} from '@mui/utils';
 import RequestTicketList from './RequestTicketList';
 
 const headCells = [
-    {id: 'id', label: 'ID', numeric: false, width: '15%'},
-    {id: 'departmentName', label: 'Department', numeric: false, width: '25%'},
-    {id: 'numEmployees', label: 'Employee #', numeric: true, width: '15%'},
-    {id: 'overtimeTime', label: 'Overtime (h)', numeric: true, width: '15%'},
-    {id: 'createdAt', label: 'Created At', numeric: false, width: '15%'},
-    {id: 'status', label: 'Status', numeric: false, width: '15%'},
+    {id: 'id', label: 'ID', width: '10%'},
+    {id: 'departmentName', label: 'Department', width: '20%'},
+    {id: 'overtimeDate', label: 'Date', width: '15%'},
+    {id: 'startTime', label: 'Time', width: '15%'},
+    {id: 'numEmployees', label: 'Empl. #', numeric: true, width: '10%'},
+    {id: 'status', label: 'Status', width: '15%'},
 ];
 
 function EnhancedTableHead(props) {
     const {order, orderBy, onRequestSort} = props;
-    const createSortHandler = (property) => (event) => {
-        onRequestSort(event, property);
-    };
-
     return (
         <TableHead>
-            <TableRow sx={{
-                "& th": {
-                    fontWeight: 'bold',
-                    backgroundColor: colors.blue[50],
-                }
-            }}>
+            <TableRow sx={{"& th": {fontWeight: 'bold', backgroundColor: colors.blue[50]}}}>
                 {headCells.map((headCell) => (
                     <TableCell
                         key={headCell.id}
-                        sx={{
-                            width: headCell.width,
-                            whiteSpace: 'nowrap',
-                            overflow: 'hidden',
-                            textOverflow: 'ellipsis'
-                        }}
                         align={headCell.numeric ? 'right' : 'left'}
                         sortDirection={orderBy === headCell.id ? order : false}
+                        width={headCell.width}
                     >
                         <TableSortLabel
                             active={orderBy === headCell.id}
                             direction={orderBy === headCell.id ? order : 'asc'}
-                            onClick={createSortHandler(headCell.id)}
+                            onClick={(e) => onRequestSort(e, headCell.id)}
                         >
                             {headCell.label}
                             {orderBy === headCell.id ? (
@@ -83,106 +50,54 @@ function EnhancedTableHead(props) {
     );
 }
 
-function RequestRow(props) {
-    const {request, isExpanded, onToggle} = props;
-
+function RequestRow({request, isExpanded, onToggle}) {
     const getStatusChip = (status) => {
-        let color;
-        let label = status.charAt(0).toUpperCase() + status.slice(1);
+        let color = 'default';
+        let label = status ? status.toUpperCase() : 'UNKNOWN';
 
-        switch (status) {
+        switch (status?.toLowerCase()) {
             case 'pending':
                 color = 'warning';
                 break;
+            case 'open':
+                color = 'info';
+                break;     // Ready for tickets
             case 'processed':
                 color = 'success';
+                break; // Finished
+            case 'rejected':
+                color = 'error';
                 break;
-            default:
+            case 'expired':
                 color = 'default';
-                label = 'Unknown';
+                break;
         }
-
-        return <Chip label={label} color={color} size="small" sx={{minWidth: 80}}/>;
+        return <Chip label={label} color={color} size="small" sx={{minWidth: 80, fontWeight: 'bold'}}/>;
     };
 
-    const formatDate = (dateString, option) => {
-        if (!dateString) return 'N/A';
-        if (option === 'date') {
-            try {
-                return new Date(dateString).toLocaleDateString("default", {
-                    day: "2-digit",
-                    month: "short",
-                    year: "numeric"
-                });
-            } catch (e) {
-                return dateString;
-            }
-        } else if (option === 'datetime') {
-            try {
-                return new Date(dateString).toLocaleString("default", {
-                    day: "2-digit",
-                    month: "short",
-                    year: "numeric",
-                    hour: "2-digit",
-                    minute: "2-digit"
-                });
-            } catch (e) {
-                return dateString;
-            }
-        } else {
-            //default format
-            return new Date(dateString).toLocaleString("default");
-        }
-    };
-
-    const cellTruncateStyle = {
-        whiteSpace: 'nowrap',
-        overflow: 'hidden',
-        textOverflow: 'ellipsis',
-        maxWidth: 0,
-    };
+    // Format time HH:mm:ss -> HH:mm
+    const fmtTime = (t) => t ? t.substring(0, 5) : '';
 
     return (
         <React.Fragment>
-            <TableRow
-                hover
-                onClick={onToggle}
-                sx={{
-                    '& > *': {borderBottom: 'unset'},
-                    cursor: 'pointer'
-                }}
-            >
-                <TableCell component="th" scope="row" sx={cellTruncateStyle}>
-                    {request.id}
-                </TableCell>
-                <TableCell align="left" sx={cellTruncateStyle}>
-                    {request.departmentName || 'N/A'}
-                </TableCell>
-                <TableCell align="right">{request.numEmployees || 'N/A'}</TableCell>
-                <TableCell align="right">{request.overtimeTime || 0}</TableCell>
-                <TableCell align="left" sx={cellTruncateStyle}>
-                    {formatDate(request.createdAt, 'date')}
-                </TableCell>
-                <TableCell align="left">
-                    {getStatusChip(request.status)}
-                </TableCell>
+            <TableRow hover onClick={onToggle} sx={{cursor: 'pointer'}}>
+                <TableCell>{request.id}</TableCell>
+                <TableCell>{request.departmentName || 'N/A'}</TableCell>
+                <TableCell>{request.overtimeDate}</TableCell>
+                <TableCell>{fmtTime(request.startTime)} - {fmtTime(request.endTime)}</TableCell>
+                <TableCell align="right">{request.numEmployees}</TableCell>
+                <TableCell>{getStatusChip(request.status)}</TableCell>
             </TableRow>
-
             <TableRow>
                 <TableCell style={{paddingBottom: 0, paddingTop: 0}} colSpan={6}>
                     <Collapse in={isExpanded} timeout="auto" unmountOnExit>
-                        <Box sx={{margin: 2, padding: 2, backgroundColor: 'grey.100', borderRadius: 2}}>
-                            <Typography variant="h6" gutterBottom component="div">
-                                Request Details
-                            </Typography>
-                            <Typography variant="body2" sx={{mb: 1}}>
-                                <strong>Details:</strong> {request.details || 'No details provided.'}
-                            </Typography>
-                            <Typography variant="body2">
-                                <strong>Date:</strong> {formatDate(request.createdAt, 'datetime') || 'N/A'}
+                        <Box sx={{m: 2, p: 2, bgcolor: 'grey.50', borderRadius: 2, border: '1px solid #e0e0e0'}}>
+                            <Typography variant="subtitle2" gutterBottom color="primary">REQUEST DETAILS</Typography>
+                            <Typography variant="body2"><strong>Reason:</strong> {request.details}</Typography>
+                            <Typography variant="body2"
+                                        sx={{mb: 2}}><strong>Created:</strong> {new Date(request.createdAt).toLocaleString()}
                             </Typography>
 
-                            {/* Overtime Ticket List Section for each Request*/}
                             <RequestTicketList request={request}/>
                         </Box>
                     </Collapse>
@@ -192,185 +107,84 @@ function RequestRow(props) {
     );
 }
 
-
-// --- Main List Component ---
-function OvertimeRequestList() {
+export default function OvertimeRequestList() {
     const [requests, setRequests] = useState([]);
     const [page, setPage] = useState(0);
     const [expanded, setExpanded] = useState(false);
-    const navigate = useNavigate();
     const [statusFilter, setStatusFilter] = useState('');
-    const [departmentNameSearch, setDepartmentNameSearch] = useState('');
-    const [debouncedDepartmentName, setDebouncedDepartmentName] = useState(departmentNameSearch);
+    const [departmentSearch, setDepartmentSearch] = useState('');
+    const [debouncedSearch, setDebouncedSearch] = useState('');
+    const navigate = useNavigate();
     const [order, setOrder] = useState('desc');
     const [orderBy, setOrderBy] = useState('id');
 
     useEffect(() => {
-        const handler = setTimeout(() => {
-            setDebouncedDepartmentName(departmentNameSearch);
-            setPage(0);
-        }, 500);
-        return () => clearTimeout(handler);
-    }, [departmentNameSearch]);
+        const t = setTimeout(() => setDebouncedSearch(departmentSearch), 500);
+        return () => clearTimeout(t);
+    }, [departmentSearch]);
 
     useEffect(() => {
-        async function loadData() {
-            const filter = {
-                status: statusFilter || null,
-                departmentName: debouncedDepartmentName || null,
-            };
-            const sortString = `${orderBy},${order}`;
-            const pageable = {page, size: 10, sort: sortString};
+        async function load() {
             try {
-                const data = await getFilteredOvertimeRequest(filter, pageable);
+                const filter = {status: statusFilter || null, departmentName: debouncedSearch || null};
+                const data = await getFilteredOvertimeRequest(filter, {page, size: 10, sort: `${orderBy},${order}`});
                 setRequests(data?.content || []);
-            } catch (err) {
-                console.error("Failed to fetch overtime requests", err);
+            } catch (e) {
+                console.error(e);
             }
         }
 
-        loadData();
-    }, [page, statusFilter, debouncedDepartmentName, order, orderBy]);
-
-    const handleExpandChange = (panelId) => {
-        setExpanded(isExpanded => (isExpanded === panelId ? false : panelId));
-    };
-
-    const handleStatusChange = (event, newStatus) => {
-        if (newStatus !== null) {
-            setStatusFilter(newStatus);
-            setPage(0);
-        }
-    };
-
-    const handleSortRequest = (event, property) => {
-        const isAsc = orderBy === property && order === 'asc';
-        setOrder(isAsc ? 'desc' : 'asc');
-        setOrderBy(property);
-        setPage(0);
-    };
+        load();
+    }, [statusFilter, debouncedSearch, order, orderBy, page]);
 
     return (
         <Box>
-            <Paper
-                elevation={1}
-                sx={{
-                    p: 2,
-                    mb: 4,
-                    bgcolor: 'grey.50',
-                    display: 'flex',
-                    flexDirection: {xs: 'column', sm: 'row'},
-                    alignItems: {sm: 'center'},
-                    flexWrap: 'wrap',
-                    gap: 2,
-                }}
-            >
-                <Typography
-                    variant="h6"
-                    component="h2"
-                    sx={{fontWeight: 'bold', mr: 1}}
-                >
-                    Overtime Requests
-                </Typography>
+            <Paper elevation={0} sx={{
+                p: 2,
+                mb: 2,
+                bgcolor: 'white',
+                border: '1px solid #eee',
+                display: 'flex',
+                gap: 2,
+                flexWrap: 'wrap',
+                alignItems: 'center'
+            }}>
+                <Typography variant="h6" sx={{fontWeight: 'bold', mr: 2}}>Overtime Requests</Typography>
                 <TextField
-                    id="deptSearch"
-                    placeholder="Search by Department..."
-                    value={departmentNameSearch}
-                    onChange={e => setDepartmentNameSearch(e.target.value)}
-                    variant="outlined"
                     size="small"
-                    sx={{
-                        width: {xs: '100%', sm: 250},
-                        backgroundColor: 'white',
-                        borderRadius: 1,
-                        '& .MuiOutlinedInput-root': {borderRadius: 1}
-                    }}
-                    InputProps={{
-                        startAdornment: (
-                            <InputAdornment position="start">
-                                <SearchIcon/>
-                            </InputAdornment>
-                        ),
-                    }}
+                    placeholder="Search Department..."
+                    value={departmentSearch}
+                    onChange={e => setDepartmentSearch(e.target.value)}
+                    InputProps={{startAdornment: <InputAdornment position="start"><SearchIcon/></InputAdornment>}}
                 />
-                <Box sx={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 1,
-                    width: {xs: '100%', sm: 'auto'}
-                }}>
-                    <Typography variant="body2" sx={{fontWeight: 'medium', ml: 1}}>
-                        Status:
-                    </Typography>
-                    <Box sx={{backgroundColor: 'white', borderRadius: 1, overflow: 'hidden'}}>
-                        <ToggleButtonGroup
-                            value={statusFilter}
-                            exclusive
-                            onChange={handleStatusChange}
-                            size="small"
-                        >
-                            <ToggleButton value="">All</ToggleButton>
-                            <ToggleButton value="pending">Pending</ToggleButton>
-                            <ToggleButton value="processed">Processed</ToggleButton>
-                        </ToggleButtonGroup>
-                    </Box>
-                </Box>
-                <Box sx={{flexGrow: 1, display: {xs: 'none', sm: 'block'}}}/>
-                <Button
-                    variant="contained"
-                    color="primary"
-                    startIcon={<AddIcon/>}
-                    onClick={() => navigate("/overtime-request/create")}
-                    sx={{
-                        minWidth: 'auto',
-                        width: {xs: '100%', sm: 'auto'}
-                    }}
-                >
-                    Create
-                </Button>
+                <ToggleButtonGroup value={statusFilter} exclusive onChange={(e, v) => setStatusFilter(v)} size="small">
+                    <ToggleButton value="">All</ToggleButton>
+                    <ToggleButton value="pending">Pending</ToggleButton>
+                    <ToggleButton value="open">Open</ToggleButton>
+                    <ToggleButton value="processed">Processed</ToggleButton>
+                </ToggleButtonGroup>
+                <Box flexGrow={1}/>
+                <Button variant="contained" startIcon={<AddIcon/>}
+                        onClick={() => navigate("/overtime-request/create")}>Create</Button>
             </Paper>
 
-            <Paper sx={{width: '100%', mb: 2}}>
-                <TableContainer>
-                    <Table
-                        aria-labelledby="tableTitle"
-                        size="medium"
-                        sx={{
-                            tableLayout: 'fixed',
-                            width: '100%',
-                        }}
-                    >
-                        <EnhancedTableHead
-                            order={order}
-                            orderBy={orderBy}
-                            onRequestSort={handleSortRequest}
-                        />
-                        <TableBody>
-                            {requests.length === 0 ? (
-                                <TableRow>
-                                    <TableCell colSpan={6} align="center" sx={{py: 6}}>
-                                        <Typography variant="h6" color="text.secondary">
-                                            No overtime requests found.
-                                        </Typography>
-                                    </TableCell>
-                                </TableRow>
-                            ) : (
-                                requests.map((req) => (
-                                    <RequestRow
-                                        key={req.id}
-                                        request={req}
-                                        isExpanded={expanded === req.id}
-                                        onToggle={() => handleExpandChange(req.id)}
-                                    />
-                                ))
-                            )}
-                        </TableBody>
-                    </Table>
-                </TableContainer>
-            </Paper>
-            {/* TODO: Add Pagination controls here */}
+            <TableContainer component={Paper} elevation={0} sx={{border: '1px solid #eee'}}>
+                <Table>
+                    <EnhancedTableHead order={order} orderBy={orderBy} onRequestSort={(e, p) => {
+                        const isAsc = orderBy === p && order === 'asc';
+                        setOrder(isAsc ? 'desc' : 'asc');
+                        setOrderBy(p);
+                    }}/>
+                    <TableBody>
+                        {requests.length === 0 ? (
+                            <TableRow><TableCell colSpan={6} align="center">No requests found.</TableCell></TableRow>
+                        ) : requests.map(req => (
+                            <RequestRow key={req.id} request={req} isExpanded={expanded === req.id}
+                                        onToggle={() => setExpanded(expanded === req.id ? false : req.id)}/>
+                        ))}
+                    </TableBody>
+                </Table>
+            </TableContainer>
         </Box>
     );
 }
-
-export default OvertimeRequestList;

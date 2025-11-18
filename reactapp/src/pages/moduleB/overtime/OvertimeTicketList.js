@@ -23,25 +23,22 @@ import {
     colors
 } from '@mui/material';
 
-// Import MUI Icons
 import SearchIcon from '@mui/icons-material/Search';
 import AddIcon from '@mui/icons-material/Add';
 import {visuallyHidden} from '@mui/utils';
 import EmployeeListTable from './EmployeeList';
 
-//TODO: Replace this with your actual auth context hook
+// TODO: Replace with your actual auth context
 const useAuth = () => {
-    // This is a mock. Replace it.
-    return {user: {id: 199050002}}; //user with role Manager
+    return {user: {id: 199050002}}; // Mock Manager ID
 };
-// -----------------------------
-
 
 const headCells = [
-    {id: 'id', label: 'Ticket ID', numeric: false, width: '15%'},
-    {id: 'overtimeRequest.factoryManager.fullName', label: 'Requested By', numeric: false, width: '15%'},
-    {id: 'confirmedBy.fullName', label: 'Confirmed By', numeric: false, width: '15%'},
-    {id: 'approvedBy.fullName', label: 'Approved By', numeric: false, width: '15%'},
+    {id: 'id', label: 'Ticket ID', numeric: false, width: '10%'},
+    {id: 'overtimeRequest.factoryManager.fullName', label: 'Requested By', numeric: false, width: '20%'},
+    {id: 'overtimeRequest.overtimeDate', label: 'Date', numeric: false, width: '15%'},
+    {id: 'overtimeRequest.startTime', label: 'Time', numeric: false, width: '15%'},
+    {id: 'reason', label: 'Reason', numeric: false, width: '25%'},
     {id: 'status', label: 'Status', numeric: false, width: '15%'},
 ];
 
@@ -71,18 +68,22 @@ function EnhancedTableHead(props) {
                         align={headCell.numeric ? 'right' : 'left'}
                         sortDirection={orderBy === headCell.id ? order : false}
                     >
-                        <TableSortLabel
-                            active={orderBy === headCell.id}
-                            direction={orderBy === headCell.id ? order : 'asc'}
-                            onClick={createSortHandler(headCell.id)}
-                        >
-                            {headCell.label}
-                            {orderBy === headCell.id ? (
-                                <Box component="span" sx={visuallyHidden}>
-                                    {order === 'desc' ? 'sorted descending' : 'sorted ascending'}
-                                </Box>
-                            ) : null}
-                        </TableSortLabel>
+                        {headCell.id !== 'details' ? (
+                            <TableSortLabel
+                                active={orderBy === headCell.id}
+                                direction={orderBy === headCell.id ? order : 'asc'}
+                                onClick={createSortHandler(headCell.id)}
+                            >
+                                {headCell.label}
+                                {orderBy === headCell.id ? (
+                                    <Box component="span" sx={visuallyHidden}>
+                                        {order === 'desc' ? 'sorted descending' : 'sorted ascending'}
+                                    </Box>
+                                ) : null}
+                            </TableSortLabel>
+                        ) : (
+                            headCell.label
+                        )}
                     </TableCell>
                 ))}
             </TableRow>
@@ -95,13 +96,19 @@ function TicketRow(props) {
 
     const getStatusChip = (status) => {
         let color;
-        let label = status ? status.charAt(0).toUpperCase() + status.slice(1).toLowerCase() : 'Unknown';
-        switch (status) {
+        let label = status ? status.toUpperCase() : 'UNKNOWN';
+        switch (status?.toLowerCase()) {
             case 'pending':
                 color = 'warning';
+                label = 'PENDING';
+                break;
+            case 'submitted':
+                color = 'info';
+                label = 'SUBMITTED';
                 break;
             case 'confirmed':
-                color = 'info';
+                color = 'primary';
+                label = 'WAITING FD';
                 break;
             case 'approved':
                 color = 'success';
@@ -112,8 +119,10 @@ function TicketRow(props) {
             default:
                 color = 'default';
         }
-        return <Chip label={label} color={color} size="small" sx={{minWidth: 90}}/>;
+        return <Chip label={label} color={color} size="small" sx={{minWidth: 90, fontWeight: 'bold'}}/>;
     };
+
+    const formatTime = (t) => t ? t.substring(0, 5) : '';
 
     const cellTruncateStyle = {
         whiteSpace: 'nowrap',
@@ -127,10 +136,7 @@ function TicketRow(props) {
             <TableRow
                 hover
                 onClick={onToggle}
-                sx={{
-                    '& > *': {borderBottom: 'unset'},
-                    cursor: 'pointer'
-                }}
+                sx={{'& > *': {borderBottom: 'unset'}, cursor: 'pointer'}}
             >
                 <TableCell component="th" scope="row" sx={cellTruncateStyle}>
                     {ticket.id}
@@ -139,10 +145,13 @@ function TicketRow(props) {
                     {ticket.requesterName || 'N/A'}
                 </TableCell>
                 <TableCell align="left" sx={cellTruncateStyle}>
-                    {ticket.confirmedByName || 'N/A'}
+                    {ticket.overtimeDate || 'N/A'}
                 </TableCell>
                 <TableCell align="left" sx={cellTruncateStyle}>
-                    {ticket.approvedByName || 'N/A'}
+                    {formatTime(ticket.startTime)} - {formatTime(ticket.endTime)}
+                </TableCell>
+                <TableCell align="left" sx={cellTruncateStyle}>
+                    {ticket.reason? `${ticket.reason}` : ticket.approvedByName ? `Approved by ${ticket.approvedByName}` : '-'}
                 </TableCell>
                 <TableCell align="left">
                     {getStatusChip(ticket.status)}
@@ -150,25 +159,21 @@ function TicketRow(props) {
             </TableRow>
 
             <TableRow>
-                <TableCell style={{paddingBottom: 0, paddingTop: 0}} colSpan={5}>
+                <TableCell style={{paddingBottom: 0, paddingTop: 0}} colSpan={6}>
                     <Collapse in={isExpanded} timeout="auto" unmountOnExit>
                         <Box sx={{margin: 2, padding: 2, backgroundColor: 'grey.100', borderRadius: 2}}>
-                            <Typography variant="h6" gutterBottom component="div">
-                                Ticket Details
+                            <Typography variant="h6" gutterBottom component="div">Ticket Details</Typography>
+                            <Typography variant="body2" sx={{mb: 1}}>
+                                <strong>Confirmed By:</strong> {ticket.confirmedByName || 'Pending'}
                             </Typography>
                             <Typography variant="body2" sx={{mb: 1}}>
-                                <strong>Request ID:</strong> {ticket.requestId || 'N/A'}
-                            </Typography>
-                            <Typography variant="body2" sx={{mb: 1}}>
-                                <strong>Reason:</strong> {ticket.reason || 'No reason provided.'}
-                            </Typography>
-                            <Typography variant="body2" sx={{mb: 1}}>
-                                <strong>Created At:</strong> {new Date(ticket.createdAt).toLocaleString() || 'N/A'}
+                                <strong>Approved By:</strong> {ticket.approvedByName || 'Pending'}
                             </Typography>
 
                             <Typography variant="body2" sx={{mb: 0.5, fontWeight: 'bold'}}>
                                 Employee List:
                             </Typography>
+                            {/* Pass the list to your existing EmployeeList component */}
                             <EmployeeListTable employees={ticket.employeeList}/>
                         </Box>
                     </Collapse>
@@ -178,53 +183,39 @@ function TicketRow(props) {
     );
 }
 
-
-// --- Main List Component (Standalone Manager View) ---
 function OvertimeTicketList() {
     const [tickets, setTickets] = useState([]);
     const [page, setPage] = useState(0);
     const [expanded, setExpanded] = useState(false);
     const navigate = useNavigate();
+
     const [order, setOrder] = useState('desc');
     const [orderBy, setOrderBy] = useState('id');
 
     const [statusFilter, setStatusFilter] = useState('');
     const [requesterNameSearch, setRequesterNameSearch] = useState('');
-    const [confirmedByNameSearch, setConfirmedByNameSearch] = useState('');
-    const [approvedByNameSearch, setApprovedByNameSearch] = useState('');
-
-    // --- Debounced values for searching ---
     const [debouncedRequester, setDebouncedRequester] = useState(requesterNameSearch);
-    const [debouncedConfirmed, setDebouncedConfirmed] = useState(confirmedByNameSearch);
-    const [debouncedApproved, setDebouncedApproved] = useState(approvedByNameSearch);
 
-    //TODO: Replace this with your actual auth context hook
     const {user: currentUser} = useAuth();
 
-    // Debounce search inputs
+    // Debounce search
     useEffect(() => {
         const handler = setTimeout(() => {
             setDebouncedRequester(requesterNameSearch);
-            setDebouncedConfirmed(confirmedByNameSearch);
-            setDebouncedApproved(approvedByNameSearch);
             setPage(0);
         }, 500);
         return () => clearTimeout(handler);
-    }, [requesterNameSearch, confirmedByNameSearch, approvedByNameSearch]);
+    }, [requesterNameSearch]);
 
-    // Main data fetching effect
+    // Data Fetching
     useEffect(() => {
         async function loadData() {
             if (!currentUser?.id) return;
 
             const filter = {
                 managerId: currentUser.id,
-
-                // Filters from the UI
                 status: statusFilter || null,
                 requesterName: debouncedRequester || null,
-                confirmedByName: debouncedConfirmed || null,
-                approvedByName: debouncedApproved || null,
             };
 
             const pageable = {
@@ -243,7 +234,7 @@ function OvertimeTicketList() {
         }
 
         loadData();
-    }, [page, statusFilter, debouncedRequester, debouncedConfirmed, debouncedApproved, order, orderBy, currentUser?.id]);
+    }, [page, statusFilter, debouncedRequester, order, orderBy, currentUser?.id]);
 
     const handleExpandChange = (panelId) => {
         setExpanded(isExpanded => (isExpanded === panelId ? false : panelId));
@@ -261,128 +252,62 @@ function OvertimeTicketList() {
         setPage(0);
     };
 
-    const commonSearchFieldProps = {
-        variant: "outlined",
-        size: "small",
-        sx: {
-            width: 250,
-            backgroundColor: 'white',
-            borderRadius: 1,
-            '& .MuiOutlinedInput-root': {borderRadius: 1}
-        },
-        InputProps: {
-            startAdornment: (
-                <InputAdornment position="start">
-                    <SearchIcon/>
-                </InputAdornment>
-            ),
-        }
-    };
-
     return (
         <Box>
-            <Paper
-                elevation={1}
-                sx={{
-                    p: 2,
-                    mb: 4,
-                    bgcolor: 'grey.50',
-                    display: 'flex',
-                    alignItems: 'center',
-                    flexWrap: 'wrap',
-                    gap: 2,
-                }}
-            >
-                <Typography
-                    variant="h5"
-                    component="h2"
-                    sx={{fontWeight: 'bold', mr: 1, width: '100%'}}
-                >
+            <Paper elevation={1} sx={{
+                p: 2,
+                mb: 4,
+                bgcolor: 'grey.50',
+                display: 'flex',
+                alignItems: 'center',
+                flexWrap: 'wrap',
+                gap: 2
+            }}>
+                <Typography variant="h5" component="h2" sx={{fontWeight: 'bold', mr: 1, width: '100%'}}>
                     My Overtime Tickets
                 </Typography>
 
-                {/* --- Updated Search Fields --- */}
                 <TextField
                     id="requesterSearch"
                     placeholder="Search by Requester..."
                     value={requesterNameSearch}
                     onChange={e => setRequesterNameSearch(e.target.value)}
-                    {...commonSearchFieldProps}
-                />
-                <TextField
-                    id="confirmedBySearch"
-                    placeholder="Search by Confirmed By..."
-                    value={confirmedByNameSearch}
-                    onChange={e => setConfirmedByNameSearch(e.target.value)}
-                    {...commonSearchFieldProps}
-                />
-                <TextField
-                    id="approvedBySearch"
-                    placeholder="Search by Approved By..."
-                    value={approvedByNameSearch}
-                    onChange={e => setApprovedByNameSearch(e.target.value)}
-                    {...commonSearchFieldProps}
+                    variant="outlined"
+                    size="small"
+                    sx={{width: 250, bgcolor: 'white'}}
+                    InputProps={{startAdornment: (<InputAdornment position="start"><SearchIcon/></InputAdornment>)}}
                 />
 
                 <Box sx={{display: 'flex', alignItems: 'center', gap: 1}}>
-                    <Typography variant="body2" sx={{fontWeight: 'medium', ml: 1}}>
-                        Status:
-                    </Typography>
-                    <Box sx={{backgroundColor: 'white', borderRadius: 1, overflow: 'hidden'}}>
-                        <ToggleButtonGroup
-                            value={statusFilter}
-                            exclusive
-                            onChange={handleStatusChange}
-                            size="small"
-                        >
-                            <ToggleButton value="">All</ToggleButton>
-                            <ToggleButton value="pending">Pending</ToggleButton>
-                            <ToggleButton value="confirmed">Confirmed</ToggleButton>
-                            <ToggleButton value="approved">Approved</ToggleButton>
-                            <ToggleButton value="rejected">Rejected</ToggleButton>
-                        </ToggleButtonGroup>
-                    </Box>
+                    <Typography variant="body2" sx={{fontWeight: 'medium', ml: 1}}>Status:</Typography>
+                    <ToggleButtonGroup value={statusFilter} exclusive onChange={handleStatusChange} size="small"
+                                       sx={{bgcolor: 'white'}}>
+                        <ToggleButton value="">All</ToggleButton>
+                        <ToggleButton value="pending">Pending</ToggleButton>
+                        <ToggleButton value="submitted">Submitted</ToggleButton>
+                        <ToggleButton value="confirmed">Confirmed</ToggleButton>
+                        <ToggleButton value="approved">Approved</ToggleButton>
+                        <ToggleButton value="rejected">Rejected</ToggleButton>
+                    </ToggleButtonGroup>
                 </Box>
 
                 <Box sx={{flexGrow: 1}}/>
 
-                <Button
-                    variant="contained"
-                    color="primary"
-                    startIcon={<AddIcon/>}
-                    onClick={() => navigate("/overtime-ticket/create")}
-                    sx={{minWidth: 'auto'}}
-                >
+                <Button variant="contained" color="primary" startIcon={<AddIcon/>}
+                        onClick={() => navigate("/overtime-ticket/create")} sx={{minWidth: 'auto'}}>
                     Create
                 </Button>
             </Paper>
 
-            {/* --- Table Section --- */}
             <Paper sx={{width: '100%', mb: 2}}>
                 <TableContainer>
-                    <Table
-                        aria-labelledby="tableTitle"
-                        size={"medium"}
-                        sx={{
-                            tableLayout: 'fixed',
-                            width: '100%',
-                            minWidth: '900px',
-                        }}
-                    >
-                        <EnhancedTableHead
-                            order={order}
-                            orderBy={orderBy}
-                            onRequestSort={handleSortRequest}
-                        />
+                    <Table aria-labelledby="tableTitle" size={"medium"}
+                           sx={{tableLayout: 'fixed', width: '100%', minWidth: '900px'}}>
+                        <EnhancedTableHead order={order} orderBy={orderBy} onRequestSort={handleSortRequest}/>
                         <TableBody>
                             {tickets.length === 0 ? (
-                                <TableRow>
-                                    <TableCell colSpan={5} align="center" sx={{py: 6}}>
-                                        <Typography variant="h6" color="text.secondary">
-                                            No overtime tickets found.
-                                        </Typography>
-                                    </TableCell>
-                                </TableRow>
+                                <TableRow><TableCell colSpan={6} align="center" sx={{py: 6}}>No overtime tickets
+                                    found.</TableCell></TableRow>
                             ) : (
                                 tickets.map((ticket) => (
                                     <TicketRow
@@ -397,10 +322,6 @@ function OvertimeTicketList() {
                     </Table>
                 </TableContainer>
             </Paper>
-
-            <Box>
-                {/* TODO: Add Pagination controls here */}
-            </Box>
         </Box>
     );
 }
