@@ -12,7 +12,7 @@ import RequestTicketList from './RequestTicketList';
 
 const headCells = [
     {id: 'id', label: 'ID', width: '10%'},
-    {id: 'departmentName', label: 'Department', width: '20%'},
+    {id: 'departmentName', label: 'Department', width: '35%'},
     {id: 'overtimeDate', label: 'Date', width: '15%'},
     {id: 'startTime', label: 'Time', width: '15%'},
     {id: 'numEmployees', label: 'Empl. #', numeric: true, width: '10%'},
@@ -30,13 +30,21 @@ function EnhancedTableHead(props) {
                         align={headCell.numeric ? 'right' : 'left'}
                         sortDirection={orderBy === headCell.id ? order : false}
                         width={headCell.width}
+                        sx={{ overflow: 'hidden' }}
                     >
                         <TableSortLabel
                             active={orderBy === headCell.id}
                             direction={orderBy === headCell.id ? order : 'asc'}
                             onClick={(e) => onRequestSort(e, headCell.id)}
                         >
-                            {headCell.label}
+                            <Box component="span" sx={{
+                                whiteSpace: 'nowrap',
+                                overflow: 'hidden',
+                                textOverflow: 'ellipsis',
+                                display: 'block'
+                            }}>
+                                {headCell.label}
+                            </Box>
                             {orderBy === headCell.id ? (
                                 <Box component="span" sx={visuallyHidden}>
                                     {order === 'desc' ? 'sorted descending' : 'sorted ascending'}
@@ -78,13 +86,37 @@ function RequestRow({request, isExpanded, onToggle}) {
     // Format time HH:mm:ss -> HH:mm
     const fmtTime = (t) => t ? t.substring(0, 5) : '';
 
+    // Style to force ellipsis
+    const ellipsisStyle = {
+        whiteSpace: 'nowrap',
+        overflow: 'hidden',
+        textOverflow: 'ellipsis',
+        display: 'block'
+    };
+
     return (
         <React.Fragment>
             <TableRow hover onClick={onToggle} sx={{cursor: 'pointer'}}>
-                <TableCell>{request.id}</TableCell>
-                <TableCell>{request.departmentName || 'N/A'}</TableCell>
-                <TableCell>{request.overtimeDate}</TableCell>
-                <TableCell>{fmtTime(request.startTime)} - {fmtTime(request.endTime)}</TableCell>
+                <TableCell>
+                    <Box sx={ellipsisStyle} title={request.id}>
+                        {request.id}
+                    </Box>
+                </TableCell>
+                <TableCell>
+                    <Box sx={ellipsisStyle} title={request.departmentName}>
+                        {request.departmentName || 'N/A'}
+                    </Box>
+                </TableCell>
+                <TableCell>
+                    <Box sx={ellipsisStyle}>
+                        {request.overtimeDate}
+                    </Box>
+                </TableCell>
+                <TableCell>
+                    <Box sx={ellipsisStyle}>
+                        {fmtTime(request.startTime)} - {fmtTime(request.endTime)}
+                    </Box>
+                </TableCell>
                 <TableCell align="right">{request.numEmployees}</TableCell>
                 <TableCell>{getStatusChip(request.status)}</TableCell>
             </TableRow>
@@ -169,7 +201,7 @@ export default function OvertimeRequestList() {
             </Paper>
 
             <TableContainer component={Paper} elevation={0} sx={{border: '1px solid #eee'}}>
-                <Table>
+                <Table sx={{ tableLayout: 'fixed', minWidth: 650 }}>
                     <EnhancedTableHead order={order} orderBy={orderBy} onRequestSort={(e, p) => {
                         const isAsc = orderBy === p && order === 'asc';
                         setOrder(isAsc ? 'desc' : 'asc');
