@@ -57,7 +57,7 @@ const employeeHeadCells = [
     {id: 'employeePhone', label: 'Phone', numeric: false},
     {id: 'lineName', label: 'Line', numeric: false},
     {id: 'skillLevelName', label: 'Skill Level', numeric: false},
-    {id: 'status', label: 'Status', numeric: false}, // Already present
+    {id: 'status', label: 'Status', numeric: false},
 ];
 
 function EmployeeTableHead(props) {
@@ -69,7 +69,7 @@ function EmployeeTableHead(props) {
     const headStyle = {
         fontWeight: 'bold',
         backgroundColor: blue[100],
-        py: 1, // A bit more padding for modal
+        py: 1,
     };
 
     return (

@@ -41,7 +41,7 @@ import ActionReasonModal from './ActionReasonModal';
 
 const headCells = [
     {id: 'id', label: 'Ticket ID', numeric: false, width: '10%'},
-    {id: 'managerName', label: 'Manager', numeric: false, width: '15%'},
+    {id: 'manager.fullName', label: 'Manager Name', numeric: false, width: '15%'},
     {id: 'employeeList', label: 'Employees', numeric: false, width: '15%'},
     {id: 'reason', label: 'Reason', numeric: false, width: '20%'},
     {id: 'status', label: 'Status', numeric: false, width: '10%'},
