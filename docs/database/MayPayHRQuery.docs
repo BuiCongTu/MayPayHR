@@ -359,8 +359,8 @@ CREATE TABLE tbOvertimeRequest (
 GO
 
 DECLARE @DeptHoanThanh INT = (SELECT department_id FROM tbDepartment WHERE name = 'Finishing Center/Trung tâm hoàn thành');
-INSERT INTO tbOvertimeRequest (factory_manager_id, department_id, overtime_date, start_time, end_time, overtime_hours, num_employees, status, details)
-VALUES ((SELECT user_id FROM tbUser WHERE full_name = 'Nguyễn Thị A'), @DeptHoanThanh, '2025-10-30', '17:00:00', '20:30:00', 3.5, 50, 'open', 'Tăng ca hoàn thành đơn hàng gấp');
+INSERT INTO tbOvertimeRequest (factory_manager_id, department_id, overtime_date, start_time, end_time, overtime_time, num_employees, status, details)
+VALUES ((SELECT user_id FROM tbUser WHERE full_name = 'Nguyễn Thị A'), @DeptHoanThanh, '2025-12-30', '17:00:00', '20:30:00', 3.5, 50, 'open', 'Tăng ca hoàn thành đơn hàng gấp');
 GO
 
 -- =============================================
