@@ -77,6 +77,9 @@ public class OvertimeTicketMapper {
         if (employee != null) {
             empDto.setEmployeeId(employee.getId());
             empDto.setEmployeeName(employee.getFullName());
+            empDto.setEmployeePhone(employee.getPhone());
+            empDto.setEmployeeEmail(employee.getEmail());
+            empDto.setSkillLevelName(employee.getSkillLevel().getName());
         }
 
         TbLine line = association.getLine();

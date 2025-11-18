@@ -51,12 +51,13 @@ function stableSort(array, comparator) {
 
 // --- HeadCells for Employee Table ---
 const employeeHeadCells = [
-    {id: 'id', label: 'ID', numeric: false},
-    {id: 'fullName', label: 'Full Name', numeric: false},
-    {id: 'email', label: 'Email', numeric: false},
-    {id: 'phone', label: 'Phone', numeric: false},
+    {id: 'employeeId', label: 'ID', numeric: false},
+    {id: 'employeeName', label: 'Full Name', numeric: false},
+    {id: 'employeeEmail', label: 'Email', numeric: false},
+    {id: 'employeePhone', label: 'Phone', numeric: false},
     {id: 'lineName', label: 'Line', numeric: false},
     {id: 'skillLevelName', label: 'Skill Level', numeric: false},
+    {id: 'status', label: 'Status', numeric: false, width: '10%'},
 ];
 
 function EmployeeTableHead(props) {
