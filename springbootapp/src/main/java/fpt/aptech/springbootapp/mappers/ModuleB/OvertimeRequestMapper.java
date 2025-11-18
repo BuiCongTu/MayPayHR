@@ -2,39 +2,22 @@ package fpt.aptech.springbootapp.mappers.ModuleB;
 
 import fpt.aptech.springbootapp.dtos.ModuleB.OvertimeRequestDTO;
 import fpt.aptech.springbootapp.entities.ModuleB.TbOvertimeRequest;
+import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
 
-import java.util.stream.Collectors;
+@Mapper(componentModel = "spring", uses = {OvertimeTicketMapper.class})
+public interface OvertimeRequestMapper {
 
-public class OvertimeRequestMapper {
+    @Mapping(source = "factoryManager.id", target = "factoryManagerId")
+    @Mapping(source = "factoryManager.fullName", target = "factoryManagerName")
+    @Mapping(source = "department.id", target = "departmentId")
+    @Mapping(source = "department.name", target = "departmentName")
+    @Mapping(source = "overtimeTickets", target = "overtimeTickets")
+    OvertimeRequestDTO toDTO(TbOvertimeRequest request);
 
-    public static OvertimeRequestDTO toDTO(TbOvertimeRequest entity) {
-        if (entity == null) return null;
-
-        OvertimeRequestDTO dto = new OvertimeRequestDTO();
-        dto.setId(entity.getId());
-        dto.setStatus(entity.getStatus());
-        dto.setOvertimeTime(entity.getOvertimeTime());
-        dto.setNumEmployees(entity.getNumEmployees());
-        dto.setDetails(entity.getDetails());
-        dto.setCreatedAt(entity.getCreatedAt());
-
-        if (entity.getDepartment() != null) {
-            dto.setDepartmentId(entity.getDepartment().getId());
-            dto.setDepartmentName(entity.getDepartment().getName());
-        }
-
-        if (entity.getFactoryManager() != null) {
-            dto.setFactoryManagerId(entity.getFactoryManager().getId());
-            dto.setFactoryManagerName(entity.getFactoryManager().getFullName());
-        }
-
-        if (entity.getOvertimeTickets() != null) {
-            dto.setOvertimeTickets(
-                    entity.getOvertimeTickets().stream()
-                            .map(OvertimeTicketMapper::toDTO)
-                            .collect(Collectors.toList())
-            );
-        }
-        return dto;
-    }
+    @Mapping(source = "factoryManagerId", target = "factoryManager.id")
+    @Mapping(source = "departmentId", target = "department.id")
+    @Mapping(target = "overtimeTime", ignore = true)
+    @Mapping(target = "overtimeTickets", ignore = true)
+    TbOvertimeRequest toEntity(OvertimeRequestDTO dto);
 }

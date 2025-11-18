@@ -31,30 +31,33 @@ public class OvertimeTicketServiceImpl implements OvertimeTicketService {
     private final UserRepository userRepository;
     private final OvertimeRequestRepository overtimeRequestRepository;
     private final LineRepository lineRepository;
+    private final OvertimeTicketMapper overtimeTicketMapper;
 
     @Autowired
     public OvertimeTicketServiceImpl(OvertimeTicketRepository overtimeTicketRepository,
                                      UserRepository userRepository,
                                      OvertimeRequestRepository overtimeRequestRepository,
-                                     LineRepository lineRepository) {
+                                     LineRepository lineRepository,
+                                     OvertimeTicketMapper overtimeTicketMapper) {
         this.overtimeTicketRepository = overtimeTicketRepository;
         this.userRepository = userRepository;
         this.overtimeRequestRepository = overtimeRequestRepository;
         this.lineRepository = lineRepository;
+        this.overtimeTicketMapper = overtimeTicketMapper;
     }
 
     @Override
     public Page<OvertimeTicketDTO> getFilteredTicket(OvertimeTicketFilter filter, Pageable pageable) {
         Specification<TbOvertimeTicket> spec = OvertimeTicketSpecification.build(filter);
-        return overtimeTicketRepository.findAll(spec, pageable).map(OvertimeTicketMapper::toDTO);
+        return overtimeTicketRepository.findAll(spec, pageable).map(overtimeTicketMapper::toDTO);
     }
 
     @Override
     public OvertimeTicketDTO confirmTicket(Integer id) {
         TbOvertimeTicket overtimeTicket = overtimeTicketRepository.findById(id).orElse(null);
-        if(overtimeTicket != null){
+        if (overtimeTicket != null) {
             overtimeTicket.setStatus(OvertimeTicketStatus.confirmed);
-            return OvertimeTicketMapper.toDTO(overtimeTicketRepository.save(overtimeTicket));
+            return overtimeTicketMapper.toDTO(overtimeTicketRepository.save(overtimeTicket));
         }
         throw new IllegalArgumentException("Overtime ticket not found");
     }
@@ -62,10 +65,10 @@ public class OvertimeTicketServiceImpl implements OvertimeTicketService {
     @Override
     public OvertimeTicketDTO rejectTicket(Integer id, String reason) {
         TbOvertimeTicket overtimeTicket = overtimeTicketRepository.findById(id).orElse(null);
-        if(overtimeTicket != null){
+        if (overtimeTicket != null) {
             overtimeTicket.setStatus(OvertimeTicketStatus.rejected);
             overtimeTicket.setReason(reason);
-            return OvertimeTicketMapper.toDTO(overtimeTicketRepository.save(overtimeTicket));
+            return overtimeTicketMapper.toDTO(overtimeTicketRepository.save(overtimeTicket));
         }
         throw new IllegalArgumentException("Overtime ticket not found");
     }
@@ -73,45 +76,45 @@ public class OvertimeTicketServiceImpl implements OvertimeTicketService {
     @Override
     public OvertimeTicketDTO approveTicket(Integer id, String reason) {
         TbOvertimeTicket overtimeTicket = overtimeTicketRepository.findById(id).orElse(null);
-        if(overtimeTicket != null){
+        if (overtimeTicket != null) {
             overtimeTicket.setStatus(OvertimeTicketStatus.approved);
             overtimeTicket.setReason(reason);
-            return OvertimeTicketMapper.toDTO(overtimeTicketRepository.save(overtimeTicket));
+            return overtimeTicketMapper.toDTO(overtimeTicketRepository.save(overtimeTicket));
         }
         throw new IllegalArgumentException("Overtime ticket not found");
     }
 
     @Override
     public void create(TbOvertimeTicket overtimeTicket) {
-        if(overtimeTicket == null){
+        if (overtimeTicket == null) {
             throw new IllegalArgumentException("Overtime ticket cannot be null");
         }
 
-        if(overtimeTicket.getManager() == null){
+        if (overtimeTicket.getManager() == null) {
             throw new IllegalArgumentException("Manager is required");
         }
-        if(overtimeTicket.getManager().getId() == null){
+        if (overtimeTicket.getManager().getId() == null) {
             throw new IllegalArgumentException("Manager id is required");
         }
 
         TbUser manager = userRepository.findById(overtimeTicket.getManager().getId()).orElse(null);
-        if(manager == null){
+        if (manager == null) {
             throw new IllegalArgumentException("Manager not found");
         }
 
-        if(!manager.getRole().getName().equals("Manager")){
+        if (!manager.getRole().getName().equals("Manager")) {
             throw new IllegalArgumentException("Not a manager");
         }
 
         //request
-        if(overtimeTicket.getOvertimeRequest() == null){
+        if (overtimeTicket.getOvertimeRequest() == null) {
             throw new IllegalArgumentException("Overtime request is required");
         }
-        if(overtimeTicket.getOvertimeRequest().getId() == null){
+        if (overtimeTicket.getOvertimeRequest().getId() == null) {
             throw new IllegalArgumentException("Overtime request id is required");
         }
         TbOvertimeRequest request = overtimeRequestRepository.findById(overtimeTicket.getOvertimeRequest().getId()).orElse(null);
-        if(request == null){
+        if (request == null) {
             throw new IllegalArgumentException("Overtime request not found");
         }
 
@@ -139,7 +142,6 @@ public class OvertimeTicketServiceImpl implements OvertimeTicketService {
             TbLine managedLine = lineRepository.findById(association.getLine().getId())
                     .orElseThrow(() -> new IllegalArgumentException("Line not found with id: " + association.getLine().getId()));
 
-            // Create new, managed association object
             TbOvertimeTicketEmployee managedAssociation = new TbOvertimeTicketEmployee();
             managedAssociation.setEmployee(managedEmployee);
             managedAssociation.setLine(managedLine);

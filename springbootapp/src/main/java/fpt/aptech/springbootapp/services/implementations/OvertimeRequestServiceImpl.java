@@ -1,11 +1,9 @@
 package fpt.aptech.springbootapp.services.implementations;
 
-import fpt.aptech.springbootapp.dtos.ModuleB.DepartmentDTO;
 import fpt.aptech.springbootapp.dtos.ModuleB.OvertimeRequestDTO;
 import fpt.aptech.springbootapp.entities.Core.TbUser;
 import fpt.aptech.springbootapp.filter.OvertimeRequestFilter;
 import fpt.aptech.springbootapp.entities.ModuleB.TbOvertimeRequest;
-import fpt.aptech.springbootapp.mappers.DepartmentMapper;
 import fpt.aptech.springbootapp.mappers.ModuleB.OvertimeRequestMapper;
 import fpt.aptech.springbootapp.repositories.DepartmentRepository;
 import fpt.aptech.springbootapp.repositories.ModuleB.OvertimeRequestRepository;
@@ -27,15 +25,18 @@ public class OvertimeRequestServiceImpl implements OvertimeRequestService {
     private final OvertimeRequestRepository overtimeRequestRepository;
     private final DepartmentRepository departmentRepository;
     private final UserRepository userRepository;
+    private final OvertimeRequestMapper overtimeRequestMapper;
 
     @Autowired
     public OvertimeRequestServiceImpl(
             OvertimeRequestRepository overtimeRequestRepository,
             DepartmentRepository departmentRepository,
-            UserRepository userRepository) {
+            UserRepository userRepository,
+            OvertimeRequestMapper overtimeRequestMapper) {
         this.overtimeRequestRepository = overtimeRequestRepository;
         this.departmentRepository = departmentRepository;
         this.userRepository = userRepository;
+        this.overtimeRequestMapper = overtimeRequestMapper;
     }
 
     @Override
@@ -116,6 +117,6 @@ public class OvertimeRequestServiceImpl implements OvertimeRequestService {
     public Page<OvertimeRequestDTO> getFilteredRequests(OvertimeRequestFilter filter, Pageable pageable) {
         Specification<TbOvertimeRequest> spec = OvertimeRequestSpecification.build(filter);
         return overtimeRequestRepository.findAll(spec, pageable)
-                .map(OvertimeRequestMapper::toDTO);
+                .map(overtimeRequestMapper::toDTO);
     }
 }
