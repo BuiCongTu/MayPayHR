@@ -26,7 +26,6 @@ public class TbOvertimeTicket {
     @Column(name = "ticket_id", nullable = false)
     private Integer id;
 
-    // manager
     @NotNull
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "manager_id", nullable = false)
@@ -39,7 +38,7 @@ public class TbOvertimeTicket {
     @OneToMany(mappedBy = "overtimeTicket", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<TbOvertimeTicketEmployee> overtimeEmployees = new HashSet<>();
 
-    @Lob // khai bao dang large text
+    @Lob
     @Column(name = "reason")
     private String reason;
 
@@ -61,6 +60,10 @@ public class TbOvertimeTicket {
     private Instant createdAt;
 
     public enum OvertimeTicketStatus {
-        pending, confirmed, approved, rejected
+        pending,    // Registration Open
+        submitted,  // Manager Submitted -> Waiting for FM
+        confirmed,  // FM Confirmed -> Waiting for FD
+        approved,   // FD Approved
+        rejected    // Rejected
     }
 }

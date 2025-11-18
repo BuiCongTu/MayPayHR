@@ -17,24 +17,35 @@ import java.util.*;
 @AllArgsConstructor
 @Table(name = "tbOvertimeRequest")
 @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
-
 public class TbOvertimeRequest {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "request_id", nullable = false)
     private Integer id;
 
-    //n:1 factory manager
     @NotNull
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "factory_manager_id", nullable = false)
     private TbUser factoryManager;
 
-    //n:1 department
     @NotNull
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "department_id", nullable = false)
     private TbDepartment department;
+
+    // [NEW] Date and Time Fields
+    @NotNull
+    @Column(name = "overtime_date", nullable = false)
+    private LocalDate overtimeDate;
+
+    @NotNull
+    @ColumnDefault("'17:00:00'")
+    @Column(name = "start_time", nullable = false)
+    private LocalTime startTime;
+
+    @NotNull
+    @Column(name = "end_time", nullable = false)
+    private LocalTime endTime;
 
     @NotNull
     @Column(name = "overtime_time", nullable = false)
@@ -49,7 +60,7 @@ public class TbOvertimeRequest {
     @Column(name = "status", length = 20)
     private OvertimeRequestStatus status = OvertimeRequestStatus.pending;
 
-    @Lob //khai bao dang large text
+    @Lob
     @Column(name = "details")
     private String details;
 
@@ -61,7 +72,10 @@ public class TbOvertimeRequest {
     private List<TbOvertimeTicket> overtimeTickets = new ArrayList<>();
 
     public enum OvertimeRequestStatus {
-        pending, processed
+        pending,    // Waiting for FD
+        open,       // FD Approved
+        processed,  // Done (Ticket Approved)
+        rejected,   // FD Rejected
+        expired     // Date passed without action
     }
-
 }
