@@ -343,11 +343,14 @@ GO
 CREATE TABLE tbOvertimeRequest (
     request_id INT IDENTITY(199110000,1) PRIMARY KEY,    
     factory_manager_id INT NOT NULL,                   
-    department_id INT NOT NULL,                        
+    department_id INT NOT NULL, 
+    overtime_date DATE NOT NULL,                       
+    start_time TIME NOT NULL DEFAULT '17:00:00',
+    end_time TIME NOT NULL,
     overtime_time FLOAT NOT NULL,                      
     num_employees INT NOT NULL,                        
     [status] VARCHAR(20) DEFAULT 'pending' 
-        CHECK (status IN ('pending', 'processed')),
+        CHECK (status IN ('pending', 'open', 'processed', 'rejected', 'expired')),
     details TEXT,                                      
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT FK_OvertimeRequest_Manager FOREIGN KEY (factory_manager_id) REFERENCES tbUser(user_id),
@@ -356,8 +359,8 @@ CREATE TABLE tbOvertimeRequest (
 GO
 
 DECLARE @DeptHoanThanh INT = (SELECT department_id FROM tbDepartment WHERE name = 'Finishing Center/Trung tâm hoàn thành');
-INSERT INTO tbOvertimeRequest (factory_manager_id, department_id, overtime_time, num_employees, status, details)
-VALUES ((SELECT user_id FROM tbUser WHERE full_name = 'Nguyễn Thị A'), @DeptHoanThanh, 3.5, 50, 'processed', 'Tăng ca hoàn thành đơn hàng gấp');
+INSERT INTO tbOvertimeRequest (factory_manager_id, department_id, overtime_date, start_time, end_time, overtime_hours, num_employees, status, details)
+VALUES ((SELECT user_id FROM tbUser WHERE full_name = 'Nguyễn Thị A'), @DeptHoanThanh, '2025-10-30', '17:00:00', '20:30:00', 3.5, 50, 'open', 'Tăng ca hoàn thành đơn hàng gấp');
 GO
 
 -- =============================================
@@ -367,10 +370,9 @@ CREATE TABLE tbOvertimeTicket (
     ticket_id INT IDENTITY(199120000,1) PRIMARY KEY,     
     manager_id INT NOT NULL,                           
     request_id INT,                                    
-    overtime_time DECIMAL(15,2) NOT NULL,              
     reason TEXT,                                       
     [status] VARCHAR(20) DEFAULT 'pending' 
-        CHECK (status IN ('pending', 'confirmed', 'approved', 'rejected')),
+        CHECK (status IN ('pending', 'submitted', 'confirmed', 'approved', 'rejected')),
     confirmed_by INT,                                  
     approved_by INT,                                   
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
@@ -381,11 +383,11 @@ CREATE TABLE tbOvertimeTicket (
 );
 GO
 
-INSERT INTO tbOvertimeTicket (manager_id, request_id, overtime_time, reason, status, confirmed_by, approved_by)
+INSERT INTO tbOvertimeTicket (manager_id, request_id, reason, status, confirmed_by, approved_by)
 VALUES (
     (SELECT user_id FROM tbUser WHERE full_name = 'Trần Thị B'),
     (SELECT MAX(request_id) FROM tbOvertimeRequest),
-    3.5, 'Hoàn thành đơn hàng', 'approved',
+    'Hoàn thành đơn hàng', 'approved',
     (SELECT user_id FROM tbUser WHERE full_name = 'Nguyễn Thị A'),
     (SELECT user_id FROM tbUser WHERE full_name = 'Dương Thị N')
 );
@@ -395,24 +397,33 @@ GO
 -- 12.1. tb_overtime_ticket_employees - Chi tiết nhân viên tăng ca
 -- =============================================
 CREATE TABLE tb_overtime_ticket_employees (
+    id INT IDENTITY(1,1) PRIMARY KEY, -- Added ID for easier JPA handling
     overtime_ticket_id INT NOT NULL,
     user_id INT NOT NULL,
+    line_id INT NULL,
     
-    -- Composite primary key
-    PRIMARY KEY (overtime_ticket_id, user_id),
+    -- [UPDATED STATUS] 'accepted' is better than 'ok'
+    [status] VARCHAR(20) DEFAULT 'pending'
+        CHECK (status IN ('pending', 'accepted', 'rejected')), 
     
-    -- Foreign keys
+    -- Prevent duplicate invites for the same ticket
+    CONSTRAINT UQ_Ticket_User UNIQUE (overtime_ticket_id, user_id), 
+    
     CONSTRAINT FK_OvertimeEmployees_Ticket FOREIGN KEY (overtime_ticket_id) 
         REFERENCES tbOvertimeTicket(ticket_id) ON DELETE CASCADE,
     CONSTRAINT FK_OvertimeEmployees_User FOREIGN KEY (user_id) 
-        REFERENCES tbUser(user_id) ON DELETE CASCADE
+        REFERENCES tbUser(user_id) ON DELETE CASCADE,
+    CONSTRAINT FK_OvertimeEmployees_Line FOREIGN KEY (line_id) 
+        REFERENCES tbLine(line_id)
 );
 GO
 
-INSERT INTO tb_overtime_ticket_employees (overtime_ticket_id, user_id)
+INSERT INTO tb_overtime_ticket_employees (overtime_ticket_id, user_id, status, line_id)
 SELECT TOP 3
     (SELECT MAX(ticket_id) FROM tbOvertimeTicket),
-    user_id
+    user_id,
+    'accepted',
+    (SELECT MAX(line_id) FROM tbLine)
 FROM tbUser
 WHERE role_id = (SELECT role_id FROM tbRole WHERE name = 'Worker')
 ORDER BY user_id;
@@ -619,29 +630,6 @@ CREATE TABLE tbPasswordResetToken (
 CREATE INDEX idx_token ON tbPasswordResetToken(token);
 CREATE INDEX idx_user_used ON tbPasswordResetToken(user_id, used);
 GO
-
-
---some additional changes
-ALTER TABLE tbOvertimeTicket
-DROP COLUMN overtime_time;
-GO
-
-ALTER TABLE tb_overtime_ticket_employees
-ADD 
-    line_id INT NULL, 
-    [status] VARCHAR(20) NOT NULL DEFAULT 'pending';
-GO
-
-ALTER TABLE tb_overtime_ticket_employees
-ADD CONSTRAINT FK_OvertimeEmployees_Line 
-    FOREIGN KEY (line_id) REFERENCES tbLine(line_id);
-GO
-
-ALTER TABLE tb_overtime_ticket_employees
-ADD CONSTRAINT CHK_OvertimeEmployee_Status
-    CHECK ([status] IN ('pending', 'ok', 'rejected'));
-GO
-
 
 SELECT * FROM tbRole
 SELECT * FROM tbLeaveReason
