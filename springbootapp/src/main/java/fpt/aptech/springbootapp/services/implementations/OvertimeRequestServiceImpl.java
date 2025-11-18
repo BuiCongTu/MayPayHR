@@ -1,11 +1,9 @@
 package fpt.aptech.springbootapp.services.implementations;
 
-import fpt.aptech.springbootapp.dtos.ModuleB.DepartmentDTO;
 import fpt.aptech.springbootapp.dtos.ModuleB.OvertimeRequestDTO;
 import fpt.aptech.springbootapp.entities.Core.TbUser;
 import fpt.aptech.springbootapp.filter.OvertimeRequestFilter;
 import fpt.aptech.springbootapp.entities.ModuleB.TbOvertimeRequest;
-import fpt.aptech.springbootapp.mappers.DepartmentMapper;
 import fpt.aptech.springbootapp.mappers.ModuleB.OvertimeRequestMapper;
 import fpt.aptech.springbootapp.repositories.DepartmentRepository;
 import fpt.aptech.springbootapp.repositories.ModuleB.OvertimeRequestRepository;
