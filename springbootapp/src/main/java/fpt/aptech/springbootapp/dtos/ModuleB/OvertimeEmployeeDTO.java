@@ -11,6 +11,9 @@ public class OvertimeEmployeeDTO {
     private Integer overtimeTicketId;
     private Integer employeeId;
     private String employeeName;
+    private String employeeEmail;
+    private String employeePhone;
+    private String skillLevelName;
     private Integer lineId;
     private String lineName;
     private TbOvertimeTicketEmployee.EmployeeOvertimeStatus status;

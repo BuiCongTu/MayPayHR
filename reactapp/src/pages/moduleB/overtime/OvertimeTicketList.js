@@ -43,7 +43,7 @@ const headCells = [
     {id: 'overtimeRequest.factoryManager.fullName', label: 'Requested By', numeric: false, width: '15%'},
     {id: 'confirmedBy.fullName', label: 'Confirmed By', numeric: false, width: '15%'},
     {id: 'approvedBy.fullName', label: 'Approved By', numeric: false, width: '15%'},
-    {id: 'overtimeTime', label: 'Overtime (h)', numeric: true, width: '10%'},
+    // {id: 'overtimeTime', label: 'Overtime (h)', numeric: true, width: '10%'},
     {id: 'status', label: 'Status', numeric: false, width: '15%'},
 ];
 
@@ -146,7 +146,7 @@ function TicketRow(props) {
                 <TableCell align="left" sx={cellTruncateStyle}>
                     {ticket.approvedByName || 'N/A'}
                 </TableCell>
-                <TableCell align="right">{ticket.overtimeTime || 0}</TableCell>
+                {/*<TableCell align="right">{ticket.overtimeTime || 0}</TableCell>*/}
                 <TableCell align="left">
                     {getStatusChip(ticket.status)}
                 </TableCell>
