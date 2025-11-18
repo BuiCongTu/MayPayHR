@@ -37,8 +37,8 @@ public class TbOvertimeTicketEmployee {
     private EmployeeOvertimeStatus status = EmployeeOvertimeStatus.pending;
 
     public enum EmployeeOvertimeStatus {
-        pending, // default
-        ok,      // Employee accepts the overtime
-        rejected // Employee rejects the overtime
+        pending,
+        accepted,
+        rejected
     }
 }

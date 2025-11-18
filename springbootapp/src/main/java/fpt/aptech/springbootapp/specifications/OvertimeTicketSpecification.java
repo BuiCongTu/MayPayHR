@@ -30,6 +30,10 @@ public class OvertimeTicketSpecification {
                 predicates.add(cb.like(root.get("overtimeRequest").get("factoryManager").get("fullName"), "%" + filter.getRequesterName() + "%"));
             }
 
+            if (filter.getOvertimeDate() != null) {
+                predicates.add(cb.equal(root.get("overtimeRequest").get("overtimeDate"), filter.getOvertimeDate()));
+            }
+
             if (filter.getStatus() != null) {
                 predicates.add(cb.equal(root.get("status"), filter.getStatus()));
             }
