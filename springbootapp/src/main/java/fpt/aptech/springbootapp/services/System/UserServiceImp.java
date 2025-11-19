@@ -46,8 +46,8 @@ public class UserServiceImp implements UserService {
 
     @Override
     public UserResponseDto register(RegisterReq registerReq) {
-        if (userRepository.findByEmail(registerReq.getEmail()).isPresent()) {
-            throw new RuntimeException("Email already exists");
+        if (userRepository.findByPhone(registerReq.getPhone()).isPresent()) {
+            throw new RuntimeException("Phone already exists");
         }
 
         TbRole role = roleRepository.findById(registerReq.getRoleId())
@@ -107,14 +107,14 @@ public class UserServiceImp implements UserService {
     @Override
     public LoginResponse login(LoginReq loginReq) {
         //tim
-        TbUser user = userRepository.findByEmail(loginReq.getEmail())
+        TbUser user = userRepository.findByPhone(loginReq.getPhone())
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
         if (!passwordEncoder.matches(loginReq.getPassword(), user.getPasswordHash())) {
-            throw new RuntimeException("Invalid email or password");
+            throw new RuntimeException("Invalid phone or password");
         }
 
-        String token = jwtUtils.generateToken(user.getEmail(), user.getRole().getName());
+        String token = jwtUtils.generateToken(user.getPhone(), user.getRole().getName());
 
         UserResponseDto userDto = buildUserResponseDto(user);
 
@@ -150,14 +150,14 @@ public class UserServiceImp implements UserService {
     }
 
     @Override
-    public Optional<TbUser> findByEmail(String email) {
-        return userRepository.findByEmail(email);
+    public Optional<TbUser> findByPhone(String phone) {
+        return userRepository.findByPhone(phone);
     }
 
     @Override
-    public UserResponseDto getUserByEmail(String email) {
-        TbUser user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("Not found employee: " + email));
+    public UserResponseDto getUserByPhone(String phone) {
+        TbUser user = userRepository.findByPhone(phone)
+                .orElseThrow(() -> new RuntimeException("Not found employee: " + phone));
 
         return buildUserResponseDto(user);
     }
@@ -168,12 +168,12 @@ public class UserServiceImp implements UserService {
     }
 
     @Override
-    public void changePassword(String email, ChangePassReq request) {
+    public void changePassword(String phone, ChangePassReq request) {
         if (!request.getNewPassword().equals(request.getConfirmPassword())) {
             throw new RuntimeException("New password and confirm password do not match");
         }
 
-        TbUser user = userRepository.findByEmail(email)
+        TbUser user = userRepository.findByPhone(phone)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
         if (!passwordEncoder.matches(request.getOldPassword(), user.getPasswordHash())) {
@@ -185,8 +185,8 @@ public class UserServiceImp implements UserService {
 
     @Override
     @Transactional
-    public void forgotPassword(String email) {
-        TbUser user = userRepository.findByEmail(email)
+    public void forgotPassword(String phone) {
+        TbUser user = userRepository.findByPhone(phone)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
         // xoá token cũ
