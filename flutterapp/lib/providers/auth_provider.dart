@@ -1,44 +1,40 @@
 import 'package:flutter/material.dart';
 import 'package:flutterapp/services/auth_service.dart';
 
-
 class AuthProvider extends ChangeNotifier {
-  bool _isLoading = false;
-  String? _token;
+  bool isLoading = false;
+  String? token;
 
-  bool get isLoading => _isLoading;
-  String? get token => _token;
-  Future<Map<String, dynamic>?> login(String email, String password) async {
-    _isLoading = true;
+  bool get loading => isLoading;
+
+  String? get tokens => token;
+
+  Future<Map<String, dynamic>?> login(String phone, String password) async {
+    isLoading = true;
     notifyListeners();
 
-    final responseMap = await AuthService.login(email, password);
+    final responseMap = await AuthService.login(phone, password);
 
-    _isLoading = false;
-    
+    isLoading = false;
     if (responseMap != null) {
-      _token = responseMap["token"] as String?; 
+      token = responseMap["token"];
     } else {
-      _token = null;
+      token = null;
     }
-    
     notifyListeners();
     return responseMap;
   }
 
-  Future<bool> register(Map<String, dynamic> userPayload) async {
-    _isLoading = true;
+  Future<String?> register(Map<String, dynamic> userPayload) async {
+    if (userPayload.isEmpty) return 'Payload empty';
+
+    isLoading = true;
     notifyListeners();
 
-    final success = await AuthService.register(userPayload);
+    final String? errorMessage = await AuthService.register(userPayload);
 
-    _isLoading = false;
+    isLoading = false;
     notifyListeners();
-    return success;
-  }
-  Future<void> logout() async {
-    await AuthService.logout();
-    _token = null;
-    notifyListeners();
+    return errorMessage;
   }
 }

@@ -49,7 +49,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         if (authHeader != null && authHeader.startsWith("Bearer ")) {
             token = authHeader.substring(7); // Cắt "Bearer "
             try {
-                email = jwtUtils.getEmailFromJwt(token); // lấy email từ token
+                email = jwtUtils.getPhoneFromJwt(token); // lấy email từ token
             } catch (Exception e) {
                 System.out.println("Not valid: " + e.getMessage());
             }

@@ -8,16 +8,19 @@ import fpt.aptech.springbootapp.services.System.UserService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.*;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-
 @RestController
 @RequestMapping("/api/auth")
 public class AuthController {
+    @Autowired
+    private AuthenticationManager authenticationManager;
 
     private JwtUtils jwtUtils;
     private UserService userService;
@@ -25,22 +28,42 @@ public class AuthController {
     @Autowired
     public AuthController(
             JwtUtils jwtUtils,
-            UserService userService)
-    {
+            UserService userService) {
         this.jwtUtils = jwtUtils;
         this.userService = userService;
     }
 
     @PostMapping("/login")
-    public ResponseEntity<ApiResponse<LoginResponse>> login(@Valid @RequestBody LoginReq request) {
-        try {
-            LoginResponse loginResponse = userService.login(request);
-            return ResponseEntity.ok(ApiResponse.success("Login successful", loginResponse));
-        } catch (RuntimeException e) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body(ApiResponse.error(e.getMessage()));
-        }
+public ResponseEntity<ApiResponse<LoginResponse>> login(@Valid @RequestBody LoginReq request) {
+    try {
+        // authenticate bằng AuthenticationManager
+        Authentication authentication = authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(request.getPhone(), request.getPassword())
+        );
+
+        // gán Authentication vào SecurityContext
+        SecurityContextHolder.getContext().setAuthentication(authentication);
+
+        // lấy user từ DB
+        TbUser user = userService.findByPhone(request.getPhone())
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        // tạo token JWT
+        String token = jwtUtils.generateToken(user.getPhone(), user.getRole().getName());
+
+        LoginResponse loginResponse = LoginResponse.builder()
+                .token(token)
+                .tokenType("Bearer")
+                .user(userService.getUserByPhone(user.getPhone()))
+                .build();
+
+        return ResponseEntity.ok(ApiResponse.success("Login successful", loginResponse));
+
+    } catch (Exception e) {
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                .body(ApiResponse.error("Invalid phone or password"));
     }
+}
 
     @GetMapping("/logout")
     public ResponseEntity<ApiResponse<String>> logout() {
@@ -70,16 +93,16 @@ public class AuthController {
         }
     }
 
-
-    @GetMapping("/getemp/{email}")
-    public ResponseEntity<ApiResponse<UserResponseDto>> getUserByEmail(@PathVariable String email) {
+    // TIen: chỉnh sua lại login bang phone
+    @GetMapping("/getemp/{phone}")
+    public ResponseEntity<ApiResponse<UserResponseDto>> getUserByPhone(@PathVariable String phone) {
         try {
-            if (email == null || email.trim().isEmpty()) {
+            if (phone == null || phone.trim().isEmpty()) {
                 return ResponseEntity.badRequest()
-                        .body(ApiResponse.error("Email cannot be empty"));
+                        .body(ApiResponse.error("Phone cannot be empty"));
             }
 
-            UserResponseDto user = userService.getUserByEmail(email);
+            UserResponseDto user = userService.getUserByPhone(phone);
             return ResponseEntity.ok(ApiResponse.success(user));
         } catch (RuntimeException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
@@ -87,15 +110,14 @@ public class AuthController {
         }
     }
 
-
-    @PutMapping("/updateuser/{email}")
+    @PutMapping("/updateuser/{phone}")
     public ResponseEntity<ApiResponse<UserResponseDto>> updateUser(
-            @PathVariable String email,
+            @PathVariable String phone,
             @RequestBody TbUser userUpdate) {
         try {
-            if (email == null || email.trim().isEmpty()) {
+            if (phone == null || phone.trim().isEmpty()) {
                 return ResponseEntity.badRequest()
-                        .body(ApiResponse.error("Email cannot be empty"));
+                        .body(ApiResponse.error("Phone cannot be empty"));
             }
 
             if (userUpdate == null) {
@@ -103,7 +125,7 @@ public class AuthController {
                         .body(ApiResponse.error("User update data cannot be null"));
             }
 
-            TbUser existingUser = userService.findByEmail(email)
+            TbUser existingUser = userService.findByPhone(phone)
                     .orElseThrow(() -> new RuntimeException("User not found"));
 
             // ko cập nhật password và email)
@@ -139,7 +161,7 @@ public class AuthController {
             }
 
             TbUser updatedUser = userService.createOrUpdateUser(existingUser);
-            UserResponseDto userResponse = userService.getUserByEmail(updatedUser.getEmail());
+            UserResponseDto userResponse = userService.getUserByPhone(updatedUser.getPhone());
 
             return ResponseEntity.ok(ApiResponse.success("Update successful", userResponse));
 
@@ -152,14 +174,14 @@ public class AuthController {
         }
     }
 
-        //lay thong tin user hiện tại từ JWT token
+    // lay thong tin user hiện tại từ JWT token
     @GetMapping("/me")
     public ResponseEntity<ApiResponse<UserResponseDto>> getCurrentUser() {
         try {
             Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-            String email = authentication.getName();
+            String phone = authentication.getName();
 
-            UserResponseDto user = userService.getUserByEmail(email);
+            UserResponseDto user = userService.getUserByPhone(phone);
             return ResponseEntity.ok(ApiResponse.success(user));
         } catch (RuntimeException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)

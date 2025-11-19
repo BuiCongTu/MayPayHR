@@ -38,7 +38,7 @@ public class DataSeeder implements CommandLineRunner {
                 .orElseGet(() -> roleRepository.save(new TbRole(null, "USER", null, null)));
 
         // Tạo tài khoản admin nếu chưa có
-        if (userRepository.findByEmail("admin@admin.com").isEmpty()) {
+        if (userRepository.findByPhone("0987654321").isEmpty()) {
             TbUser admin = new TbUser();
             admin.setEmail("admin@admin.com");
             admin.setFullName("Admin User");
@@ -52,19 +52,6 @@ public class DataSeeder implements CommandLineRunner {
             System.out.println(" Admin account created: admin@admin.com / 123456");
         }
 
-        // Tạo tài khoản user nếu chưa có
-        // if (userRepository.findByEmail("user@user.com").isEmpty()) {
-        //     TbUser user = new TbUser();
-        //     user.setEmail("user@user.com");
-        //     user.setFullName("Normal User");
-        //     user.setPhone("0123456789");
-        //     user.setPasswordHash(passwordEncoder.encode("123456"));
-        //     user.setStatus(TbUser.UserStatus.Active);
-        //     user.setCreatedAt(Instant.now());
-        //     user.setRole(userRole);
-
-        //     userRepository.save(user);
-        //     System.out.println(" User account created: user@user.com / 123456");
-        // }
+        
     }
 }

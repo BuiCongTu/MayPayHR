@@ -13,20 +13,21 @@ import java.util.Date;
 
 @Component
 public class JwtUtils {
-    private static final String secret = "AIzaSyB8dmLwCiGmIH82ZCCBPWP9IECoBapa27A";
+    private static final String secret = "0123456789abcdef0123456789abcdef";
     // expiration time 1 hour
     private static final long jwtExpirationMs = 1000 * 60 * 60;
 
-    public String generateToken(String email, String role) {
-        return Jwts.builder().setSubject(email)
+    //Tiên: sua email thanh phone
+    public String generateToken(String phone, String role) {
+        return Jwts.builder().setSubject(phone)
                 .claim("role", role)
                 .setIssuedAt(new Date(System.currentTimeMillis()))
                 .setExpiration(new Date(System.currentTimeMillis() + jwtExpirationMs))
                 .signWith(secretTokey(secret), SignatureAlgorithm.HS256).compact();
     }
 
-    //lấy email từ token
-    public String getEmailFromJwt(String token) {
+    //lấy phone từ token
+    public String getPhoneFromJwt(String token) {
         return extractUsername(token);
     }
 

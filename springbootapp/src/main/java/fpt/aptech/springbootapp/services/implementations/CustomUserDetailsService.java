@@ -18,13 +18,13 @@ public class CustomUserDetailsService implements UserDetailsService {
     @Autowired
     private UserRepository userRepository;
 @Override
-public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
-    System.out.println("Checking user with email: " + email);
-    TbUser user = userRepository.findByEmail(email)
-            .orElseThrow(() -> new UsernameNotFoundException("User not found with email: " + email));
+public UserDetails loadUserByUsername(String phone) throws UsernameNotFoundException {
+    System.out.println("Checking user with phone: " + phone);
+    TbUser user = userRepository.findByPhone(phone)
+            .orElseThrow(() -> new UsernameNotFoundException("User not found with phone: " + phone));
 
     return new org.springframework.security.core.userdetails.User(
-            user.getEmail(),
+            user.getPhone(),
             user.getPasswordHash(), // dùng hash đã có trong DB
             Collections.emptyList()
     );

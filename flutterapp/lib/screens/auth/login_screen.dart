@@ -1,77 +1,70 @@
 import 'package:flutter/material.dart';
-import 'package:flutterapp/screens/home/admin_screen.dart';
-import 'package:flutterapp/screens/home/user_screen.dart';
-import 'package:flutterapp/screens/auth/register_screen.dart';
-import 'package:flutterapp/services/auth_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../../services/auth_service.dart';
+import '../home/admin_screen.dart';
+import '../home/user_screen.dart';
+import 'register_screen.dart';
+import 'forgot_password_screen.dart';
 
 class LoginScreen extends StatefulWidget {
+  const LoginScreen({super.key});
+
   @override
-  _LoginScreenState createState() => _LoginScreenState();
+  State<LoginScreen> createState() => _LoginScreenState();
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  final _emailController = TextEditingController();
-  final _passwordController = TextEditingController();
+  final _phoneCtrl = TextEditingController();
+  final _passCtrl = TextEditingController();
   bool _isLoading = false;
 
   @override
   void initState() {
     super.initState();
-    _checkAutoLogin();
+    _autoLogin();
   }
 
-  // Auto-login nếu đã lưu token
-  Future<void> _checkAutoLogin() async {
+  Future<void> _autoLogin() async {
     final prefs = await SharedPreferences.getInstance();
     final token = prefs.getString("token");
     final role = prefs.getString("role")?.toUpperCase();
-
     if (token != null && role != null) {
-      if (role == "ADMIN") {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (_) => const AdminHomeScreen()),
-        );
-      } else {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (_) => const UserHomeScreen()),
-        );
-      }
+      _navigateByRole(role);
     }
   }
 
-  Future<void> _handleLogin() async {
+  void _navigateByRole(String role) {
+    if (role == "ADMIN") {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (_) => const AdminHomeScreen()),
+      );
+    } else {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (_) => const UserHomeScreen()),
+      );
+    }
+  }
+
+  Future<void> _login() async {
     setState(() => _isLoading = true);
 
-    final email = _emailController.text.trim();
-    final password = _passwordController.text.trim();
+    final phone = _phoneCtrl.text.trim();
+    final pass = _passCtrl.text.trim();
 
     try {
-      final result = await AuthService.login(email, password);
+      final result = await AuthService.login(phone, pass);
 
       if (result != null) {
         final role = (result["role"] ?? "USER").toString().toUpperCase();
-
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text("Đăng nhập thành công!")),
         );
-
-        if (role == "ADMIN") {
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(builder: (_) => const AdminHomeScreen()),
-          );
-        } else {
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(builder: (_) => const UserHomeScreen()),
-          );
-        }
+        _navigateByRole(role);
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Email hoặc mật khẩu không đúng.")),
+          const SnackBar(content: Text("Số điện thoại hoặc mật khẩu không đúng.")),
         );
       }
     } catch (e) {
@@ -90,25 +83,24 @@ class _LoginScreenState extends State<LoginScreen> {
       body: Stack(
         children: [
           Padding(
-            padding: const EdgeInsets.all(16.0),
+            padding: const EdgeInsets.all(16),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 TextField(
-                  controller: _emailController,
-                  decoration: const InputDecoration(labelText: "Email"),
+                  controller: _phoneCtrl,
+                  decoration: const InputDecoration(labelText: "Phone"),
                 ),
                 TextField(
-                  controller: _passwordController,
+                  controller: _passCtrl,
                   decoration: const InputDecoration(labelText: "Password"),
                   obscureText: true,
                 ),
                 const SizedBox(height: 20),
                 ElevatedButton(
-                  onPressed: _isLoading ? null : _handleLogin,
+                  onPressed: _isLoading ? null : _login,
                   child: const Text("Login"),
                 ),
-                const SizedBox(height: 10),
                 TextButton(
                   onPressed: () {
                     Navigator.push(
@@ -116,10 +108,16 @@ class _LoginScreenState extends State<LoginScreen> {
                       MaterialPageRoute(builder: (_) => RegisterScreen()),
                     );
                   },
-                  child: const Text(
-                    "Chưa có tài khoản? Đăng ký ngay",
-                    style: TextStyle(color: Colors.blueAccent),
-                  ),
+                  child: const Text("Chưa có tài khoản? Đăng ký"),
+                ),
+                TextButton(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => const ForgotPasswordScreen()),
+                    );
+                  },
+                  child: const Text("Quên mật khẩu?"),
                 ),
               ],
             ),

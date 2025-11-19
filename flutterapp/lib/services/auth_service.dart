@@ -4,87 +4,96 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../configs/api_config.dart';
 
 class AuthService {
+  // Mapping roleId to string
+  static String getRoleFromId(int roleId) {
+    switch (roleId) {
+      case 199010000: return "WORKER";
+      case 199010001: return "MANAGER";
+      case 199010002: return "FACTORY_MANAGER";
+      case 199010003: return "FACTORY_DIRECTOR";
+      case 199010004: return "HR";
+      case 199010005: return "ADMIN";
+      default: return "USER";
+    }
+  }
 
-  // Login
-  static Future<Map<String, dynamic>?> login(String email, String password) async {
-    final url = Uri.parse("${ApiConfig.baseUrl}/api/auth/login");
-
+  // Login bằng phone
+  static Future<Map<String, dynamic>?> login(String phone, String password) async {
     try {
+      final url = Uri.parse('${ApiConfig.baseUrl}${ApiConfig.loginEndpoint}');
       final response = await http.post(
         url,
         headers: {"Content-Type": "application/json"},
-        body: jsonEncode({"email": email, "password": password}),
+        body: jsonEncode({"phone": phone, "password": password}),
       );
 
       if (response.statusCode == 200) {
-        final responseJson = jsonDecode(response.body);
-        final data = responseJson["data"];
+        final res = jsonDecode(response.body);
+        final data = res["data"];
         final token = data["token"];
-        final userDto = data["user"];
+        final user = data["user"];
+        final role = user["roleName"] != null
+            ? user["roleName"].toString().toUpperCase()
+            : getRoleFromId(user["roleId"]);
 
-        // Xác định role
-        String role = "";
-        if (userDto["roleName"] != null) {
-          role = userDto["roleName"].toString().toUpperCase();
-        } else if (userDto["roleId"] != null) {
-          role = userDto["roleId"] == 1 ? "ADMIN" : "USER";
-        } else {
-          role = "USER";
-        }
-
-        // Lưu SharedPreferences
         final prefs = await SharedPreferences.getInstance();
         await prefs.setString("token", token);
-        await prefs.setString("email", email);
+        await prefs.setString("phone", phone);
         await prefs.setString("role", role);
 
-        return {"token": token, "user": userDto, "role": role};
-      } else {
-        print("Login Failed: ${response.statusCode} - ${response.body}");
+        return {"token": token, "user": user, "role": role};
       }
+      return null;
     } catch (e) {
-      print("Login Error: $e");
+      return null;
     }
-    return null;
   }
 
   // Register
   static Future<String?> register(Map<String, dynamic> userData) async {
     try {
-      final url = Uri.parse('${ApiConfig.baseUrl}/api/auth/register');
-      print('Register payload: ${jsonEncode(userData)}');
-
+      final url = Uri.parse('${ApiConfig.baseUrl}${ApiConfig.registerEndpoint}');
       final response = await http.post(
         url,
-        headers: {'Content-Type': 'application/json'},
+        headers: {"Content-Type": "application/json"},
         body: jsonEncode(userData),
       );
-
-      print('Response: ${response.statusCode}, Body: ${response.body}');
-
-      if (response.statusCode == 200 || response.statusCode == 201) {
-        return null; // null nghĩa là đăng ký thành công
-      } else {
-        String message = 'Unknown error';
-        if (response.body.isNotEmpty) {
-          try {
-            final Map<String, dynamic> resBody = jsonDecode(response.body);
-            message = resBody['message'] ?? message;
-          } catch (e) {
-            message = 'Invalid response format';
-          }
-        }
-        return message; // trả về message lỗi để hiển thị
+      if (response.statusCode == 200 || response.statusCode == 201) return null;
+      if (response.body.isNotEmpty) {
+        final Map<String, dynamic> resBody = jsonDecode(response.body);
+        return resBody['message'] ?? 'Đăng ký thất bại';
       }
+      return 'Đăng ký thất bại';
     } catch (e) {
       return 'Exception: $e';
     }
   }
 
-
   // Logout
   static Future<void> logout() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.clear();
+  }
+
+  // Forgot Password
+  static Future<bool> forgotPassword(String email) async {
+    final url = Uri.parse('${ApiConfig.baseUrl}${ApiConfig.forgotPasswordEndpoint}');
+    final response = await http.post(
+      url,
+      headers: {"Content-Type": "application/json"},
+      body: jsonEncode({"email": email}),
+    );
+    return response.statusCode == 200;
+  }
+
+  // Reset Password
+  static Future<bool> resetPassword(String token, String password) async {
+    final url = Uri.parse('${ApiConfig.baseUrl}${ApiConfig.resetPasswordEndpoint}');
+    final response = await http.post(
+      url,
+      headers: {"Content-Type": "application/json"},
+      body: jsonEncode({"token": token, "newPassword": password}),
+    );
+    return response.statusCode == 200;
   }
 }
