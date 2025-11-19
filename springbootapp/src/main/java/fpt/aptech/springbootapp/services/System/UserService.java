@@ -16,13 +16,13 @@ public interface UserService {
 
     // User CRUD
     TbUser createOrUpdateUser(TbUser user);
-    Optional<TbUser> findByEmail(String email);
-    UserResponseDto getUserByEmail(String email);
+    Optional<TbUser> findByPhone(String phone);
+    UserResponseDto getUserByPhone(String phone);
     List<TbUser> findAllUsers();
 
     // Password management
-    void changePassword(String email, ChangePassReq request);
-    void forgotPassword(String email);
+    void changePassword(String phone, ChangePassReq request);
+    void forgotPassword(String phone);
     void resetPassword(String token, String newPassword);
 }
 
