@@ -19,7 +19,7 @@ class LoginResponse {
     return LoginResponse(
       token: map['token'] as String ?? '',
       tokenType: map['tokenType'] as String ?? '',
-      user: map['user'] as UserModels,
+      user: map['user'] != null ? UserModels.fromJson(map['user']) : null,    
     );
   }
 }
