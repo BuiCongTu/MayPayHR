@@ -9,7 +9,7 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface UserRepository extends JpaRepository<TbUser, Integer> {
-    Optional<TbUser> findByEmail(String email);
+    Optional<TbUser> findByPhone(String phone);
     // Optional<TbUser> findByResetToken(String phone);
 
     //
