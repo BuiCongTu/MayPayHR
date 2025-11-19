@@ -36,7 +36,7 @@ public class DataSeeder implements CommandLineRunner {
                 .orElseGet(() -> roleRepository.save(new TbRole(null, "USER", null, null)));
 
         // Tạo tài khoản admin nếu chưa có
-        if (userRepository.findByEmail("admin@admin.com").isEmpty()) {
+        if (userRepository.findByPhone("0987654321").isEmpty()) {
             TbUser admin = new TbUser();
             admin.setEmail("admin@admin.com");
             admin.setFullName("Admin User");
