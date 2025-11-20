@@ -49,7 +49,6 @@ function stableSort(array, comparator) {
     return stabilizedThis.map((el) => el[0]);
 }
 
-// --- HeadCells for Employee Table ---
 const employeeHeadCells = [
     {id: 'employeeId', label: 'ID', numeric: false},
     {id: 'employeeName', label: 'Full Name', numeric: false},
@@ -57,7 +56,7 @@ const employeeHeadCells = [
     {id: 'employeePhone', label: 'Phone', numeric: false},
     {id: 'lineName', label: 'Line', numeric: false},
     {id: 'skillLevelName', label: 'Skill Level', numeric: false},
-    {id: 'status', label: 'Status', numeric: false, width: '10%'}, // Already present
+    {id: 'status', label: 'Status', numeric: false, width: '10%'},
 ];
 
 function EmployeeTableHead(props) {
@@ -108,7 +107,7 @@ function EmployeeListTable({employees}) {
 
     if (!employees || employees.length === 0) {
         return (
-            <Typography variant="body2" sx={{p: 2, fontStyle: 'italic'}}> {/* Added padding */}
+            <Typography variant="body2" sx={{p: 2, fontStyle: 'italic'}}>
                 No employees assigned to this ticket.
             </Typography>
         );
@@ -126,29 +125,30 @@ function EmployeeListTable({employees}) {
         (emp.employeeId || '').toString().toLowerCase().includes(searchTerm.toLowerCase())
     );
 
-    // Sort the filtered employees
     const sortedEmployees = stableSort(filteredEmployees, getComparator(order, orderBy));
 
     const tableCellStyle = {
         py: 0.5,
     };
 
-    // --- NEW Helper Function for status chip ---
-    const getStatusChip = (status) => {
-        let color;
-        let label = (status || 'pending').charAt(0).toUpperCase() + (status || 'pending').slice(1);
+    const getStatusChip = (statusRaw) => {
+        const status = statusRaw ? statusRaw.toLowerCase() : 'pending';
+        let color = 'default';
+        let label = status.charAt(0).toUpperCase() + status.slice(1);
 
         switch (status) {
-            case 'ok':
+            case 'accepted': // Correct DB status
                 color = 'success';
+                label = 'Accepted';
                 break;
             case 'rejected':
                 color = 'error';
                 break;
             case 'pending':
-            default:
                 color = 'warning';
-                label = 'Pending';
+                break;
+            default:
+                color = 'default';
         }
         return <Chip label={label} color={color} size="small" sx={{minWidth: 70}}/>;
     };
@@ -157,7 +157,7 @@ function EmployeeListTable({employees}) {
         <Box sx={{p: 2}}>
             <TextField
                 id="employeeNameSearch"
-                placeholder="Search by Employee (Name, ID, Email)..."
+                placeholder="Search by Employee..."
                 value={searchTerm}
                 onChange={e => setSearchTerm(e.target.value)}
                 variant="outlined"
@@ -166,11 +166,7 @@ function EmployeeListTable({employees}) {
                     mb: 2,
                     width: '100%',
                     maxWidth: '400px',
-                    backgroundColor: 'white',
-                    '& .MuiInputBase-input': {
-                        paddingTop: '8px',
-                        paddingBottom: '8px',
-                    },
+                    backgroundColor: 'white'
                 }}
                 InputProps={{
                     startAdornment: (
@@ -180,16 +176,7 @@ function EmployeeListTable({employees}) {
                     ),
                 }}
             />
-            <TableContainer
-                component={Paper}
-                variant="outlined"
-                sx={{
-                    mt: 1,
-                    mb: 1,
-                    border: '1px solid',
-                    borderColor: 'divider',
-                }}
-            >
+            <TableContainer component={Paper} variant="outlined" sx={{ mt: 1, mb: 1 }}>
                 <Table size="small" aria-label="employee list">
                     <EmployeeTableHead
                         order={order}
@@ -200,13 +187,12 @@ function EmployeeListTable({employees}) {
                         {sortedEmployees.length > 0 ? (
                             sortedEmployees.map((emp) => (
                                 <TableRow key={emp.employeeId} sx={{'&:last-child td, &:last-child th': {border: 0}}}>
-                                    <TableCell sx={tableCellStyle}>{emp.employeeId || 'N/A'}</TableCell>
-                                    <TableCell sx={tableCellStyle}>{emp.employeeName || 'N/A'}</TableCell>
-                                    <TableCell sx={tableCellStyle}>{emp.employeeEmail || 'N/A'}</TableCell>
-                                    <TableCell sx={tableCellStyle}>{emp.employeePhone || 'N/A'}</TableCell>
-                                    <TableCell sx={tableCellStyle}>{emp.lineName || 'N/A'}</TableCell>
-                                    <TableCell sx={tableCellStyle}>{emp.skillLevelName || 'N/A'}</TableCell>
-                                    {/* --- NEW TableCell for Status Chip --- */}
+                                    <TableCell sx={tableCellStyle}>{emp.employeeId}</TableCell>
+                                    <TableCell sx={tableCellStyle}>{emp.employeeName}</TableCell>
+                                    <TableCell sx={tableCellStyle}>{emp.employeeEmail}</TableCell>
+                                    <TableCell sx={tableCellStyle}>{emp.employeePhone}</TableCell>
+                                    <TableCell sx={tableCellStyle}>{emp.lineName}</TableCell>
+                                    <TableCell sx={tableCellStyle}>{emp.skillLevelName}</TableCell>
                                     <TableCell sx={tableCellStyle}>
                                         {getStatusChip(emp.status)}
                                     </TableCell>

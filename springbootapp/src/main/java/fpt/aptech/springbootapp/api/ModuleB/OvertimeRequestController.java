@@ -39,7 +39,7 @@ public class OvertimeRequestController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<TbOvertimeRequest> read(@PathVariable int id) {
+    public ResponseEntity<OvertimeRequestDTO> read(@PathVariable int id) {
         try {
             return ResponseEntity.ok(overtimeRequestService.read(id));
         } catch (Exception e) {

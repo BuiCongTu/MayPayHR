@@ -11,7 +11,7 @@ import java.util.List;
 
 public interface OvertimeRequestService {
     void create(TbOvertimeRequest overtimeRequest);
-    TbOvertimeRequest read(int id);
+    OvertimeRequestDTO read(int id);
     void update(TbOvertimeRequest overtimeRequest);
     void delete(int id);
     List<TbOvertimeRequest> list();

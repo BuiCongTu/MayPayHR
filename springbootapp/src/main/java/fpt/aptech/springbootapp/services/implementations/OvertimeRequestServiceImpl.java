@@ -102,13 +102,16 @@ public class OvertimeRequestServiceImpl implements OvertimeRequestService {
     }
 
     @Override
-    public TbOvertimeRequest read(int id) {
-        try {
-            return overtimeRequestRepository.findById(id).orElse(null);
-        } catch (Exception e) {
-            System.out.println(e.getMessage());
+    public OvertimeRequestDTO read(int id) {
+        try{
+            TbOvertimeRequest overtimeRequest = overtimeRequestRepository.findById(id).orElse(null);
+            if (overtimeRequest == null) {
+                throw new IllegalArgumentException("Overtime request not found");
+            }
+            return overtimeRequestMapper.toDTO(overtimeRequest);
+        }catch (Exception e){
+            throw new IllegalArgumentException("Overtime request not found");
         }
-        return null;
     }
 
     @Override
