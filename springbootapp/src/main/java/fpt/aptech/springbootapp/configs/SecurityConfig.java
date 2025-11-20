@@ -70,7 +70,8 @@ public class SecurityConfig {
                                 "/api/overtime/**",
                                 "/api/proposal/**",
                                 "/api/payroll/**",
-                                "/api/department/**"
+                                "/api/department/**",
+                                "/api/lines/**"
                         )
                         .permitAll()
                         // cần authentication
