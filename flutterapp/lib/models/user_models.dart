@@ -61,7 +61,6 @@ class UserModels {
     };
   }
 
-
   factory UserModels.fromJson(Map<String, dynamic> json) {
     return UserModels(
       id: json['id'] ?? 0,
@@ -82,18 +81,17 @@ class UserModels {
       status: json['status'],
       createdAt: json['createdAt'] != null ? DateTime.parse(json['createdAt']) : null,
     );
-  }
+      }
+
+
   bool get isWorker => roleName?.toLowerCase() == 'worker';
-
   bool get isManager => roleName?.toLowerCase() == 'manager';
-
   bool get isFactoryManager => roleName?.toLowerCase() == 'factory manager';
-
   bool get isFactoryDirector => roleName?.toLowerCase() == 'factory director';
-
   bool get isHR => roleName?.toLowerCase() == 'hr';
-
   bool get isAdmin => roleName?.toLowerCase() == 'admin';
+  bool get isUser => !isAdmin;
+
 
   String formatBaseSalary() {
     if (baseSalary == null) return '0₫';
@@ -105,11 +103,10 @@ class UserModels {
     return formatter.format(baseSalary);
   }
 
+
   /// lấy ngày thuê theo định dạng
   String? getFormattedHireDate() {
     if (hireDate == null) return null;
     return DateFormat('dd/MM/yyyy').format(hireDate!);
   }
-
-
 }

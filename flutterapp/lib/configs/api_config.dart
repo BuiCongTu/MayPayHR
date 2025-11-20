@@ -13,7 +13,7 @@ class ApiConfig {
   static const String registerEndpoint = '/api/auth/register';
   static const String logoutEndpoint = '/api/auth/logout';
   static const String getCurrentUserEndpoint = '/api/auth/me';
-  static const String getUserByEmailEndpoint = '/api/auth/getemp';
+  static const String getUserByPhoneEndpoint = '/api/auth/getemp';
   static const String getAllEmployeesEndpoint = '/api/auth/getallemp';
   static const String updateUserEndpoint = '/api/auth/updateuser';
   static const String changePasswordEndpoint = '/api/auth/change-password';

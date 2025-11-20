@@ -71,15 +71,15 @@ public class AuthController {
     }
 
 
-    @GetMapping("/getemp/{email}")
-    public ResponseEntity<ApiResponse<UserResponseDto>> getUserByEmail(@PathVariable String email) {
+    @GetMapping("/getemp/{phone}")
+    public ResponseEntity<ApiResponse<UserResponseDto>> getUserByPhone(@PathVariable String phone) {
         try {
-            if (email == null || email.trim().isEmpty()) {
+            if (phone == null || phone.trim().isEmpty()) {
                 return ResponseEntity.badRequest()
-                        .body(ApiResponse.error("Email cannot be empty"));
+                        .body(ApiResponse.error("Phone cannot be empty"));
             }
 
-            UserResponseDto user = userService.getUserByEmail(email);
+            UserResponseDto user = userService.getUserByPhone(phone);
             return ResponseEntity.ok(ApiResponse.success(user));
         } catch (RuntimeException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
@@ -88,14 +88,14 @@ public class AuthController {
     }
 
 
-    @PutMapping("/updateuser/{email}")
+    @PutMapping("/updateuser/{phone}")
     public ResponseEntity<ApiResponse<UserResponseDto>> updateUser(
-            @PathVariable String email,
+            @PathVariable String phone,
             @RequestBody TbUser userUpdate) {
         try {
-            if (email == null || email.trim().isEmpty()) {
+            if (phone == null || phone.trim().isEmpty()) {
                 return ResponseEntity.badRequest()
-                        .body(ApiResponse.error("Email cannot be empty"));
+                        .body(ApiResponse.error("Phone cannot be empty"));
             }
 
             if (userUpdate == null) {
@@ -103,7 +103,7 @@ public class AuthController {
                         .body(ApiResponse.error("User update data cannot be null"));
             }
 
-            TbUser existingUser = userService.findByEmail(email)
+            TbUser existingUser = userService.findByPhone(phone)
                     .orElseThrow(() -> new RuntimeException("User not found"));
 
             // ko cập nhật password và email)
@@ -139,7 +139,7 @@ public class AuthController {
             }
 
             TbUser updatedUser = userService.createOrUpdateUser(existingUser);
-            UserResponseDto userResponse = userService.getUserByEmail(updatedUser.getEmail());
+            UserResponseDto userResponse = userService.getUserByPhone(updatedUser.getPhone());
 
             return ResponseEntity.ok(ApiResponse.success("Update successful", userResponse));
 
@@ -157,9 +157,9 @@ public class AuthController {
     public ResponseEntity<ApiResponse<UserResponseDto>> getCurrentUser() {
         try {
             Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-            String email = authentication.getName();
+            String phone = authentication.getName();
 
-            UserResponseDto user = userService.getUserByEmail(email);
+            UserResponseDto user = userService.getUserByPhone(phone);
             return ResponseEntity.ok(ApiResponse.success(user));
         } catch (RuntimeException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)

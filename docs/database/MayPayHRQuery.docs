@@ -348,7 +348,6 @@ CREATE TABLE tbOvertimeRequest (
     start_time TIME NOT NULL DEFAULT '17:00:00',
     end_time TIME NOT NULL,
     overtime_time FLOAT NOT NULL,                      
-    num_employees INT NOT NULL,                        
     [status] VARCHAR(20) DEFAULT 'pending' 
         CHECK (status IN ('pending', 'open', 'processed', 'rejected', 'expired')),
     details TEXT,                                      
@@ -358,9 +357,32 @@ CREATE TABLE tbOvertimeRequest (
 );
 GO
 
+-- =============================================
+-- 11.1 tbOvertimeRequestDetail - Chi tiết số lượng theo chuyền
+-- =============================================
+CREATE TABLE tbOvertimeRequestDetail (
+    detail_id INT IDENTITY(1,1) PRIMARY KEY,
+    request_id INT NOT NULL,
+    line_id INT NOT NULL,
+    num_employees INT NOT NULL CHECK (num_employees > 0), 
+    
+    CONSTRAINT FK_RequestDetail_Request FOREIGN KEY (request_id) 
+        REFERENCES tbOvertimeRequest(request_id) ON DELETE CASCADE,
+    CONSTRAINT FK_RequestDetail_Line FOREIGN KEY (line_id) 
+        REFERENCES tbLine(line_id),
+    
+    CONSTRAINT UQ_RequestDetail_Line UNIQUE (request_id, line_id) 
+);
+GO
+
 DECLARE @DeptHoanThanh INT = (SELECT department_id FROM tbDepartment WHERE name = 'Finishing Center/Trung tâm hoàn thành');
-INSERT INTO tbOvertimeRequest (factory_manager_id, department_id, overtime_date, start_time, end_time, overtime_time, num_employees, status, details)
-VALUES ((SELECT user_id FROM tbUser WHERE full_name = 'Nguyễn Thị A'), @DeptHoanThanh, '2025-12-30', '17:00:00', '20:30:00', 3.5, 50, 'open', 'Tăng ca hoàn thành đơn hàng gấp');
+INSERT INTO tbOvertimeRequest (factory_manager_id, department_id, overtime_date, start_time, end_time, overtime_time, status, details)
+VALUES ((SELECT user_id FROM tbUser WHERE full_name = 'Nguyễn Thị A'), @DeptHoanThanh, '2025-12-30', '17:00:00', '20:30:00', 3.5, 'open', 'Tăng ca hoàn thành đơn hàng gấp');
+
+INSERT INTO tbOvertimeRequestDetail (request_id, line_id, num_employees)
+VALUES 
+((SELECT MAX(request_id) FROM tbOvertimeRequest), (SELECT line_id FROM tbLine WHERE line_id = 199060000), 30),
+((SELECT MAX(request_id) FROM tbOvertimeRequest), (SELECT line_id FROM tbLine WHERE line_id = 199060001), 20);
 GO
 
 -- =============================================
@@ -423,7 +445,7 @@ SELECT TOP 3
     (SELECT MAX(ticket_id) FROM tbOvertimeTicket),
     user_id,
     'accepted',
-    (SELECT MAX(line_id) FROM tbLine)
+    (SELECT line_id FROM tbLine WHERE line_id = 199060000)
 FROM tbUser
 WHERE role_id = (SELECT role_id FROM tbRole WHERE name = 'Worker')
 ORDER BY user_id;
