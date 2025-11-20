@@ -59,7 +59,7 @@ public class TbOvertimeRequest {
     private void calculateDuration() {
         if (this.startTime != null && this.endTime != null) {
             long minutes = java.time.Duration.between(this.startTime, this.endTime).toMinutes();
-            if (minutes < 0) minutes += 1440;
+            //if (minutes < 0) minutes += 1440;
             this.overtimeTime = Math.round((minutes / 60.0) * 100.0) / 100.0;
         }
     }
