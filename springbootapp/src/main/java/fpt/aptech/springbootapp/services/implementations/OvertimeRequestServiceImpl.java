@@ -19,6 +19,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
+import java.time.LocalDate;
 import java.util.List;
 
 @Service
@@ -55,7 +56,7 @@ public class OvertimeRequestServiceImpl implements OvertimeRequestService {
         if (factoryManager == null) {
             throw new IllegalArgumentException("Factory manager not found");
         }
-        // Check role ID (199010002 is Factory Manager)
+        //role 199010002 is Factory Manager
         if (factoryManager.getRole().getId() != 199010002) {
             throw new IllegalArgumentException("User is not a factory manager");
         }
@@ -67,9 +68,23 @@ public class OvertimeRequestServiceImpl implements OvertimeRequestService {
             throw new IllegalArgumentException("Department not found");
         }
 
-        if (overtimeRequest.getOvertimeTime() == null || overtimeRequest.getOvertimeTime() <= 0) {
-            throw new IllegalArgumentException("Valid overtime time is required");
+        if (overtimeRequest.getOvertimeDate() == null) {
+            throw new IllegalArgumentException("Overtime date is required");
         }
+        if (overtimeRequest.getOvertimeDate().isBefore(LocalDate.now())) {
+            throw new IllegalArgumentException("Cannot create overtime requests for past dates");
+        }
+
+        if (overtimeRequest.getStartTime() == null || overtimeRequest.getEndTime() == null) {
+            throw new IllegalArgumentException("Start time and End time are required");
+        }
+
+        if (!overtimeRequest.getEndTime().isAfter(overtimeRequest.getStartTime())) {
+            throw new IllegalArgumentException("End time must be after Start time");
+        }
+
+        //default status is pending
+        overtimeRequest.setStatus(TbOvertimeRequest.OvertimeRequestStatus.pending);
 
         if (overtimeRequest.getLineDetails() == null || overtimeRequest.getLineDetails().isEmpty()) {
             throw new IllegalArgumentException("At least one line must be selected with a valid employee count.");
@@ -98,12 +113,12 @@ public class OvertimeRequestServiceImpl implements OvertimeRequestService {
 
     @Override
     public void update(TbOvertimeRequest overtimeRequest) {
-        // Implement update logic if needed
+        // Implement update if needed
     }
 
     @Override
     public void delete(int id) {
-        // Implement delete logic if needed
+        // Implement delete if needed
     }
 
     @Override

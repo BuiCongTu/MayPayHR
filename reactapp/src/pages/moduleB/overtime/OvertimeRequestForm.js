@@ -100,16 +100,15 @@ function OvertimeRequestForm() {
             const start = new Date(`1970-01-01T${formData.startTime}:00`);
             const end = new Date(`1970-01-01T${formData.endTime}:00`);
 
-            let diffMs = end - start;
-            if (diffMs < 0) {
-                diffMs += 24 * 60 * 60 * 1000; // Add 24 hours
+            const diffMs = end - start;
+
+            if (diffMs <= 0) {
+                setFormData(prev => ({ ...prev, overtimeTime: 0 }));
+            } else {
+                const diffHours = diffMs / (1000 * 60 * 60);
+                const roundedHours = Math.round(diffHours * 100) / 100;
+                setFormData(prev => ({ ...prev, overtimeTime: roundedHours }));
             }
-
-            const diffHours = diffMs / (1000 * 60 * 60);
-            // Round to 2 decimals
-            const roundedHours = Math.round(diffHours * 100) / 100;
-
-            setFormData(prev => ({ ...prev, overtimeTime: roundedHours }));
         }
     }, [formData.overtimeDate, formData.startTime, formData.endTime]);
 
@@ -166,8 +165,8 @@ function OvertimeRequestForm() {
 
         // Payload matching DTO/Entity
         const payload = {
-            factoryManager: { id: parseInt(formData.factoryManagerId) },
-            department: { id: parseInt(formData.departmentId) },
+            factoryManagerId: parseInt(formData.factoryManagerId),
+            departmentId: parseInt(formData.departmentId),
             overtimeDate: formData.overtimeDate,
             startTime: formData.startTime + ":00",
             endTime: formData.endTime + ":00",
@@ -269,8 +268,13 @@ function OvertimeRequestForm() {
                                 label="Hours"
                                 value={formData.overtimeTime}
                                 fullWidth
-                                InputProps={{ readOnly: true }}
-                                sx={{ bgcolor: 'action.hover' }}
+                                disabled
+                                sx={{
+                                    "& .MuiInputBase-input.Mui-disabled": {
+                                        WebkitTextFillColor: "#000000",
+                                        backgroundColor: "#f5f5f5"
+                                    }
+                                }}
                             />
                         </Grid>
                     </Grid>
