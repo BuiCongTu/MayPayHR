@@ -15,17 +15,17 @@ import { visuallyHidden } from '@mui/utils';
 // --- 1. MAIN TABLE CONFIGURATION ---
 const mainHeadCells = [
     { id: 'id', label: 'ID', width: '10%' },
-    { id: 'departmentName', label: 'Department', width: '25%' },
+    { id: 'departmentName', label: 'Department', width: '20%' },
     { id: 'overtimeDate', label: 'Date', width: '15%' },
     { id: 'startTime', label: 'Time', width: '15%', disableSorting: true },
     { id: 'numEmployees', label: 'Total Empl.', numeric: true, width: '15%', disableSorting: true },
-    { id: 'status', label: 'Status', width: '10%', disableSorting: true },
+    { id: 'status', label: 'Status', width: '15%', disableSorting: true },
     { id: 'actions', label: 'Actions', width: '10%', disableSorting: true }
 ];
 
 // --- 2. LINE TABLE CONFIGURATION ---
 const lineHeadCells = [
-    { id: 'lineId', label: 'Line ID', numeric: false, width: '10%' }, // NEW COLUMN
+    { id: 'lineId', label: 'Line ID', numeric: false, width: '10%' },
     { id: 'lineName', label: 'Line Name', numeric: false, width: '30%' },
     { id: 'progress', label: 'Staffing Progress (Staffed / Required)', numeric: false, width: '50%', disableSorting: true },
     { id: 'nav', label: '', numeric: false, width: '10%' }

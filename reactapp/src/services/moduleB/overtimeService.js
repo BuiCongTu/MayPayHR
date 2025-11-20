@@ -75,3 +75,18 @@ export async function rejectOvertimeTicket(ticketId, reason) {
         throw err.response?.data || new Error('Failed to reject ticket');
     }
 }
+
+export async function getOvertimeRequestById(id) {
+    const API_URL = `${BASE_API}/overtime-request/${id}`;
+    try {
+        const response = await axios.get(API_URL);
+        return response.data;
+    } catch (err) {
+        console.error(`Failed to fetch request ${id}:`, err);
+        throw err;
+    }
+}
+
+export async function approveOvertimeTicket(ticketId) {
+    // ... implementation for FM to approve/confirm a ticket
+}
