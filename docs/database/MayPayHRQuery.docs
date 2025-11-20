@@ -381,8 +381,8 @@ VALUES ((SELECT user_id FROM tbUser WHERE full_name = 'Nguyễn Thị A'), @Dept
 
 INSERT INTO tbOvertimeRequestDetail (request_id, line_id, num_employees)
 VALUES 
-((SELECT MAX(request_id) FROM tbOvertimeRequest), (SELECT line_id FROM tbLine WHERE name = N'Finishing Team 1/Tổ Hoàn Thành 1'), 30),
-((SELECT MAX(request_id) FROM tbOvertimeRequest), (SELECT line_id FROM tbLine WHERE name = N'Finishing Team 2/Tổ Hoàn Thành 2'), 20);
+((SELECT MAX(request_id) FROM tbOvertimeRequest), (SELECT line_id FROM tbLine WHERE line_id = 199060000), 30),
+((SELECT MAX(request_id) FROM tbOvertimeRequest), (SELECT line_id FROM tbLine WHERE line_id = 199060001), 20);
 GO
 
 -- =============================================
