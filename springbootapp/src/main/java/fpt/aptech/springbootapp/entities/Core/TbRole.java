@@ -13,7 +13,7 @@ import java.util.*;
 @NoArgsConstructor
 @AllArgsConstructor
 @Table(name = "tbRole")
-@JsonIgnoreProperties({"users"})
+@JsonIgnoreProperties({"users", "hibernateLazyInitializer", "handler"})
 public class TbRole {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
