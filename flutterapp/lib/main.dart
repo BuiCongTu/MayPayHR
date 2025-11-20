@@ -1,39 +1,35 @@
 
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'providers/auth_provider.dart';
+import 'screens/auth/login_screen.dart';
+import 'screens/home/home_screen.dart';
 import 'package:flutterapp/screens/auth/AppTheme.dart';
 import 'package:flutterapp/screens/home/home_screen.dart';
 
 final AppTheme appTheme = AppTheme();
 
 void main() {
-  runApp(const MyApp());
+  runApp(MyApp());
 }
-
-class MyApp extends StatefulWidget {
-  const MyApp({super.key});
-
-  @override
-  State<MyApp> createState() => _MyAppState();
-}
-
-class _MyAppState extends State<MyApp> {
-  @override
-  void initState() {
-    appTheme.addListener(() {
-      setState(() {});
-    });
-    super.initState();
-  }
-
+class MyApp extends StatelessWidget {
+  // Check token on startup if you saved phone earlier, you can pass it to loadToken
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      title: 'Flutter App',
-      theme: AppTheme.lightTheme,
-      darkTheme: AppTheme.darkTheme,
-      themeMode: appTheme.currentTheme,
-      home: HomeScreen(),
-    );
-  }
+    return ChangeNotifierProvider(
+      create: (_) => AuthProvider(),
+      child: MaterialApp(
+        title: 'My App',
+        theme: ThemeData(primarySwatch: Colors.blue),
+        home: Consumer<AuthProvider>(
+          builder: (context, auth, _) {
+            if (auth.isLoggedIn) {
+              return HomeScreen();
+            } else {
+              return LoginScreen();
+            }
+          },
+        ),
+      ),
+    );  }
 }
