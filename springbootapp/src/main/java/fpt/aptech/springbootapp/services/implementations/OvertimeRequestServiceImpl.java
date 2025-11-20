@@ -2,8 +2,9 @@ package fpt.aptech.springbootapp.services.implementations;
 
 import fpt.aptech.springbootapp.dtos.ModuleB.OvertimeRequestDTO;
 import fpt.aptech.springbootapp.entities.Core.TbUser;
-import fpt.aptech.springbootapp.filter.OvertimeRequestFilter;
 import fpt.aptech.springbootapp.entities.ModuleB.TbOvertimeRequest;
+import fpt.aptech.springbootapp.entities.ModuleB.TbOvertimeRequestDetail;
+import fpt.aptech.springbootapp.filter.OvertimeRequestFilter;
 import fpt.aptech.springbootapp.mappers.ModuleB.OvertimeRequestMapper;
 import fpt.aptech.springbootapp.repositories.DepartmentRepository;
 import fpt.aptech.springbootapp.repositories.ModuleB.OvertimeRequestRepository;
@@ -15,6 +16,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
 import java.util.List;
@@ -40,33 +42,26 @@ public class OvertimeRequestServiceImpl implements OvertimeRequestService {
     }
 
     @Override
+    @Transactional
     public void create(TbOvertimeRequest overtimeRequest) {
         if (overtimeRequest == null) {
             throw new IllegalArgumentException("Overtime request cannot be null");
         }
 
-        if (overtimeRequest.getFactoryManager() == null) {
+        if (overtimeRequest.getFactoryManager() == null || overtimeRequest.getFactoryManager().getId() == null) {
             throw new IllegalArgumentException("Factory manager is required");
         }
-        if (overtimeRequest.getFactoryManager().getId() == null) {
-            throw new IllegalArgumentException("Factory manager id is required");
-        }
-
-        //factory manager
         TbUser factoryManager = userRepository.findById(overtimeRequest.getFactoryManager().getId()).orElse(null);
         if (factoryManager == null) {
             throw new IllegalArgumentException("Factory manager not found");
         }
+        // Check role ID (199010002 is Factory Manager)
         if (factoryManager.getRole().getId() != 199010002) {
-            throw new IllegalArgumentException("Not a factory manager");
+            throw new IllegalArgumentException("User is not a factory manager");
         }
 
-        //department
-        if (overtimeRequest.getDepartment() == null) {
+        if (overtimeRequest.getDepartment() == null || overtimeRequest.getDepartment().getId() == null) {
             throw new IllegalArgumentException("Department is required");
-        }
-        if (overtimeRequest.getDepartment().getId() == null) {
-            throw new IllegalArgumentException("Department id is required");
         }
         if (departmentRepository.findById(overtimeRequest.getDepartment().getId()).isEmpty()) {
             throw new IllegalArgumentException("Department not found");
@@ -75,12 +70,20 @@ public class OvertimeRequestServiceImpl implements OvertimeRequestService {
         if (overtimeRequest.getOvertimeTime() == null || overtimeRequest.getOvertimeTime() <= 0) {
             throw new IllegalArgumentException("Valid overtime time is required");
         }
-        if (overtimeRequest.getNumEmployees() == null || overtimeRequest.getNumEmployees() <= 0) {
-            throw new IllegalArgumentException("Valid number of employees is required");
+
+        if (overtimeRequest.getLineDetails() == null || overtimeRequest.getLineDetails().isEmpty()) {
+            throw new IllegalArgumentException("At least one line must be selected with a valid employee count.");
         }
+
+        for (TbOvertimeRequestDetail detail : overtimeRequest.getLineDetails()) {
+            if (detail.getNumEmployees() == null || detail.getNumEmployees() <= 0) {
+                throw new IllegalArgumentException("Number of employees for line " + detail.getLine().getName() + " must be greater than 0");
+            }
+            detail.setOvertimeRequest(overtimeRequest);
+        }
+
         overtimeRequest.setCreatedAt(Instant.now());
         overtimeRequestRepository.save(overtimeRequest);
-
     }
 
     @Override
@@ -95,12 +98,12 @@ public class OvertimeRequestServiceImpl implements OvertimeRequestService {
 
     @Override
     public void update(TbOvertimeRequest overtimeRequest) {
-
+        // Implement update logic if needed
     }
 
     @Override
     public void delete(int id) {
-
+        // Implement delete logic if needed
     }
 
     @Override

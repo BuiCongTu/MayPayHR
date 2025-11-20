@@ -18,7 +18,9 @@ public class OvertimeRequestDTO {
     private LocalTime startTime;
     private LocalTime endTime;
     private Double overtimeTime;
-    private Integer numEmployees;
+
+    private List<OvertimeRequestDetailDTO> lineDetails;
+
     private String details;
     private Instant createdAt;
 
@@ -29,4 +31,13 @@ public class OvertimeRequestDTO {
     private String factoryManagerName;
 
     private List<OvertimeTicketDTO> overtimeTickets;
+
+    public Integer getNumEmployees() {
+        if (lineDetails == null || lineDetails.isEmpty()) {
+            return 0;
+        }
+        return lineDetails.stream()
+                .mapToInt(detail -> detail.getNumEmployees() == null ? 0 : detail.getNumEmployees())
+                .sum();
+    }
 }
