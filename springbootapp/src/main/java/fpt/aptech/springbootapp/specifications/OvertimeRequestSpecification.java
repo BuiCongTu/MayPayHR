@@ -30,10 +30,6 @@ public class OvertimeRequestSpecification {
                 predicates.add(cb.like(root.get("department").get("name"), "%" + filter.getDepartmentName() + "%"));
             }
 
-            if(filter.getNumEmployees() != null){
-                predicates.add(cb.equal(root.get("numEmployees"), filter.getNumEmployees()));
-            }
-
             if(filter.getOvertimeTime() != null){
                 predicates.add(cb.equal(root.get("overtimeTime"), filter.getOvertimeTime()));
             }
