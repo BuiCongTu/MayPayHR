@@ -445,7 +445,7 @@ SELECT TOP 3
     (SELECT MAX(ticket_id) FROM tbOvertimeTicket),
     user_id,
     'accepted',
-    (SELECT MAX(line_id) FROM tbLine)
+    (SELECT line_id FROM tbLine WHERE line_id = 199060000)
 FROM tbUser
 WHERE role_id = (SELECT role_id FROM tbRole WHERE name = 'Worker')
 ORDER BY user_id;
