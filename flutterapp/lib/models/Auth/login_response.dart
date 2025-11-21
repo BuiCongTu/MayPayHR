@@ -9,9 +9,9 @@ class LoginResponse {
 
   Map<String, dynamic> toMap() {
     return {
-      'token': this.token,
-      'tokenType': this.tokenType,
-      'user': this.user,
+      'token': token,
+      'tokenType': tokenType,
+      'user': user,
     };
   }
 

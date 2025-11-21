@@ -1,17 +1,16 @@
 package fpt.aptech.springbootapp.configs;
 
-import fpt.aptech.springbootapp.entities.Core.TbRole;
-import fpt.aptech.springbootapp.entities.Core.TbUser;
-
-import fpt.aptech.springbootapp.repositories.RoleRepository;
-import fpt.aptech.springbootapp.repositories.UserRepository;
+import java.time.Instant;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
-import java.time.Instant;
+import fpt.aptech.springbootapp.entities.Core.TbRole;
+import fpt.aptech.springbootapp.entities.Core.TbUser;
+import fpt.aptech.springbootapp.repositories.RoleRepository;
+import fpt.aptech.springbootapp.repositories.UserRepository;
 
 @Component
 public class DataSeeder implements CommandLineRunner {
@@ -47,7 +46,6 @@ public class DataSeeder implements CommandLineRunner {
             admin.setRole(adminRole);
 
             userRepository.save(admin);
-            System.out.println(" Admin account created: admin@admin.com / 123456");
         }
 
         // Tạo tài khoản user nếu chưa có
@@ -60,7 +58,6 @@ public class DataSeeder implements CommandLineRunner {
         //     user.setStatus(TbUser.UserStatus.Active);
         //     user.setCreatedAt(Instant.now());
         //     user.setRole(userRole);
-
         //     userRepository.save(user);
         //     System.out.println(" User account created: user@user.com / 123456");
         // }

@@ -9,6 +9,7 @@ import org.hibernate.annotations.ColumnDefault;
 
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.time.LocalDateTime;
 
 @Getter
 @Setter
@@ -18,7 +19,6 @@ import java.time.Instant;
 public class TbFaceScanLog {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "scan_id", nullable = false)
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -55,9 +55,8 @@ public class TbFaceScanLog {
     @Column(name = "attendance_id")
     private Integer attendanceId;
 
-    @ColumnDefault("getdate()")
-    @Column(name = "created_at")
-    private Instant createdAt;
+    @Column(name = "created_at", columnDefinition = "DATETIMEOFFSET(6)")
+    private LocalDateTime createdAt;
 
     public enum ScanType {
         CHECK_IN,

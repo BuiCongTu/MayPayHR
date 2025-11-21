@@ -1,18 +1,21 @@
 package fpt.aptech.springbootapp.securities;
 
-import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
-import io.jsonwebtoken.security.Keys;
-import org.springframework.stereotype.Component;
-
-import javax.crypto.SecretKey;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Date;
 
+import javax.crypto.SecretKey;
+
+import org.springframework.stereotype.Component;
+
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.SignatureAlgorithm;
+import io.jsonwebtoken.security.Keys;
+
 @Component
 public class JwtUtils {
+
     private static final String secret = "AIzaSyB8dmLwCiGmIH82ZCCBPWP9IECoBapa27A";
     // expiration time 1 hour
     private static final long jwtExpirationMs = 1000 * 60 * 60;
@@ -84,7 +87,6 @@ public class JwtUtils {
             Jwts.parser().setSigningKey(secretTokey(secret)).build().parseClaimsJws(token);
             return true;
         } catch (Exception e) {
-            System.out.println("JWT validation error: " + e.getMessage());
             return false;
         }
     }

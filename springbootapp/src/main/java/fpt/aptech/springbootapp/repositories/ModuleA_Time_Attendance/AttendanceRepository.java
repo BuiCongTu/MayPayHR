@@ -1,19 +1,23 @@
 package fpt.aptech.springbootapp.repositories.ModuleA_Time_Attendance;
 
-import fpt.aptech.springbootapp.entities.Core.TbUser;
-import fpt.aptech.springbootapp.entities.ModuleA.TbAttendance;
+import java.time.LocalDate;
+import java.util.List;
+import java.util.Optional;
+
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import java.time.*;
-import java.util.*;
+import fpt.aptech.springbootapp.entities.Core.TbUser;
+import fpt.aptech.springbootapp.entities.ModuleA.TbAttendance;
 
 @Repository
 public interface AttendanceRepository extends JpaRepository<TbAttendance, Long> {
 //1. tim attendance cua user trong ngay
+
     Optional<TbAttendance> findByUserAndDate(TbUser user, LocalDate date);
+
     //2. tim attendance cua user theo id va ngay
     @Query("SELECT a FROM TbAttendance a WHERE a.user.id = :userId AND a.date = :date")
     Optional<TbAttendance> findByUserIdAndDate(
@@ -41,6 +45,7 @@ public interface AttendanceRepository extends JpaRepository<TbAttendance, Long> 
 
     //7 lay tat ca theo status
     List<TbAttendance> findByStatus(TbAttendance.AttendanceStatus status);
+
     //8. lay attend cua user voi status trong ngay
     @Query("SELECT a FROM TbAttendance a WHERE a.user.id = :userId AND a.date = :date AND a.status = :status")
     Optional<TbAttendance> findByUserIdAndDateAndStatus(
@@ -59,7 +64,8 @@ public interface AttendanceRepository extends JpaRepository<TbAttendance, Long> 
     //10. kiem tra user da check out hnay chua
     @Query("SELECT CASE WHEN COUNT(a) > 0 THEN true ELSE false END FROM TbAttendance a WHERE a.user.id = :userId AND a.date = :date AND a.timeOut IS NOT NULL")
     boolean hasCheckedOutToday(@Param("userId") Integer userId,
-                               @Param("date") LocalDate date);
+            @Param("date") LocalDate date);
+
     //11 lay attendance cua user va department trong ngay
     @Query("SELECT a FROM TbAttendance a WHERE a.date = :date AND a.user.department.id = :departmentId ORDER BY a.user.id")
     List<TbAttendance> findByDateAndDepartment(
@@ -99,5 +105,20 @@ public interface AttendanceRepository extends JpaRepository<TbAttendance, Long> 
     // 17. kiem tra user co attendance nao chua
     @Query("SELECT CASE WHEN COUNT(a) > 0 THEN true ELSE false END FROM TbAttendance a WHERE a.user.id = :userId")
     boolean hasAnyAttendanceRecord(@Param("userId") Integer userId);
+
+    // 18. lay attendance cua user trong khoang ngay
+    @Query("SELECT a FROM TbAttendance a WHERE a.user = :user AND a.date BETWEEN :startDate AND :endDate ORDER BY a.date DESC")
+    List<TbAttendance> findByUserAndDateBetween(
+            @Param("user") TbUser user,
+            @Param("startDate") LocalDate startDate,
+            @Param("endDate") LocalDate endDate
+    );
+
+    // 19. lay attendance cua department trong ngay
+    @Query("SELECT a FROM TbAttendance a WHERE a.user.department.id = :departmentId AND a.date = :date ORDER BY a.user.id")
+    List<TbAttendance> findByUserDepartmentIdAndDate(
+            @Param("departmentId") Integer departmentId,
+            @Param("date") LocalDate date
+    );
 
 }

@@ -12,7 +12,7 @@ class ThemeConfig extends ChangeNotifier {
 
   static ThemeData lightTheme = ThemeData(
     scaffoldBackgroundColor: Colors.white,
-    appBarTheme: AppBarTheme(color: Colors.white),
+    appBarTheme: AppBarTheme(backgroundColor: Colors.white),
     elevatedButtonTheme: ElevatedButtonThemeData(
       style: ElevatedButton.styleFrom(
         backgroundColor: Colors.red,
@@ -27,7 +27,7 @@ class ThemeConfig extends ChangeNotifier {
 
   static ThemeData darkTheme = ThemeData(
     scaffoldBackgroundColor: Colors.black54,
-    appBarTheme: AppBarTheme(color: Colors.white),
+    appBarTheme: AppBarTheme(backgroundColor: Colors.white),
     elevatedButtonTheme: ElevatedButtonThemeData(
       style: ElevatedButton.styleFrom(
         backgroundColor: Colors.red,
