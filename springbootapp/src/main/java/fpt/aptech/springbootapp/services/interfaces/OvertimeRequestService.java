@@ -16,4 +16,7 @@ public interface OvertimeRequestService {
     void delete(int id);
     List<TbOvertimeRequest> list();
     Page<OvertimeRequestDTO> getFilteredRequests(OvertimeRequestFilter filter, Pageable pageable);
+    OvertimeRequestDTO approveRequest(Integer id);
+    OvertimeRequestDTO rejectRequest(Integer id);
+    OvertimeRequestDTO processRequest(Integer id);
 }

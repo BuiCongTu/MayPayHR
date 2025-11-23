@@ -1,37 +1,20 @@
 import React, {useState, useEffect} from 'react';
 import {
     getFilteredOvertimeTickets,
-    confirmOvertimeTicket,
+    approveOvertimeTicket,
     rejectOvertimeTicket
 } from "../../../services/moduleB/overtimeService";
 
 import {
-    Box,
-    Paper,
-    TextField,
-    InputAdornment,
-    ToggleButton,
-    ToggleButtonGroup,
-    Table,
-    TableBody,
-    TableCell,
-    TableContainer,
-    TableHead,
-    TableRow,
-    TableSortLabel,
-    Chip,
-    colors,
-    Stack,
-    Dialog,
-    DialogTitle,
-    DialogContent,
-    Tooltip,
-    IconButton
+    Box, Paper, TextField, InputAdornment, ToggleButton, ToggleButtonGroup,
+    Table, TableBody, TableCell, TableContainer, TableHead, TableRow,
+    TableSortLabel, Chip, colors, Stack, Dialog, DialogTitle,
+    DialogContent, Tooltip, IconButton
 } from '@mui/material';
 
 import SearchIcon from '@mui/icons-material/Search';
 import CloseIcon from '@mui/icons-material/Close';
-import CheckIcon from '@mui/icons-material/Check';
+import VerifiedIcon from '@mui/icons-material/Verified';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 
 import {visuallyHidden} from '@mui/utils';
@@ -82,7 +65,8 @@ function EnhancedTableHead(props) {
     );
 }
 
-function RequestTicketList({request}) {
+// Updated Prop definition: added 'onRefresh'
+function RequestTicketList({request, onRefresh}) {
     const [tickets, setTickets] = useState([]);
     const [order, setOrder] = useState('desc');
     const [orderBy, setOrderBy] = useState('id');
@@ -94,12 +78,17 @@ function RequestTicketList({request}) {
     // Modals
     const [employeeModalOpen, setEmployeeModalOpen] = useState(false);
     const [selectedEmployees, setSelectedEmployees] = useState([]);
+
+    // Reject Modal
     const [rejectModalOpen, setRejectModalOpen] = useState(false);
     const [ticketToReject, setTicketToReject] = useState(null);
 
+    // Approve Modal (NEW)
+    const [approveModalOpen, setApproveModalOpen] = useState(false);
+    const [ticketToApprove, setTicketToApprove] = useState(null);
+
     const requestId = request?.id;
 
-    // Debounce
     useEffect(() => {
         const handler = setTimeout(() => {
             setDebouncedManagerName(managerNameSearch);
@@ -107,7 +96,6 @@ function RequestTicketList({request}) {
         return () => clearTimeout(handler);
     }, [managerNameSearch]);
 
-    // Fetch Data
     useEffect(() => {
         async function loadData() {
             if (!requestId) {
@@ -150,10 +138,21 @@ function RequestTicketList({request}) {
         setEmployeeModalOpen(true);
     };
 
-    const handleConfirm = async (ticketId) => {
+    // Open Approve Modal
+    const handleApproveClick = (ticket) => {
+        setTicketToApprove(ticket);
+        setApproveModalOpen(true);
+    };
+
+    // Submit Approve
+    const handleApproveSubmit = async (reason) => {
+        if (!ticketToApprove) return;
         try {
-            await confirmOvertimeTicket(ticketId);
-            setTickets(prev => prev.map(t => t.id === ticketId ? {...t, status: 'confirmed'} : t));
+            await approveOvertimeTicket(ticketToApprove.id, reason);
+            setTickets(prev => prev.map(t => t.id === ticketToApprove.id ? {...t, status: 'approved'} : t));
+            setApproveModalOpen(false);
+            setTicketToApprove(null);
+            if (onRefresh) onRefresh();
         } catch (err) {
             console.error(err);
         }
@@ -165,6 +164,7 @@ function RequestTicketList({request}) {
             await rejectOvertimeTicket(ticketToReject.id, reason);
             setTickets(prev => prev.map(t => t.id === ticketToReject.id ? {...t, status: 'rejected', reason} : t));
             setRejectModalOpen(false);
+            if (onRefresh) onRefresh();
         } catch (err) {
             console.error(err);
         }
@@ -180,11 +180,8 @@ function RequestTicketList({request}) {
             case 'submitted':
                 color = 'info';
                 break;
-            case 'confirmed':
-                color = 'primary'; // FM Approved
-                break;
             case 'approved':
-                color = 'success'; // Final Approval
+                color = 'success';
                 break;
             case 'rejected':
                 color = 'error';
@@ -195,7 +192,6 @@ function RequestTicketList({request}) {
         return <Chip label={label} color={color} size="small" sx={{minWidth: 90, fontWeight: 'bold'}}/>;
     };
 
-    // Helper for Scope
     const getScopeText = (employeeList) => {
         if(!employeeList) return "0 Employees";
         const count = employeeList.length;
@@ -204,7 +200,6 @@ function RequestTicketList({request}) {
 
     return (
         <Box sx={{ mt: 1 }}>
-            {/* Toolbar */}
             <Stack direction={{xs: 'column', sm: 'row'}} spacing={2} alignItems="center" sx={{mb: 2}}>
                 <TextField
                     placeholder="Search Manager..."
@@ -218,13 +213,12 @@ function RequestTicketList({request}) {
                     <ToggleButtonGroup value={statusFilter} exclusive onChange={handleStatusChange} size="small" sx={{bgcolor: 'white'}}>
                         <ToggleButton value="">All</ToggleButton>
                         <ToggleButton value="submitted">Submitted</ToggleButton>
-                        <ToggleButton value="confirmed">Confirmed</ToggleButton>
                         <ToggleButton value="approved">Approved</ToggleButton>
+                        <ToggleButton value="rejected">Rejected</ToggleButton>
                     </ToggleButtonGroup>
                 </Box>
             </Stack>
 
-            {/* Table */}
             <Paper sx={{width: '100%', mb: 0, border: '1px solid', borderColor: 'grey.300', overflow: 'hidden'}}>
                 <TableContainer>
                     <Table size="small" sx={{width: '100%', tableLayout: 'fixed'}}>
@@ -252,9 +246,9 @@ function RequestTicketList({request}) {
 
                                                     {isActionable && (
                                                         <>
-                                                            <Tooltip title="Confirm">
-                                                                <IconButton color="success" onClick={() => handleConfirm(ticket.id)} size="small">
-                                                                    <CheckIcon fontSize="small"/>
+                                                            <Tooltip title="Approve">
+                                                                <IconButton color="success" onClick={() => handleApproveClick(ticket)} size="small">
+                                                                    <VerifiedIcon fontSize="small"/>
                                                                 </IconButton>
                                                             </Tooltip>
                                                             <Tooltip title="Reject">
@@ -278,7 +272,7 @@ function RequestTicketList({request}) {
                 </TableContainer>
             </Paper>
 
-            {/* Modal: Employee List */}
+            {/* EMPLOYEES MODAL */}
             <Dialog open={employeeModalOpen} onClose={() => setEmployeeModalOpen(false)} maxWidth="md" fullWidth>
                 <DialogTitle sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     Ticket Employees
@@ -291,7 +285,7 @@ function RequestTicketList({request}) {
                 </DialogContent>
             </Dialog>
 
-            {/* Modal: Reject Reason */}
+            {/* REJECT MODAL */}
             <ActionReasonModal
                 open={rejectModalOpen}
                 onClose={() => setRejectModalOpen(false)}
@@ -300,6 +294,17 @@ function RequestTicketList({request}) {
                 label="Reason for Rejection"
                 submitText="Reject Ticket"
                 submitColor="error"
+            />
+
+            {/* APPROVE MODAL */}
+            <ActionReasonModal
+                open={approveModalOpen}
+                onClose={() => setApproveModalOpen(false)}
+                onSubmit={handleApproveSubmit}
+                title="Approve Ticket"
+                label="Reason or Approval Note"
+                submitText="Approve"
+                submitColor="success"
             />
         </Box>
     );

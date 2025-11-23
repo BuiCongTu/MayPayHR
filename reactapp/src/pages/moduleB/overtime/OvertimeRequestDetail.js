@@ -1,9 +1,12 @@
-import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import React, {useState, useEffect} from 'react';
+import {useParams, useNavigate} from 'react-router-dom';
 import {
     getOvertimeRequestById,
-    confirmOvertimeTicket,
-    rejectOvertimeTicket
+    approveOvertimeTicket,
+    rejectOvertimeTicket,
+    approveOvertimeRequest,
+    rejectOvertimeRequest,
+    processOvertimeRequest
 } from '../../../services/moduleB/overtimeService';
 import RequestStatusTracker from '../../../components/moduleB/RequestStatusTracker';
 import EmployeeListTable from './EmployeeList';
@@ -15,9 +18,11 @@ import {
     Paper, Grid, Chip, LinearProgress, Card, CardContent, Stack,
     Accordion, AccordionSummary, AccordionDetails, Table, TableBody,
     TableCell, TableContainer, TableHead, TableRow, IconButton, Tooltip,
-    Dialog, DialogTitle, DialogContent, Tabs, Tab, CardActionArea
+    Dialog, DialogTitle, DialogContent, Tabs, Tab, CardActionArea,
+    Drawer, Divider, Switch, FormControlLabel
 } from '@mui/material';
 
+// Icons
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import CalendarTodayIcon from '@mui/icons-material/CalendarToday';
@@ -25,16 +30,22 @@ import GroupIcon from '@mui/icons-material/Group';
 import PendingActionsIcon from '@mui/icons-material/PendingActions';
 import AssignmentTurnedInIcon from '@mui/icons-material/AssignmentTurnedIn';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import VerifiedIcon from '@mui/icons-material/Verified';
 import CancelIcon from '@mui/icons-material/Cancel';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import CloseIcon from '@mui/icons-material/Close';
 import ViewListIcon from '@mui/icons-material/ViewList';
 import TableChartIcon from '@mui/icons-material/TableChart';
 import DescriptionIcon from '@mui/icons-material/Description';
+import HistoryIcon from '@mui/icons-material/History';
+import ThumbDownIcon from '@mui/icons-material/ThumbDown';
+import ThumbUpIcon from '@mui/icons-material/ThumbUp';
+import HourglassEmptyIcon from '@mui/icons-material/HourglassEmpty';
+import TaskIcon from '@mui/icons-material/Task';
 
+// --- HELPER FUNCTIONS ---
 function processStaffingData(request) {
-    if (!request || !request.lineDetails) return { stats: {}, lines: [] };
+    if (!request || !request.lineDetails) return {stats: {}, lines: []};
 
     const lineMap = {};
     let pendingTicketsGlobal = 0;
@@ -97,25 +108,26 @@ function processStaffingData(request) {
     };
 }
 
-function StatCard({ title, value, subtitle, icon, color, onClick }) {
+function StatCard({title, value, subtitle, icon, color, onClick}) {
     const CardContentWrapper = onClick ? CardActionArea : React.Fragment;
-    const wrapperProps = onClick ? { onClick: onClick } : {};
+    const wrapperProps = onClick ? {onClick: onClick} : {};
 
     return (
-        <Card elevation={2} sx={{ height: '100%', borderTop: `4px solid ${color}` }}>
+        <Card elevation={2} sx={{height: '100%', borderTop: `4px solid ${color}`}}>
             <CardContentWrapper {...wrapperProps}>
                 <CardContent>
                     <Stack direction="row" justifyContent="space-between" alignItems="start">
                         <Box>
-                            <Typography color="textSecondary" variant="caption" fontWeight="bold" textTransform="uppercase">
+                            <Typography color="textSecondary" variant="caption" fontWeight="bold"
+                                        textTransform="uppercase">
                                 {title}
                             </Typography>
-                            <Typography variant="h4" fontWeight="bold" sx={{ my: 1 }}>
+                            <Typography variant="h4" fontWeight="bold" sx={{my: 1}}>
                                 {value}
                             </Typography>
                             {subtitle}
                         </Box>
-                        <Box sx={{ p: 1, bgcolor: `${color}15`, borderRadius: 2, color: color }}>
+                        <Box sx={{p: 1, bgcolor: `${color}15`, borderRadius: 2, color: color}}>
                             {icon}
                         </Box>
                     </Stack>
@@ -125,33 +137,45 @@ function StatCard({ title, value, subtitle, icon, color, onClick }) {
     );
 }
 
-function TicketStatusChip({ status }) {
+function TicketStatusChip({status}) {
     let color = 'default';
     if (status === 'submitted') color = 'info';
-    if (status === 'confirmed') color = 'primary';
     if (status === 'approved') color = 'success';
     if (status === 'rejected') color = 'error';
-    return <Chip label={status?.toUpperCase()} color={color} size="small" sx={{ fontWeight: 'bold', minWidth: 80 }} />;
+    return <Chip label={status?.toUpperCase()} color={color} size="small" sx={{fontWeight: 'bold', minWidth: 80}}/>;
 }
 
+const ROLE_FACTORY_MANAGER = 199010002;
+const ROLE_FACTORY_DIRECTOR = 199010003;
+
 export default function OvertimeRequestDetail() {
-    const { id } = useParams();
+    const {id} = useParams();
     const navigate = useNavigate();
 
     const [request, setRequest] = useState(null);
-    const [processedData, setProcessedData] = useState({ stats: {}, lines: [] });
+    const [processedData, setProcessedData] = useState({stats: {}, lines: []});
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
 
     // UI State
     const [tabValue, setTabValue] = useState(0);
     const [expandedAccordion, setExpandedAccordion] = useState(false);
+    const [drawerOpen, setDrawerOpen] = useState(false);
+
+    // ROLE SIMULATION STATE
+    const [currentUserRole, setCurrentUserRole] = useState(ROLE_FACTORY_MANAGER);
 
     // Modals
     const [employeeModalOpen, setEmployeeModalOpen] = useState(false);
     const [selectedEmployeeList, setSelectedEmployeeList] = useState([]);
+
+    // Reject Modal State
     const [rejectModalOpen, setRejectModalOpen] = useState(false);
-    const [ticketToReject, setTicketToReject] = useState(null);
+    const [rejectTarget, setRejectTarget] = useState({type: null, id: null});
+
+    // Approve Modal State
+    const [approveModalOpen, setApproveModalOpen] = useState(false);
+    const [ticketToApprove, setTicketToApprove] = useState(null);
 
     const loadData = async () => {
         try {
@@ -173,28 +197,66 @@ export default function OvertimeRequestDetail() {
         setExpandedAccordion(isExpanded ? panelId : false);
     };
 
-    const handleConfirm = async (ticketId) => {
+    // --- ACTIONS: REQUEST LEVEL ---
+    const handleApproveRequest = async () => {
+        if (!window.confirm("Approve this request?")) return;
         try {
-            await confirmOvertimeTicket(ticketId);
+            await approveOvertimeRequest(request.id);
             loadData();
         } catch (err) {
-            alert("Failed to confirm ticket: " + err.message);
+            alert("Error approving request: " + (err.message || err));
+        }
+    }
+
+    const handleProcessRequest = async () => {
+        if (!window.confirm("Process this request? This will finalize the data for Payroll.")) return;
+        try {
+            await processOvertimeRequest(request.id);
+            loadData();
+        } catch (err) {
+            alert("Error processing request: " + (err.message || err));
+        }
+    }
+
+    const handleRejectRequestClick = () => {
+        setRejectTarget({type: 'request', id: request.id});
+        setRejectModalOpen(true);
+    }
+
+    // --- ACTIONS: TICKET LEVEL (Parent/Accordion View) ---
+    const handleApproveClick = (ticketId) => {
+        setTicketToApprove(ticketId);
+        setApproveModalOpen(true);
+    };
+
+    const handleApproveSubmit = async (reason) => {
+        try {
+            await approveOvertimeTicket(ticketToApprove, reason);
+            setApproveModalOpen(false);
+            setTicketToApprove(null);
+            loadData(); // Refresh data
+        } catch (err) {
+            alert("Failed to approve ticket: " + err.message);
         }
     };
 
-    const handleRejectClick = (ticketId) => {
-        setTicketToReject(ticketId);
+    const handleRejectTicketClick = (ticketId) => {
+        setRejectTarget({type: 'ticket', id: ticketId});
         setRejectModalOpen(true);
     };
 
     const handleRejectSubmit = async (reason) => {
         try {
-            await rejectOvertimeTicket(ticketToReject, reason);
+            if (rejectTarget.type === 'request') {
+                await rejectOvertimeRequest(rejectTarget.id, reason);
+            } else if (rejectTarget.type === 'ticket') {
+                await rejectOvertimeTicket(rejectTarget.id, reason);
+            }
             setRejectModalOpen(false);
-            setTicketToReject(null);
-            loadData();
+            setRejectTarget({type: null, id: null});
+            loadData(); // Refresh data
         } catch (err) {
-            alert("Failed to reject ticket.");
+            alert("Failed to reject.");
         }
     };
 
@@ -207,100 +269,212 @@ export default function OvertimeRequestDetail() {
         setTabValue(1);
     };
 
-    if (loading) return <Box p={5} display="flex" justifyContent="center"><CircularProgress /></Box>;
+    // --- RENDERERS ---
+    const renderActionButtons = () => {
+        const isManager = currentUserRole === ROLE_FACTORY_MANAGER;
+        const isDirector = currentUserRole === ROLE_FACTORY_DIRECTOR;
+        const status = request.status?.toLowerCase();
+
+        return (
+            <Stack direction="row" spacing={1} alignItems="center">
+
+                <FormControlLabel
+                    control={<Switch size="small" checked={isDirector}
+                                     onChange={() => setCurrentUserRole(isDirector ? ROLE_FACTORY_MANAGER : ROLE_FACTORY_DIRECTOR)}/>}
+                    label={<Typography variant="caption">Simulate Director</Typography>}
+                    sx={{mr: 2, border: '1px dashed #ccc', pr: 1, borderRadius: 1}}
+                />
+
+                <Button
+                    variant="outlined"
+                    startIcon={<HistoryIcon/>}
+                    onClick={() => setDrawerOpen(true)}
+                    sx={{borderColor: 'grey.400', color: 'grey.700'}}
+                >
+                    History
+                </Button>
+
+                {status === 'pending' && (
+                    <>
+                        {isManager && (
+                            <Chip
+                                icon={<HourglassEmptyIcon/>}
+                                label="Waiting for FD Approval"
+                                color="default"
+                                variant="outlined"
+                            />
+                        )}
+                        {isDirector && (
+                            <>
+                                <Button variant="contained" color="error" startIcon={<ThumbDownIcon/>}
+                                        onClick={handleRejectRequestClick}>
+                                    Reject
+                                </Button>
+                                <Button variant="contained" color="success" startIcon={<ThumbUpIcon/>}
+                                        onClick={handleApproveRequest}>
+                                    Approve Request
+                                </Button>
+                            </>
+                        )}
+                    </>
+                )}
+
+                {status === 'open' && isManager && (
+                    <Button
+                        variant="contained"
+                        color="primary"
+                        startIcon={<TaskIcon/>}
+                        onClick={handleProcessRequest}
+                    >
+                        Process Request
+                    </Button>
+                )}
+                {status === 'open' && isDirector && (
+                    <Chip label="Approved & Open" color="success" variant="outlined"/>
+                )}
+
+                {status === 'processed' && (
+                    <Chip label="Processed for Payroll" color="success"/>
+                )}
+
+            </Stack>
+        );
+    };
+
+    const getHeaderStatusChip = (status) => {
+        let color = 'default';
+        let label = status?.toUpperCase() || 'UNKNOWN';
+
+        switch (status?.toLowerCase()) {
+            case 'pending':
+                color = 'warning';
+                break;
+            case 'open':
+                color = 'info';
+                break;
+            case 'processed':
+                color = 'success';
+                break;
+            case 'rejected':
+                color = 'error';
+                break;
+            case 'expired':
+                color = 'default';
+                break;
+        }
+
+        return (
+            <Chip
+                label={label}
+                color={color}
+                variant="filled"
+                sx={{fontWeight: 'bold', fontSize: '0.9rem', height: 32, px: 1}}
+            />
+        );
+    };
+
+    if (loading) return <Box p={5} display="flex" justifyContent="center"><CircularProgress/></Box>;
     if (error) return <Box p={5}><Alert severity="error">{error}</Alert></Box>;
     if (!request) return null;
 
-    const { stats, lines } = processedData;
+    const {stats, lines} = processedData;
     const fmtTime = (t) => t ? t.substring(0, 5) : '';
 
     return (
-        <Container maxWidth="xl" sx={{ mt: 2, mb: 8 }}>
+        <Container maxWidth="xl" sx={{mt: 2, mb: 8}}>
 
-            {/* ZONE A: HEADER */}
+            {/* ZONE A: COMMAND CENTER HEADER */}
             <Box mb={3}>
-                <Paper elevation={3} sx={{ p: 3, borderRadius: 2 }}>
-                    <Box sx={{ mb: 2 }}>
+                <Paper elevation={2} sx={{p: 3, borderRadius: 2, borderTop: '4px solid #1976d2'}}>
+                    <Stack direction={{xs: 'column', md: 'row'}} justifyContent="space-between"
+                           alignItems={{xs: 'start', md: 'center'}} spacing={2} mb={2}>
                         <Button
-                            startIcon={<ArrowBackIcon />}
+                            startIcon={<ArrowBackIcon/>}
                             onClick={() => navigate('/overtime-request')}
-                            size="small"
-                            sx={{ color: 'text.secondary' }}
+                            sx={{color: 'text.secondary'}}
                         >
                             Back to List
                         </Button>
-                    </Box>
 
-                    <Grid container spacing={3}>
-                        <Grid item xs={12} md={7}>
-                            <Typography variant="overline" color="textSecondary" sx={{ letterSpacing: 1 }}>
-                                {request.departmentName}
+                        {renderActionButtons()}
+                    </Stack>
+
+                    <Divider sx={{mb: 2}}/>
+
+                    <Grid container spacing={2} alignItems="center">
+                        <Grid item xs={12} md={8}>
+                            <Stack direction="row" alignItems="center" spacing={2} mb={1}>
+                                <Typography variant="h4" fontWeight="bold" color="primary.main">
+                                    Overtime Request #{request.id}
+                                </Typography>
+                                {getHeaderStatusChip(request.status)}
+                            </Stack>
+
+                            <Typography variant="overline" color="textSecondary"
+                                        sx={{letterSpacing: 1, display: 'block', mb: 2}}>
+                                {request.departmentName} • Created by {request.factoryManagerName}
                             </Typography>
 
-                            <Typography variant="h4" fontWeight="bold" gutterBottom color="primary.main">
-                                Overtime Request #{request.id}
-                            </Typography>
-
-                            <Stack spacing={2} sx={{ mt: 2 }}>
-                                <Box display="flex" alignItems="center" gap={2}>
-                                    <Chip
-                                        icon={<CalendarTodayIcon />}
-                                        label={<Typography variant="subtitle1" fontWeight="bold">{request.overtimeDate}</Typography>}
-                                        color="primary" variant="outlined" sx={{ px: 1 }}
-                                    />
-                                    <Chip
-                                        icon={<AccessTimeIcon />}
-                                        label={`${fmtTime(request.startTime)} - ${fmtTime(request.endTime)} (${request.overtimeTime}h)`}
-                                        variant="outlined"
-                                    />
-                                </Box>
-
-                                <Box>
-                                    <Typography variant="body2" color="textSecondary">Requested by</Typography>
-                                    <Typography variant="subtitle1" fontWeight="medium">{request.factoryManagerName}</Typography>
-                                </Box>
-
-                                {/* ADDED DETAILS SECTION */}
-                                {request.details && (
-                                    <Box sx={{ bgcolor: '#f8f9fa', p: 2, borderRadius: 1, borderLeft: '4px solid #1976d2', mt: 1 }}>
-                                        <Box display="flex" alignItems="center" gap={1} mb={0.5}>
-                                            <DescriptionIcon fontSize="small" color="action" />
-                                            <Typography variant="subtitle2" fontWeight="bold">Request Reason:</Typography>
-                                        </Box>
-                                        <Typography variant="body2" color="text.secondary">
-                                            {request.details}
-                                        </Typography>
-                                    </Box>
-                                )}
+                            <Stack direction="row" spacing={2} flexWrap="wrap" useFlexGap>
+                                <Chip
+                                    icon={<CalendarTodayIcon fontSize="small"/>}
+                                    label={<Typography variant="body2"
+                                                       fontWeight="bold">{request.overtimeDate}</Typography>}
+                                    variant="outlined"
+                                    sx={{px: 1, borderColor: 'grey.300'}}
+                                />
+                                <Chip
+                                    icon={<AccessTimeIcon fontSize="small"/>}
+                                    label={`${fmtTime(request.startTime)} - ${fmtTime(request.endTime)} (${request.overtimeTime}h)`}
+                                    variant="outlined"
+                                    sx={{borderColor: 'grey.300'}}
+                                />
                             </Stack>
                         </Grid>
 
-                        <Grid item xs={12} md={5}>
-                            <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'center', pl: { md: 4 }, borderLeft: { md: '1px solid #eee' } }}>
-                                <Typography variant="subtitle2" color="textSecondary" gutterBottom align="center">
-                                    CURRENT STATUS
-                                </Typography>
-                                <RequestStatusTracker status={request.status} />
-                            </Box>
+                        <Grid item xs={12} md={4}>
+                            {request.details && (
+                                <Box sx={{
+                                    bgcolor: 'grey.50',
+                                    p: 2,
+                                    borderRadius: 2,
+                                    border: '1px solid',
+                                    borderColor: 'grey.200'
+                                }}>
+                                    <Box display="flex" alignItems="center" gap={1} mb={0.5}>
+                                        <DescriptionIcon fontSize="small" color="action"/>
+                                        <Typography variant="subtitle2" fontWeight="bold" color="text.primary">Request
+                                            Note:</Typography>
+                                    </Box>
+                                    <Typography variant="body2" color="text.secondary" sx={{fontStyle: 'italic'}}>
+                                        "{request.details}"
+                                    </Typography>
+                                </Box>
+                            )}
                         </Grid>
                     </Grid>
                 </Paper>
             </Box>
 
             {/* ZONE B: HEALTH CHECK */}
-            <Grid container spacing={3} sx={{ mb: 4 }}>
+            <Grid container spacing={3} sx={{mb: 4}}>
                 <Grid item xs={12} sm={6} md={4}>
-                    <StatCard title="Total Demand" value={stats.totalDemand} subtitle={<Typography variant="body2" color="textSecondary">Required Employees</Typography>} icon={<GroupIcon />} color="#1976d2" />
+                    <StatCard title="Total Demand" value={stats.totalDemand}
+                              subtitle={<Typography variant="body2" color="textSecondary">Required
+                                  Employees</Typography>} icon={<GroupIcon/>} color="#1976d2"/>
                 </Grid>
                 <Grid item xs={12} sm={6} md={4}>
-                    <StatCard title="Current Supply" value={stats.totalSupply} subtitle={<Typography variant="body2" color="textSecondary">Accepted Employees</Typography>} icon={<AssignmentTurnedInIcon />} color={stats.totalSupply >= stats.totalDemand ? "#2e7d32" : "#ed6c02"} />
+                    <StatCard title="Current Supply" value={stats.totalSupply}
+                              subtitle={<Typography variant="body2" color="textSecondary">Accepted
+                                  Employees</Typography>} icon={<AssignmentTurnedInIcon/>}
+                              color={stats.totalSupply >= stats.totalDemand ? "#2e7d32" : "#ed6c02"}/>
                 </Grid>
                 <Grid item xs={12} sm={6} md={4}>
                     <StatCard
                         title="Pending Review"
                         value={stats.pendingTickets}
                         subtitle={<Typography variant="body2" color="textSecondary">Tickets waiting action</Typography>}
-                        icon={<PendingActionsIcon />}
+                        icon={<PendingActionsIcon/>}
                         color={stats.pendingTickets > 0 ? "#d32f2f" : "#9e9e9e"}
                         onClick={stats.pendingTickets > 0 ? handlePendingCardClick : undefined}
                     />
@@ -308,19 +482,19 @@ export default function OvertimeRequestDetail() {
             </Grid>
 
             {/* ZONE C: TABS & CONTENT */}
-            <Box sx={{ width: '100%', bgcolor: 'background.paper', borderRadius: 2, boxShadow: 1, p: 2 }}>
-                <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 2 }}>
+            <Box sx={{width: '100%', bgcolor: 'background.paper', borderRadius: 2, boxShadow: 1, p: 2}}>
+                <Box sx={{borderBottom: 1, borderColor: 'divider', mb: 2}}>
                     <Tabs value={tabValue} onChange={(e, val) => setTabValue(val)}>
-                        <Tab icon={<ViewListIcon />} label="Line Coverage" iconPosition="start" />
-                        <Tab icon={<TableChartIcon />} label="Ticket Management" iconPosition="start" />
+                        <Tab icon={<ViewListIcon/>} label="Line Coverage" iconPosition="start"/>
+                        <Tab icon={<TableChartIcon/>} label="Ticket Management" iconPosition="start"/>
                     </Tabs>
                 </Box>
 
-                {/* TAB 1: LINE COVERAGE */}
                 {tabValue === 0 && (
                     <Box>
-                        <Typography variant="body2" color="textSecondary" sx={{ mb: 2 }}>
-                            Drill down by line to see coverage gaps. <strong>Only valid tickets count towards the total.</strong>
+                        <Typography variant="body2" color="textSecondary" sx={{mb: 2}}>
+                            Drill down by line to see coverage gaps. <strong>Only valid tickets count towards the
+                            total.</strong>
                         </Typography>
                         {lines.map((line) => {
                             const isFull = line.staffed >= line.required;
@@ -329,23 +503,28 @@ export default function OvertimeRequestDetail() {
                             return (
                                 <Accordion
                                     key={line.id}
-                                    sx={{ mb: 1, border: '1px solid #eee', '&:before': { display: 'none' } }}
+                                    sx={{mb: 1, border: '1px solid #eee', '&:before': {display: 'none'}}}
                                     expanded={expandedAccordion === line.id}
                                     onChange={handleAccordionChange(line.id)}
                                 >
-                                    <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                                        <Box display="flex" width="100%" alignItems="center" justifyContent="space-between" pr={2}>
+                                    <AccordionSummary expandIcon={<ExpandMoreIcon/>}>
+                                        <Box display="flex" width="100%" alignItems="center"
+                                             justifyContent="space-between" pr={2}>
                                             <Typography variant="subtitle1" fontWeight="bold">{line.name}</Typography>
                                             <Box display="flex" alignItems="center" gap={2}>
-                                                <Typography variant="body2" sx={{ color: statusColor, fontWeight: 'bold' }}>
+                                                <Typography variant="body2"
+                                                            sx={{color: statusColor, fontWeight: 'bold'}}>
                                                     {line.staffed} / {line.required} Filled
                                                 </Typography>
-                                                <LinearProgress variant="determinate" value={Math.min((line.staffed/line.required)*100, 100)} sx={{ width: 100, height: 8, borderRadius: 4 }} color={isFull ? "success" : "warning"} />
+                                                <LinearProgress variant="determinate"
+                                                                value={Math.min((line.staffed / line.required) * 100, 100)}
+                                                                sx={{width: 100, height: 8, borderRadius: 4}}
+                                                                color={isFull ? "success" : "warning"}/>
                                             </Box>
                                         </Box>
                                     </AccordionSummary>
 
-                                    <AccordionDetails sx={{ bgcolor: '#fafafa', p: 0 }}>
+                                    <AccordionDetails sx={{bgcolor: '#fafafa', p: 0}}>
                                         <TableContainer>
                                             <Table size="small">
                                                 <TableHead>
@@ -353,27 +532,49 @@ export default function OvertimeRequestDetail() {
                                                         <TableCell><strong>Ticket Source</strong></TableCell>
                                                         <TableCell><strong>Manager</strong></TableCell>
                                                         <TableCell><strong>Status</strong></TableCell>
-                                                        <TableCell align="right"><strong>Contribution</strong></TableCell>
+                                                        <TableCell
+                                                            align="right"><strong>Contribution</strong></TableCell>
                                                         <TableCell align="right"><strong>Actions</strong></TableCell>
                                                     </TableRow>
                                                 </TableHead>
                                                 <TableBody>
                                                     {line.tickets.length === 0 ? (
-                                                        <TableRow><TableCell colSpan={5} align="center" sx={{ py: 3, color: 'text.secondary' }}>No tickets submitted for this line yet.</TableCell></TableRow>
+                                                        <TableRow><TableCell colSpan={5} align="center"
+                                                                             sx={{py: 3, color: 'text.secondary'}}>No
+                                                            tickets submitted for this line yet.</TableCell></TableRow>
                                                     ) : (
                                                         line.tickets.map((ticket) => (
                                                             <TableRow key={ticket.ticketId}>
                                                                 <TableCell>Ticket #{ticket.ticketId}</TableCell>
                                                                 <TableCell>{ticket.managerName}</TableCell>
-                                                                <TableCell><TicketStatusChip status={ticket.status} /></TableCell>
-                                                                <TableCell align="right"><Chip label={`+${ticket.contribution}`} size="small" variant="outlined" /></TableCell>
+                                                                <TableCell><TicketStatusChip
+                                                                    status={ticket.status}/></TableCell>
+                                                                <TableCell align="right"><Chip
+                                                                    label={`+${ticket.contribution}`} size="small"
+                                                                    variant="outlined"/></TableCell>
                                                                 <TableCell align="right">
-                                                                    <Stack direction="row" spacing={1} justifyContent="flex-end">
-                                                                        <Tooltip title="View List"><IconButton size="small" onClick={() => handleViewEmployees(ticket.employees)}><VisibilityIcon fontSize="small" /></IconButton></Tooltip>
+                                                                    <Stack direction="row" spacing={1}
+                                                                           justifyContent="flex-end">
+                                                                        <Tooltip title="View List"><IconButton
+                                                                            size="small"
+                                                                            onClick={() => handleViewEmployees(ticket.employees)}><VisibilityIcon
+                                                                            fontSize="small"/></IconButton></Tooltip>
                                                                         {ticket.status === 'submitted' && (
                                                                             <>
-                                                                                <Tooltip title="Confirm"><IconButton color="success" size="small" onClick={() => handleConfirm(ticket.ticketId)}><CheckCircleIcon fontSize="small" /></IconButton></Tooltip>
-                                                                                <Tooltip title="Reject"><IconButton color="error" size="small" onClick={() => handleRejectClick(ticket.ticketId)}><CancelIcon fontSize="small" /></IconButton></Tooltip>
+                                                                                <Tooltip title="Approve">
+                                                                                    <IconButton color="success"
+                                                                                                size="small"
+                                                                                                onClick={() => handleApproveClick(ticket.ticketId)}>
+                                                                                        <VerifiedIcon fontSize="small"/>
+                                                                                    </IconButton>
+                                                                                </Tooltip>
+                                                                                <Tooltip title="Reject">
+                                                                                    <IconButton color="error"
+                                                                                                size="small"
+                                                                                                onClick={() => handleRejectTicketClick(ticket.ticketId)}>
+                                                                                        <CancelIcon fontSize="small"/>
+                                                                                    </IconButton>
+                                                                                </Tooltip>
                                                                             </>
                                                                         )}
                                                                     </Stack>
@@ -391,24 +592,49 @@ export default function OvertimeRequestDetail() {
                     </Box>
                 )}
 
-                {/* TAB 2: TICKET MANAGEMENT */}
                 {tabValue === 1 && (
                     <Box>
-                        <Typography variant="body2" color="textSecondary" sx={{ mb: 2 }}>
+                        <Typography variant="body2" color="textSecondary" sx={{mb: 2}}>
                             Manage all submitted tickets in a single list.
                         </Typography>
-                        <RequestTicketList request={request} />
+                        {/* --- UPDATED: Pass onRefresh prop --- */}
+                        <RequestTicketList request={request} onRefresh={loadData}/>
                     </Box>
                 )}
             </Box>
 
-            {/* MODALS */}
+            <Drawer
+                anchor="right"
+                open={drawerOpen}
+                onClose={() => setDrawerOpen(false)}
+            >
+                <Box sx={{width: 350, p: 3}}>
+                    <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
+                        <Typography variant="h6" fontWeight="bold">Request Status</Typography>
+                        <IconButton onClick={() => setDrawerOpen(false)}><CloseIcon/></IconButton>
+                    </Box>
+                    <Divider sx={{mb: 3}}/>
+
+                    <RequestStatusTracker status={request.status} orientation="vertical"/>
+
+                    <Box mt={4} p={2} bgcolor="grey.50" borderRadius={2}>
+                        <Typography variant="caption" color="textSecondary" display="block" gutterBottom>
+                            METADATA
+                        </Typography>
+                        <Typography variant="body2"><strong>Created:</strong> {new Date().toLocaleDateString()}
+                        </Typography>
+                        <Typography variant="body2"><strong>Last Updated:</strong> {new Date().toLocaleDateString()}
+                        </Typography>
+                    </Box>
+                </Box>
+            </Drawer>
+
             <Dialog open={employeeModalOpen} onClose={() => setEmployeeModalOpen(false)} maxWidth="md" fullWidth>
-                <DialogTitle sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    Employee List <IconButton onClick={() => setEmployeeModalOpen(false)}><CloseIcon /></IconButton>
+                <DialogTitle sx={{display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}>
+                    Employee List <IconButton onClick={() => setEmployeeModalOpen(false)}><CloseIcon/></IconButton>
                 </DialogTitle>
-                <DialogContent dividers sx={{ p: 0 }}>
-                    <EmployeeListTable employees={selectedEmployeeList} />
+                <DialogContent dividers sx={{p: 0}}>
+                    <EmployeeListTable employees={selectedEmployeeList}/>
                 </DialogContent>
             </Dialog>
 
@@ -416,10 +642,20 @@ export default function OvertimeRequestDetail() {
                 open={rejectModalOpen}
                 onClose={() => setRejectModalOpen(false)}
                 onSubmit={handleRejectSubmit}
-                title="Reject Ticket"
+                title={`Reject ${rejectTarget.type === 'request' ? 'Request' : 'Ticket'}`}
                 label="Reason for Rejection"
-                submitText="Reject Ticket"
+                submitText="Reject"
                 submitColor="error"
+            />
+
+            <ActionReasonModal
+                open={approveModalOpen}
+                onClose={() => setApproveModalOpen(false)}
+                onSubmit={handleApproveSubmit}
+                title="Approve Ticket"
+                label="Reason or Approval Note"
+                submitText="Approve"
+                submitColor="success"
             />
         </Container>
     );
