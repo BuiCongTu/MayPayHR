@@ -140,4 +140,35 @@ public class OvertimeRequestServiceImpl implements OvertimeRequestService {
         return overtimeRequestRepository.findAll(spec, pageable)
                 .map(overtimeRequestMapper::toDTO);
     }
+
+    @Override
+    public OvertimeRequestDTO approveRequest(Integer id) {
+        TbOvertimeRequest overtimeRequest = overtimeRequestRepository.findById(id).orElse(null);
+        if(overtimeRequest != null){
+            overtimeRequest.setStatus(TbOvertimeRequest.OvertimeRequestStatus.open);
+            return overtimeRequestMapper.toDTO(overtimeRequestRepository.save(overtimeRequest));
+        }
+        throw new IllegalArgumentException("Overtime request not found");
+    }
+
+    @Override
+    public OvertimeRequestDTO rejectRequest(Integer id) {
+        TbOvertimeRequest overtimeRequest = overtimeRequestRepository.findById(id).orElse(null);
+        if(overtimeRequest != null){
+            overtimeRequest.setStatus(TbOvertimeRequest.OvertimeRequestStatus.rejected);
+            //reason maybe
+            return overtimeRequestMapper.toDTO(overtimeRequestRepository.save(overtimeRequest));
+        }
+        throw new IllegalArgumentException("Overtime request not found");
+    }
+
+    @Override
+    public OvertimeRequestDTO processRequest(Integer id) {
+        TbOvertimeRequest overtimeRequest = overtimeRequestRepository.findById(id).orElse(null);
+        if(overtimeRequest != null){
+            overtimeRequest.setStatus(TbOvertimeRequest.OvertimeRequestStatus.processed);
+            return overtimeRequestMapper.toDTO(overtimeRequestRepository.save(overtimeRequest));
+        }
+        throw new IllegalArgumentException("Overtime request not found");
+    }
 }

@@ -9,10 +9,9 @@ import {
     stepConnectorClasses,
     styled
 } from '@mui/material';
-import AppRegistrationIcon from '@mui/icons-material/AppRegistration'; // Registration
-import FactCheckIcon from '@mui/icons-material/FactCheck'; // FM Review
-import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings'; // FD Review
-import VerifiedIcon from '@mui/icons-material/Verified'; // Final Approval
+import AppRegistrationIcon from '@mui/icons-material/AppRegistration';
+import FactCheckIcon from '@mui/icons-material/FactCheck';
+import VerifiedIcon from '@mui/icons-material/Verified';
 import CancelIcon from '@mui/icons-material/Cancel';
 
 const ColorlibConnector = styled(StepConnector)(({ theme }) => ({
@@ -57,21 +56,18 @@ const ColorlibStepIconRoot = styled('div')(({ theme, ownerState }) => ({
     }),
 }));
 
-// --- 2. TICKET-SPECIFIC ICONS ---
 function TicketStepIcon(props) {
     const { active, completed, className, icon, error } = props;
 
     const icons = {
         1: <AppRegistrationIcon />,      // Pending
-        2: <FactCheckIcon />,            // Submitted (FM)
-        3: <AdminPanelSettingsIcon />,   // Confirmed (FD)
-        4: <VerifiedIcon />,             // Approved
+        2: <FactCheckIcon />,            // Submitted
+        3: <VerifiedIcon />,             // Approved
     };
 
     let content = icons[String(icon)];
     if (error) content = <CancelIcon />;
-    // If completed but not error, keep the original icon to show history
-    // else if (completed) content = <CheckIcon />;
+    else if (completed) content = <VerifiedIcon />; // Show verify check for history if completed
 
     return (
         <ColorlibStepIconRoot ownerState={{ completed, active, error }} className={className}>
@@ -80,7 +76,6 @@ function TicketStepIcon(props) {
     );
 }
 
-// --- 3. TICKET LOGIC ---
 export default function TicketStatusTracker({ status }) {
     let activeStep = 0;
     let isError = false;
@@ -90,20 +85,18 @@ export default function TicketStatusTracker({ status }) {
 
     switch (normalizedStatus) {
         case 'pending':
-            activeStep = 0; // 1. Registration
+            activeStep = 0;
             break;
         case 'submitted':
-            activeStep = 1; // 2. Waiting FM
+            activeStep = 1;
             break;
-        case 'confirmed':
-            activeStep = 2; // 3. Waiting FD
-            break;
+        // Removed 'confirmed' case as it's skipped now
         case 'approved':
-            activeStep = 4; // 4. Finished (All Green)
+            activeStep = 3;
             break;
         case 'rejected':
             isError = true;
-            activeStep = 1;
+            activeStep = 1; // Fails at the submitted/review stage
             break;
         default:
             activeStep = 0;
@@ -111,8 +104,7 @@ export default function TicketStatusTracker({ status }) {
 
     const steps = [
         { label: 'Registration', sub: 'Manager Selection' },
-        { label: 'FM Review', sub: 'Factory Manager Check' },
-        { label: 'FD Approval', sub: 'Director Final Sign-off' },
+        { label: 'Submitted', sub: 'Waiting for FM' },
         { label: 'Approved', sub: 'Ticket Active' },
     ];
 

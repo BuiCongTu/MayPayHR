@@ -33,6 +33,39 @@ export async function createOvertimeRequest(requestData) {
     }
 }
 
+export async function approveOvertimeRequest(requestId) {
+    const API_URL = `${BASE_API}${OVERTIME_REQUEST_API}${requestId}/approve`;
+    try {
+        const response = await axios.post(API_URL);
+        return response.data;
+    } catch (err) {
+        console.error("Failed to approve overtime request:", err);
+        throw err.response?.data || new Error('Failed to approve request');
+    }
+}
+
+export async function rejectOvertimeRequest(requestId, reason) {
+    const API_URL = `${BASE_API}${OVERTIME_REQUEST_API}${requestId}/reject`;
+    try {
+        const response = await axios.post(API_URL);
+        return response.data;
+    } catch (err) {
+        console.error("Failed to reject overtime request:", err);
+        throw err.response?.data || new Error('Failed to reject request');
+    }
+}
+
+export async function processOvertimeRequest(requestId) {
+    const API_URL = `${BASE_API}${OVERTIME_REQUEST_API}${requestId}/process`;
+    try {
+        const response = await axios.post(API_URL);
+        return response.data;
+    } catch (err) {
+        console.error("Failed to process overtime request:", err);
+        throw err.response?.data || new Error('Failed to process request');
+    }
+}
+
 //overtime ticket service
 const OVERTIME_TICKET_API = '/overtime-ticket/'
 
@@ -87,6 +120,14 @@ export async function getOvertimeRequestById(id) {
     }
 }
 
-export async function approveOvertimeTicket(ticketId) {
-    // ... implementation for FM to approve/confirm a ticket
+export async function approveOvertimeTicket(ticketId, reason) {
+    const safeReason = reason || "Approved by Factory Manager";
+    const API_URL = `${BASE_API}${OVERTIME_TICKET_API}${ticketId}/approve`;
+    try {
+        const response = await axios.post(API_URL + '?reason=' + safeReason);
+        return response.data;
+    } catch (err) {
+        console.error("Failed to approve overtime ticket:", err);
+        throw err.response?.data || new Error('Failed to approve ticket');
+    }
 }

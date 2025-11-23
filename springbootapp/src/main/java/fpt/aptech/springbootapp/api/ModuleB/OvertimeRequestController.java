@@ -66,4 +66,22 @@ public class OvertimeRequestController {
     public Page<OvertimeRequestDTO> getFiltered(@ModelAttribute OvertimeRequestFilter filter, Pageable pageable) {
         return overtimeRequestService.getFilteredRequests(filter, pageable);
     }
+
+    @PostMapping("/{id}/approve")
+    @ResponseStatus(code = HttpStatus.OK)
+    public OvertimeRequestDTO approveRequest(@PathVariable Integer id) {
+        return overtimeRequestService.approveRequest(id);
+    }
+
+    @PostMapping("/{id}/reject")
+    @ResponseStatus(code = HttpStatus.OK)
+    public OvertimeRequestDTO rejectRequest(@PathVariable Integer id) {
+        return overtimeRequestService.rejectRequest(id);
+    }
+
+    @PostMapping("/{id}/process")
+    @ResponseStatus(code = HttpStatus.OK)
+    public OvertimeRequestDTO processRequest(@PathVariable Integer id) {
+        return overtimeRequestService.processRequest(id);
+    }
 }
