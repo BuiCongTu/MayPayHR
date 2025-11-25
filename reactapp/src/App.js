@@ -4,8 +4,9 @@ import OvertimeRequestForm from "./pages/moduleB/overtime/OvertimeRequestForm";
 import Layout from "./components/layout/Layout";
 import './App.css';
 import OvertimeTicketList from "./pages/moduleB/overtime/OvertimeTicketList";
-import RequestStatusTracker from "./components/moduleB/RequestStatusTracker";
 import OvertimeRequestDetail from "./pages/moduleB/overtime/OvertimeRequestDetail";
+import OvertimeTicketDetail from "./pages/moduleB/overtime/OvertimeTicketDetail";
+import OvertimeTicketCreate from "./pages/moduleB/overtime/OvertimeTicketCreate";
 
 function App() {
 
@@ -21,6 +22,11 @@ function App() {
                         <Route path="/overtime-request/create" element={<OvertimeRequestForm />} />
                         <Route path="/overtime-ticket" element={<OvertimeTicketList />} />
                         <Route path="/overtime-request/:id" element={<OvertimeRequestDetail />} />
+
+                        {/* Ticket Routes */}
+                        <Route path="/overtime-ticket" element={<OvertimeTicketList />} />
+                        <Route path="/overtime-ticket/:id" element={<OvertimeTicketDetail />} />
+                        <Route path="/overtime-ticket/create" element={<OvertimeTicketCreate />} />
                     </Route>
                 </Routes>
             </BrowserRouter>

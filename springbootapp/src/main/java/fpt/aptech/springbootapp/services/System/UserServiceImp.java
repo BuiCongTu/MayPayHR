@@ -2,6 +2,7 @@ package fpt.aptech.springbootapp.services.System;
 
 import java.time.Instant;
 import java.util.*;
+import java.util.stream.Collectors;
 
 import fpt.aptech.springbootapp.dtos.request.Auth.*;
 import fpt.aptech.springbootapp.dtos.response.*;
@@ -234,5 +235,13 @@ public class UserServiceImp implements UserService {
         resetToken.setUsed(true);
         passwordResetTokenRepository.save(resetToken);
         System.out.println("Password reset successful for user " + user.getEmail());
+    }
+
+    @Override
+    public List<UserResponseDto> getUsersByDepartment(Integer departmentId) {
+        List<TbUser> users = userRepository.findByDepartmentIdAndRoleName(departmentId, "Worker");
+        return users.stream()
+                .map(this::buildUserResponseDto)
+                .collect(Collectors.toList());
     }
 }

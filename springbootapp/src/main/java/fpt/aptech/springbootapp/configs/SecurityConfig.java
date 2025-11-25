@@ -71,7 +71,8 @@ public class SecurityConfig {
                                 "/api/proposal/**",
                                 "/api/payroll/**",
                                 "/api/department/**",
-                                "/api/lines/**"
+                                "/api/lines/**",
+                                "/api/user/**"
                         )
                         .permitAll()
                         // cần authentication
