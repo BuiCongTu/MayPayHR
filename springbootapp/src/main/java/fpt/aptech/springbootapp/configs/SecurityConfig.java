@@ -97,7 +97,9 @@ public class SecurityConfig {
                         "/api/payroll/**",
                         "/api/department/**",
                         "/api/face-scan/attendance",
-                        "/actuator/health"
+                        "/actuator/health",
+                        "/api/lines/**",
+                        "/api/user/**"
                 )
                 .permitAll()
                 // Protected endpoints
@@ -111,22 +113,6 @@ public class SecurityConfig {
                 // All other requests
                 .anyRequest()
                 .authenticated()
-                        //không cần token
-                        .requestMatchers(
-                                "/api/auth/**",
-                                "/api/overtime-request/**",
-                                "/api/overtime-ticket/**",
-                                "/api/overtime/**",
-                                "/api/proposal/**",
-                                "/api/payroll/**",
-                                "/api/department/**",
-                                "/api/lines/**",
-                                "/api/user/**"
-                        )
-                        .permitAll()
-                        // cần authentication
-                        .anyRequest()
-                        .authenticated()
                 )
                 .authenticationProvider(authenticationProvider())
                 .userDetailsService(userDetailsService)
