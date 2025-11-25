@@ -9,9 +9,9 @@ import {
     stepConnectorClasses,
     styled
 } from '@mui/material';
-import AppRegistrationIcon from '@mui/icons-material/AppRegistration';
-import FactCheckIcon from '@mui/icons-material/FactCheck';
-import VerifiedIcon from '@mui/icons-material/Verified';
+import EditNoteIcon from '@mui/icons-material/EditNote'; // Draft
+import SendIcon from '@mui/icons-material/Send'; // Submitted
+import VerifiedIcon from '@mui/icons-material/Verified'; // Approved
 import CancelIcon from '@mui/icons-material/Cancel';
 
 const ColorlibConnector = styled(StepConnector)(({ theme }) => ({
@@ -60,14 +60,14 @@ function TicketStepIcon(props) {
     const { active, completed, className, icon, error } = props;
 
     const icons = {
-        1: <AppRegistrationIcon />,      // Pending
-        2: <FactCheckIcon />,            // Submitted
-        3: <VerifiedIcon />,             // Approved
+        1: <EditNoteIcon />,      // Draft/Pending
+        2: <SendIcon />,          // Submitted
+        3: <VerifiedIcon />,      // Approved
     };
 
     let content = icons[String(icon)];
     if (error) content = <CancelIcon />;
-    else if (completed) content = <VerifiedIcon />; // Show verify check for history if completed
+    else if (completed) content = <VerifiedIcon />;
 
     return (
         <ColorlibStepIconRoot ownerState={{ completed, active, error }} className={className}>
@@ -76,7 +76,7 @@ function TicketStepIcon(props) {
     );
 }
 
-export default function TicketStatusTracker({ status }) {
+export default function TicketStatusTracker({ status, orientation = 'horizontal' }) {
     let activeStep = 0;
     let isError = false;
     let errorLabel = "Rejected";
@@ -90,27 +90,31 @@ export default function TicketStatusTracker({ status }) {
         case 'submitted':
             activeStep = 1;
             break;
-        // Removed 'confirmed' case as it's skipped now
         case 'approved':
             activeStep = 3;
             break;
         case 'rejected':
             isError = true;
-            activeStep = 1; // Fails at the submitted/review stage
+            activeStep = 1;
             break;
         default:
             activeStep = 0;
     }
 
     const steps = [
-        { label: 'Registration', sub: 'Manager Selection' },
+        { label: 'Draft', sub: 'Manager Preparation' },
         { label: 'Submitted', sub: 'Waiting for FM' },
         { label: 'Approved', sub: 'Ticket Active' },
     ];
 
     return (
         <Box sx={{ width: '100%', py: 2 }}>
-            <Stepper alternativeLabel activeStep={activeStep} connector={<ColorlibConnector />}>
+            <Stepper
+                alternativeLabel={orientation === 'horizontal'}
+                orientation={orientation}
+                activeStep={activeStep}
+                connector={orientation === 'horizontal' ? <ColorlibConnector /> : undefined}
+            >
                 {steps.map((step, index) => {
                     const stepFailed = isError && activeStep === index;
                     const label = stepFailed ? errorLabel : step.label;
