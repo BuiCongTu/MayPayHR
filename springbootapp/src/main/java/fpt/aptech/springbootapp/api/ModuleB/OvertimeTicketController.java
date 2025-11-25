@@ -1,5 +1,6 @@
 package fpt.aptech.springbootapp.api.ModuleB;
 
+import fpt.aptech.springbootapp.dtos.ModuleB.OvertimeTicketCreateDTO;
 import fpt.aptech.springbootapp.dtos.ModuleB.OvertimeTicketDTO;
 import fpt.aptech.springbootapp.entities.ModuleB.TbOvertimeTicket;
 import fpt.aptech.springbootapp.filter.OvertimeTicketFilter;
@@ -29,6 +30,12 @@ public class OvertimeTicketController {
         return overtimeTicketService.getFilteredTicket(filter, pageable);
     }
 
+    @PostMapping("/{id}/submit")
+    @ResponseStatus(code = HttpStatus.OK)
+    public OvertimeTicketDTO submitTicket(@PathVariable Integer id) {
+        return overtimeTicketService.submitTicket(id);
+    }
+
     @PostMapping("/{id}/confirm")
     @ResponseStatus(code = HttpStatus.OK)
     public OvertimeTicketDTO confirmTicket(@PathVariable Integer id) {
@@ -47,15 +54,36 @@ public class OvertimeTicketController {
         return overtimeTicketService.approveTicket(id, reason);
     }
 
-    @PostMapping("/create")
-    public ResponseEntity<?> create(@Valid @RequestBody TbOvertimeTicket overtimeTicket) {
+//    @PostMapping("/create")
+//    public ResponseEntity<?> create(@Valid @RequestBody TbOvertimeTicket overtimeTicket) {
+//        try {
+//            overtimeTicketService.create(overtimeTicket);
+//            return ResponseEntity.ok().build();
+//        } catch (IllegalArgumentException e) {
+//            return ResponseEntity.badRequest().body(e.getMessage());
+//        } catch (Exception e) {
+//            return ResponseEntity.internalServerError().build();
+//        }
+//    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<OvertimeTicketDTO> getTicketById(@PathVariable Integer id) {
         try {
-            overtimeTicketService.create(overtimeTicket);
-            return ResponseEntity.ok().build();
+            return ResponseEntity.ok(overtimeTicketService.getTicketById(id));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.notFound().build();
+        }
+    }
+
+    @PostMapping("/create")
+    public ResponseEntity<?> createTicketV2(@RequestBody OvertimeTicketCreateDTO dto) {
+        try {
+            overtimeTicketService.createTicket(dto);
+            return ResponseEntity.ok().body("Ticket created successfully");
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         } catch (Exception e) {
-            return ResponseEntity.internalServerError().build();
+            return ResponseEntity.internalServerError().body("Error: " + e.getMessage());
         }
     }
 }

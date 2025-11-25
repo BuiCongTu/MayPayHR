@@ -24,5 +24,7 @@ public interface UserService {
     void changePassword(String phone, ChangePassReq request);
     void forgotPassword(String phone);
     void resetPassword(String token, String newPassword);
+
+    List<UserResponseDto> getUsersByDepartment(Integer departmentId);
 }
 

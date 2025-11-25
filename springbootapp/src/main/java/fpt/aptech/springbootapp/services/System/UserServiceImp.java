@@ -4,6 +4,8 @@ import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.*;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -234,5 +236,13 @@ public class UserServiceImp implements UserService {
         userRepository.save(user);
         resetToken.setUsed(true);
         passwordResetTokenRepository.save(resetToken);
+    }
+
+    @Override
+    public List<UserResponseDto> getUsersByDepartment(Integer departmentId) {
+        List<TbUser> users = userRepository.findByDepartmentIdAndRoleName(departmentId, "Worker");
+        return users.stream()
+                .map(this::buildUserResponseDto)
+                .collect(Collectors.toList());
     }
 }

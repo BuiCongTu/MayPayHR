@@ -8,6 +8,9 @@ import RegisterPage from "./pages/attendance/RegisterPage";
 import OvertimeRequestForm from "./pages/moduleB/overtime/OvertimeRequestForm";
 import OvertimeRequestList from "./pages/moduleB/overtime/OvertimeRequestList";
 import OvertimeTicketList from "./pages/moduleB/overtime/OvertimeTicketList";
+import OvertimeRequestDetail from "./pages/moduleB/overtime/OvertimeRequestDetail";
+import OvertimeTicketDetail from "./pages/moduleB/overtime/OvertimeTicketDetail";
+import OvertimeTicketCreate from "./pages/moduleB/overtime/OvertimeTicketCreate";
 
 function App()
 {
@@ -26,6 +29,12 @@ function App()
                         <Route path="/attendance/checkout" element={<CheckOutPage />} />
                         <Route path="/attendance/register" element={<RegisterPage />} />
                         <Route path="/attendance/history" element={<HistoryPage />} />
+                        <Route path="/overtime-request/:id" element={<OvertimeRequestDetail />} />
+
+                        {/* Ticket Routes */}
+                        <Route path="/overtime-ticket" element={<OvertimeTicketList />} />
+                        <Route path="/overtime-ticket/:id" element={<OvertimeTicketDetail />} />
+                        <Route path="/overtime-ticket/create" element={<OvertimeTicketCreate />} />
                     </Route>
                 </Routes>
             </BrowserRouter>
