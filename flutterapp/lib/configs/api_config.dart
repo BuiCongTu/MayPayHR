@@ -1,7 +1,7 @@
 class ApiConfig {
   // Cấu hình URL backend
-  static const String baseUrl = 'http://192.168.2.14:9999';
-  // static const String baseUrl = 'http://172.16.1.92:9999';
+  // static const String baseUrl = 'http://192.168.2.14:9999';
+  static const String baseUrl = 'http://172.16.3.234:9999';
 
   // API Timeouts (milliseconds)
   static const int connectionTimeout = 10000;

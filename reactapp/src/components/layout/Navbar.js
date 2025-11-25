@@ -1,25 +1,22 @@
-import React from 'react';
-import {AppBar, Toolbar, Typography, Button, Box, IconButton} from '@mui/material';
-import {Link, useLocation} from 'react-router-dom';
-import SettingsIcon from '@mui/icons-material/Settings';
 import AccountCircleIcon from '@mui/icons-material/AccountCircle';
+import SettingsIcon from '@mui/icons-material/Settings';
+import { AppBar, Box, Button, IconButton, Toolbar, Typography } from '@mui/material';
+import { Link, useLocation } from 'react-router-dom';
 
-const getNavLinks = (role) => {
+const getNavLinks = (role) =>
+{
     let links = [];
 
-    switch (role) {
+    switch (role)
+    {
 
-        //TODO: factory manager id, replace with actually role get from jwt
         case 199010002:
             links = [
-                {title: 'Overtime Requests', path: '/overtime-request'},
-                //mock up links
-                {title: 'Dashboard', path: '/dashboard'},
-                {title: 'Reports', path: '/reports'},
+                { title: 'Overtime Requests', path: '/overtime-request' },
+                { title: 'Dashboard', path: '/dashboard' },
+                { title: 'Reports', path: '/reports' },
             ];
             break;
-
-        //TODO: Add other roles here
 
         default:
             links = [];
@@ -28,19 +25,16 @@ const getNavLinks = (role) => {
     return links;
 };
 
-const Navbar = ({role}) => {
+const Navbar = ({ role }) =>
+{
     const navLinks = getNavLinks(role);
-    // 2. Get the current location
     const location = useLocation();
-
-    //TODO: authentication logic
     const isLoggedIn = role === 199010002;
 
     return (
         <AppBar position="static">
-            <Toolbar variant="dense" sx={{justifyContent: 'space-between'}}>
-                {/* TODO: Add Logo here */}
-                <Typography variant="h6" component="div" sx={{flexGrow: 1}}>
+            <Toolbar variant="dense" sx={{ justifyContent: 'space-between' }}>
+                <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
                     MayPayHR
                 </Typography>
 
@@ -53,7 +47,7 @@ const Navbar = ({role}) => {
                                 to="/settings"
                                 title="Settings"
                             >
-                                <SettingsIcon/>
+                                <SettingsIcon />
                             </IconButton>
                             <IconButton
                                 color="inherit"
@@ -61,7 +55,7 @@ const Navbar = ({role}) => {
                                 to="/profile"
                                 title="Profile"
                             >
-                                <AccountCircleIcon/>
+                                <AccountCircleIcon />
                             </IconButton>
                             <Button
                                 color="inherit"
@@ -92,7 +86,8 @@ const Navbar = ({role}) => {
                     }}
                 >
                     <Box>
-                        {navLinks.map((link) => {
+                        {navLinks.map((link) =>
+                        {
                             const isActive = location.pathname === link.path;
 
                             return (

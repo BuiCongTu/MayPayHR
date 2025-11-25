@@ -1,15 +1,18 @@
 package fpt.aptech.springbootapp.services.System;
 
-import jakarta.mail.MessagingException;
-import jakarta.mail.internet.MimeMessage;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.SimpleMailMessage;
-import org.springframework.mail.javamail.*;
+import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
+
+import jakarta.mail.MessagingException;
+import jakarta.mail.internet.MimeMessage;
 
 @Service
 public class EmailServiceImp implements EmailService {
+
     @Autowired
     private JavaMailSender mailSender;
     @Value("${spring.mail.username}")
@@ -56,7 +59,6 @@ public class EmailServiceImp implements EmailService {
             helper.setText(buildEmailBody(userName, resetUrl), true);
 
             mailSender.send(message);
-            System.out.println("Email sent to: " + toEmail);
         } catch (MessagingException e) {
             throw new RuntimeException("Failed to send email: " + e.getMessage());
         }

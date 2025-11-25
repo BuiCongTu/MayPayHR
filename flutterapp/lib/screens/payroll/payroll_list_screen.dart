@@ -8,10 +8,10 @@ class PayrollListScreen extends StatefulWidget {
   final String token;
 
   const PayrollListScreen({
-    Key? key,
+    super.key,
     required this.userId,
     required this.token,
-  }) : super(key: key);
+  });
 
   @override
   State<PayrollListScreen> createState() => _PayrollListScreenState();

@@ -27,3 +27,4 @@ class AuthProvider with ChangeNotifier {
 
   bool get isLoggedIn => token != null;
 }
+

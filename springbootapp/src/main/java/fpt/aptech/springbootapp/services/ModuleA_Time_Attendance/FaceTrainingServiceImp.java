@@ -45,7 +45,7 @@ public class FaceTrainingServiceImp implements FaceTrainingService {
 
             TbUser trainedByUser = userRepository.findById(trainedByUserId)
                     .orElseThrow(() -> new RuntimeException("Trainer user not found: " + trainedByUserId));
-
+            //goi python sẻvice qua webclient
             Map<String, String> request = new HashMap<>();
             request.put("image_base64", imageBase64);
             request.put("user_id", userId.toString());

@@ -24,7 +24,7 @@ public class FaceTrainingController {
 
     //api train face
     @PostMapping("/train")
-    @PreAuthorize("hasAnyRole('HR', 'Admin')")
+//    @PreAuthorize("hasAnyRole('HR', 'Admin')")
     public ResponseEntity<Map<String, Object>> trainFace(
             @RequestParam Integer userId,
             @RequestParam String imageBase64,
@@ -49,7 +49,7 @@ public class FaceTrainingController {
 
     //2. update
     @PostMapping("/update")
-    @PreAuthorize("hasAnyRole('HR', 'Admin')")
+//    @PreAuthorize("hasAnyRole('HR', 'Admin')")
     public ResponseEntity<Map<String, Object>> updateFaceTraining(
             @RequestParam Integer userId,
             @RequestParam String imageBase64,
@@ -79,7 +79,7 @@ public class FaceTrainingController {
 
     //3 lay face training
     @GetMapping("/{userId}")
-    @PreAuthorize("hasAnyRole('HR', 'Admin')")
+//    @PreAuthorize("hasAnyRole('HR', 'Admin')")
     public ResponseEntity<Map<String, Object>> getFaceTraining(@PathVariable Integer userId) {
         try {
             Optional<TbFaceTraining> faceTraining = faceTrainingService.getFaceTrainingByUserId(userId);
@@ -127,7 +127,7 @@ public class FaceTrainingController {
     }
 
     @GetMapping("/all/trained")
-    @PreAuthorize("hasAnyRole('HR', 'Admin')")
+//    @PreAuthorize("hasAnyRole('HR', 'Admin')")
     public ResponseEntity<Map<String, Object>> getAllTrainedFaces() {
         try {
             log.info("Fetching all trained faces");
@@ -154,7 +154,7 @@ public class FaceTrainingController {
 
     //lay chua train
     @GetMapping("/all/untrained")
-    @PreAuthorize("hasAnyRole('HR', 'Admin')")
+//    @PreAuthorize("hasAnyRole('HR', 'Admin')")
     public ResponseEntity<Map<String, Object>> getAllUntrainedUsers() {
         try {
             List<TbFaceTraining> result = faceTrainingService.getAllUntrainedUsers();
@@ -179,7 +179,7 @@ public class FaceTrainingController {
 
     //delete
     @DeleteMapping("/{userId}")
-    @PreAuthorize("hasAnyRole('HR', 'Admin')")
+//    @PreAuthorize("hasAnyRole('HR', 'Admin')")
     public ResponseEntity<Map<String, Object>> deleteFaceTraining(@PathVariable Integer userId) {
         try {
             faceTrainingService.deleteFaceTraining(userId);
@@ -203,7 +203,7 @@ public class FaceTrainingController {
 
     //lay train models
     @GetMapping("/model/{modelVersion}")
-    @PreAuthorize("hasAnyRole('HR', 'Admin')")
+//    @PreAuthorize("hasAnyRole('HR', 'Admin')")
     public ResponseEntity<Map<String, Object>> getFaceTrainingByModelVersion(@PathVariable String modelVersion) {
         try {
             List<TbFaceTraining> result = faceTrainingService.getFaceTrainingByModelVersion(modelVersion);

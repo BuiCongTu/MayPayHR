@@ -1,22 +1,29 @@
 package fpt.aptech.springbootapp.services.System;
 
 import java.time.Instant;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import fpt.aptech.springbootapp.dtos.request.Auth.*;
-import fpt.aptech.springbootapp.dtos.response.*;
-import fpt.aptech.springbootapp.entities.System.*;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import fpt.aptech.springbootapp.dtos.request.Auth.ChangePassReq;
+import fpt.aptech.springbootapp.dtos.request.Auth.LoginReq;
+import fpt.aptech.springbootapp.dtos.request.Auth.RegisterReq;
+import fpt.aptech.springbootapp.dtos.response.LoginResponse;
+import fpt.aptech.springbootapp.dtos.response.UserResponseDto;
+import fpt.aptech.springbootapp.entities.Core.TbRole;
+import fpt.aptech.springbootapp.entities.Core.TbUser;
+import fpt.aptech.springbootapp.entities.System.TbPasswordResetToken;
 import fpt.aptech.springbootapp.repositories.RoleRepository;
-import fpt.aptech.springbootapp.repositories.System.*;
+import fpt.aptech.springbootapp.repositories.System.PasswordResetTokenRepository;
 import fpt.aptech.springbootapp.repositories.UserRepository;
 import fpt.aptech.springbootapp.securities.JwtUtils;
-import org.springframework.beans.factory.annotation.*;
-import org.springframework.security.crypto.password.*;
-import org.springframework.stereotype.Service;
-
-import fpt.aptech.springbootapp.entities.Core.*;
-import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class UserServiceImp implements UserService {
@@ -36,7 +43,7 @@ public class UserServiceImp implements UserService {
             PasswordEncoder passwordEncoder,
             PasswordResetTokenRepository passwordResetTokenRepository,
             EmailService emailService
-        ) {
+    ) {
         this.userRepository = userRepository;
         this.roleRepository = roleRepository;
         this.jwtUtils = jwtUtils;
@@ -53,7 +60,6 @@ public class UserServiceImp implements UserService {
 
         TbRole role = roleRepository.findById(registerReq.getRoleId())
                 .orElseThrow(() -> new RuntimeException("Role not found"));
-
 
         TbUser user = new TbUser();
         user.setFullName(registerReq.getFullName());
@@ -96,7 +102,7 @@ public class UserServiceImp implements UserService {
     public TbUser createOrUpdateUser(TbUser user) {
         if (user.getId() == null) {
             TbRole userRole = roleRepository.findByName("USER")
-                .orElseGet(() -> roleRepository.save(new TbRole(null, "USER", "Default user role", null)));
+                    .orElseGet(() -> roleRepository.save(new TbRole(null, "USER", "Default user role", null)));
             user.setRole(userRole);
             user.setPasswordHash(passwordEncoder.encode(user.getPasswordHash()));
             user.setCreatedAt(Instant.now());
@@ -127,7 +133,7 @@ public class UserServiceImp implements UserService {
 
     }
 
-    //Anh Tú có thể dùng UserMapper
+    //Anh Tú có thể dùng UserMapper - ddúng zị, dùng nào cũng đc
     private UserResponseDto buildUserResponseDto(TbUser user) {
         return UserResponseDto.builder()
                 .id(user.getId())
@@ -192,8 +198,8 @@ public class UserServiceImp implements UserService {
 
         // xoá token cũ
         passwordResetTokenRepository.deleteByUser(user);
-        // TODO: Generate reset token and send email
-         String resetToken = UUID.randomUUID().toString();
+
+        String resetToken = UUID.randomUUID().toString();
         // Save token to database with expiration time
         TbPasswordResetToken passwordResetToken = new TbPasswordResetToken();
         passwordResetToken.setToken(resetToken);
@@ -203,16 +209,12 @@ public class UserServiceImp implements UserService {
         passwordResetToken.setCreatedAt(Instant.now());
 
         passwordResetTokenRepository.save(passwordResetToken);
-        // Send email with reset link
         emailService.sendPasswordResetEmail(user.getEmail(), resetToken, user.getFullName());
-        System.out.println("Password reset email sent to " + user.getEmail());
     }
 
     @Override
     @Transactional
     public void resetPassword(String token, String newPassword) {
-        // TODO: Validate token and reset password
-        // Find user by reset token
         if (token == null || token.trim().isEmpty()) {
             throw new RuntimeException("Reset token is required");
         }
@@ -234,7 +236,6 @@ public class UserServiceImp implements UserService {
         userRepository.save(user);
         resetToken.setUsed(true);
         passwordResetTokenRepository.save(resetToken);
-        System.out.println("Password reset successful for user " + user.getEmail());
     }
 
     @Override
