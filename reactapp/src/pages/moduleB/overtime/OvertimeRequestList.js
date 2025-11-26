@@ -4,12 +4,13 @@ import { useNavigate } from "react-router-dom";
 import {
     Box, Typography, Button, Paper, TextField, InputAdornment, ToggleButton, ToggleButtonGroup,
     Table, TableBody, TableCell, TableContainer, TableHead, TableRow, TableSortLabel,
-    Collapse, Chip, colors, Grid, LinearProgress, IconButton, Tooltip
+    Collapse, Chip, colors, Grid, LinearProgress, IconButton, Tooltip, FormControlLabel, Switch, Stack
 } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
 import AddIcon from '@mui/icons-material/Add';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
+import PostAddIcon from '@mui/icons-material/PostAdd';
 import { visuallyHidden } from '@mui/utils';
 
 // --- 1. MAIN TABLE CONFIGURATION ---
@@ -192,7 +193,7 @@ function LineBreakdownTable({ request, navigate }) {
 }
 
 // --- 4. MAIN ROW COMPONENT ---
-function RequestRow({ request, isExpanded, onToggle, navigate }) {
+function RequestRow({ request, isExpanded, onToggle, navigate, isFactoryManager }) {
     const getStatusChip = (status) => {
         let color = 'default';
         switch (status?.toLowerCase()) {
@@ -218,18 +219,36 @@ function RequestRow({ request, isExpanded, onToggle, navigate }) {
                     <Typography fontWeight="bold" color="text.primary">{request.numEmployees}</Typography>
                 </TableCell>
                 <TableCell onClick={onToggle} sx={{ cursor: 'pointer' }}>{getStatusChip(request.status)}</TableCell>
+
                 <TableCell>
-                    <Tooltip title="View Full Details">
-                        <IconButton
-                            color="primary"
-                            onClick={(e) => {
-                                e.stopPropagation();
-                                navigate(`/overtime-request/${request.id}`);
-                            }}
-                        >
-                            <VisibilityIcon />
-                        </IconButton>
-                    </Tooltip>
+                    <Stack direction="row" spacing={1}>
+                        <Tooltip title="View Full Details">
+                            <IconButton
+                                color="primary"
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    navigate(`/overtime-request/${request.id}`);
+                                }}
+                            >
+                                <VisibilityIcon />
+                            </IconButton>
+                        </Tooltip>
+
+                        {/* MANAGER ACTION: Add Ticket */}
+                        {!isFactoryManager && request.status === 'open' && (
+                            <Tooltip title="Create Ticket for this Request">
+                                <IconButton
+                                    color="secondary"
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        navigate(`/overtime-ticket/create`, { state: { preselectedRequestId: request.id } });
+                                    }}
+                                >
+                                    <PostAddIcon />
+                                </IconButton>
+                            </Tooltip>
+                        )}
+                    </Stack>
                 </TableCell>
             </TableRow>
 
@@ -237,7 +256,6 @@ function RequestRow({ request, isExpanded, onToggle, navigate }) {
                 <TableCell style={{ paddingBottom: 0, paddingTop: 0 }} colSpan={7}>
                     <Collapse in={isExpanded} timeout="auto" unmountOnExit>
                         <Box sx={{ m: 2, p: 3, bgcolor: '#f8f9fa', borderRadius: 2, border: '1px solid #e0e0e0' }}>
-
                             <Typography variant="subtitle2" color="textSecondary" gutterBottom>
                                 REQUEST CONTEXT
                             </Typography>
@@ -257,9 +275,7 @@ function RequestRow({ request, isExpanded, onToggle, navigate }) {
                                     </Grid>
                                 </Grid>
                             </Paper>
-
                             <LineBreakdownTable request={request} navigate={navigate} />
-
                         </Box>
                     </Collapse>
                 </TableCell>
@@ -279,6 +295,9 @@ export default function OvertimeRequestList() {
     const navigate = useNavigate();
     const [order, setOrder] = useState('desc');
     const [orderBy, setOrderBy] = useState('id');
+
+    // --- DEMO STATE ---
+    const [isFactoryManager, setIsFactoryManager] = useState(true);
 
     useEffect(() => {
         const t = setTimeout(() => setDebouncedSearch(departmentSearch), 500);
@@ -306,33 +325,53 @@ export default function OvertimeRequestList() {
 
     return (
         <Box>
+            {/* TOOLBAR */}
             <Paper elevation={0} sx={{
                 p: 2, mb: 2, bgcolor: 'white', border: '1px solid #eee',
-                display: 'flex', gap: 2, flexWrap: 'wrap', alignItems: 'center'
+                display: 'flex', gap: 2, alignItems: 'center',
+                flexWrap: 'nowrap', // FORCE SINGLE ROW
+                overflowX: 'auto' // Safe fallback for very small screens
             }}>
-                <Typography variant="h6" sx={{ fontWeight: 'bold', mr: 2 }}>Overtime Overview</Typography>
+                <Typography variant="h6" sx={{ fontWeight: 'bold', mr: 2, whiteSpace: 'nowrap' }}>Overtime Overview</Typography>
+
                 <TextField
                     size="small"
                     placeholder="Search Department..."
                     value={departmentSearch}
                     onChange={e => setDepartmentSearch(e.target.value)}
                     InputProps={{ startAdornment: <InputAdornment position="start"><SearchIcon /></InputAdornment> }}
+                    sx={{ minWidth: 200 }}
                 />
+
                 <ToggleButtonGroup
                     value={statusFilter}
                     exclusive
                     onChange={(e, v) => setStatusFilter(v)}
                     size="small"
+                    sx={{ whiteSpace: 'nowrap' }}
                 >
                     <ToggleButton value="">All</ToggleButton>
                     <ToggleButton value="pending" color="warning">Pending</ToggleButton>
                     <ToggleButton value="open" color="info">Open</ToggleButton>
                     <ToggleButton value="processed" color="success">Processed</ToggleButton>
                 </ToggleButtonGroup>
+
                 <Box flexGrow={1} />
-                <Button variant="contained" startIcon={<AddIcon />} onClick={() => navigate("/overtime-request/create")}>
-                    New Request
-                </Button>
+
+                {/* ACTIONS GROUP */}
+                <Stack direction="row" spacing={2} alignItems="center" sx={{ whiteSpace: 'nowrap' }}>
+                    <FormControlLabel
+                        control={<Switch checked={isFactoryManager} onChange={() => setIsFactoryManager(!isFactoryManager)} size="small" />}
+                        label={<Typography variant="caption">{isFactoryManager ? "Factory Manager" : "Line Manager"}</Typography>}
+                        sx={{ border: '1px dashed #ccc', borderRadius: 1, px: 1, bgcolor: isFactoryManager ? 'primary.50' : 'secondary.50', m: 0 }}
+                    />
+
+                    {isFactoryManager && (
+                        <Button variant="contained" startIcon={<AddIcon />} onClick={() => navigate("/overtime-request/create")}>
+                            New Request
+                        </Button>
+                    )}
+                </Stack>
             </Paper>
 
             <TableContainer component={Paper} elevation={0} sx={{ border: '1px solid #eee' }}>
@@ -354,6 +393,7 @@ export default function OvertimeRequestList() {
                                 isExpanded={expanded === req.id}
                                 onToggle={() => setExpanded(expanded === req.id ? false : req.id)}
                                 navigate={navigate}
+                                isFactoryManager={isFactoryManager}
                             />
                         ))}
                     </TableBody>

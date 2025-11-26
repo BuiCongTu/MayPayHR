@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect, useMemo } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom'; // Added useLocation
 import { getFilteredOvertimeRequest, createOvertimeTicket } from '../../../services/moduleB/overtimeService';
 import { getUsersByDepartment } from '../../../services/userService';
 import EmployeeTransferList from './EmployeeTransferList';
@@ -14,11 +14,12 @@ import PersonAddIcon from '@mui/icons-material/PersonAdd';
 import SaveIcon from '@mui/icons-material/Save';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 
-// --- MOCK AUTH (Replace with real context) ---
+// --- MOCK AUTH ---
 const useAuth = () => ({ user: { id: 199050002, departmentId: 199040005 } });
 
 export default function OvertimeTicketCreate() {
     const navigate = useNavigate();
+    const location = useLocation(); // Get navigation state
     const { user } = useAuth();
 
     // Data States
@@ -37,19 +38,35 @@ export default function OvertimeTicketCreate() {
     const [currentEditingLine, setCurrentEditingLine] = useState(null);
     const [error, setError] = useState(null);
 
+    // 1. Load Data & Handle Pre-selection
     useEffect(() => {
         async function init() {
             try {
+                // A. Fetch Requests
                 const reqData = await getFilteredOvertimeRequest(
                     { status: 'open', departmentId: user.departmentId },
                     { page: 0, size: 50, sort: 'id,desc' }
                 );
-                setRequests(reqData.content || []);
+                const fetchedRequests = reqData.content || [];
+                setRequests(fetchedRequests);
 
+                // B. Fetch Employees
                 if (user.departmentId) {
                     const users = await getUsersByDepartment(user.departmentId);
                     setDeptEmployees(users || []);
                 }
+
+                // C. Handle Pre-selected Request (passed from List)
+                if (location.state?.preselectedRequestId) {
+                    const targetReq = fetchedRequests.find(r => r.id === location.state.preselectedRequestId);
+                    if (targetReq) {
+                        // Trigger the change logic manually
+                        setSelectedRequest(targetReq);
+                        // Run the line setup logic immediately for this pre-selected item
+                        setupLinesForRequest(targetReq);
+                    }
+                }
+
             } catch (err) {
                 console.error(err);
                 setError("Failed to initialize data.");
@@ -58,23 +75,21 @@ export default function OvertimeTicketCreate() {
             }
         }
         init();
-    }, [user.departmentId]);
+    }, [user.departmentId, location.state]);
 
-    const handleRequestChange = (event, newValue) => {
-        setSelectedRequest(newValue);
-        setError(null);
-
-        if (newValue) {
+    // Helper to setup lines
+    const setupLinesForRequest = (req) => {
+        if (req) {
             const fulfilledLineIds = new Set();
-            if (newValue.overtimeTickets) {
-                newValue.overtimeTickets.forEach(ticket => {
+            if (req.overtimeTickets) {
+                req.overtimeTickets.forEach(ticket => {
                     if (ticket.status !== 'rejected') {
                         ticket.employeeList?.forEach(emp => fulfilledLineIds.add(emp.lineId));
                     }
                 });
             }
 
-            const initialLines = newValue.lineDetails.map(d => ({
+            const initialLines = req.lineDetails.map(d => ({
                 lineId: d.lineId,
                 lineName: d.lineName,
                 numEmployees: d.numEmployees,
@@ -87,6 +102,13 @@ export default function OvertimeTicketCreate() {
             setLines([]);
             setAllocations({});
         }
+    };
+
+    // 2. Handle Request Selection (User Interaction)
+    const handleRequestChange = (event, newValue) => {
+        setSelectedRequest(newValue);
+        setError(null);
+        setupLinesForRequest(newValue);
     };
 
     const handleLineToggle = (lineId) => {
@@ -229,8 +251,8 @@ export default function OvertimeTicketCreate() {
                                     <TableRow>
                                         <TableCell padding="checkbox">Select</TableCell>
                                         <TableCell>Line Name</TableCell>
-                                        <TableCell align="center">Required</TableCell>
-                                        <TableCell align="center">Assigned</TableCell>
+                                        <TableCell align="right">Required</TableCell>
+                                        <TableCell align="right">Assigned</TableCell>
                                         <TableCell align="right">Actions</TableCell>
                                     </TableRow>
                                 </TableHead>
@@ -258,8 +280,8 @@ export default function OvertimeTicketCreate() {
                                                         <Chip label="Fulfilled in other ticket" size="small" color="default" sx={{ mt: 0.5, fontSize: '0.7rem' }} />
                                                     )}
                                                 </TableCell>
-                                                <TableCell align="center">{line.numEmployees}</TableCell>
-                                                <TableCell align="center">
+                                                <TableCell align="right">{line.numEmployees}</TableCell>
+                                                <TableCell align="right">
                                                     <Chip
                                                         label={assignedCount}
                                                         color={assignedCount === 0 ? "default" : (isFulfilled ? "success" : "warning")}
@@ -301,11 +323,10 @@ export default function OvertimeTicketCreate() {
                 )}
             </Paper>
 
-            {/* NEW MODAL COMPONENT */}
             <EmployeeTransferList
                 open={modalOpen}
                 onClose={() => setModalOpen(false)}
-                title={`Assign Employees to: ${currentEditingLine?.lineName}`}
+                title={`Assign Employees: ${currentEditingLine?.lineName}`}
                 allEmployees={deptEmployees}
                 initialSelected={currentEditingLine ? (allocations[currentEditingLine.lineId] || []) : []}
                 unavailableEmployees={currentEditingLine ? getUnavailableEmployeesMap(currentEditingLine.lineId) : new Map()}
