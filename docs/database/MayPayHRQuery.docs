@@ -1,0 +1,675 @@
+CREATE DATABASE MayPayHR;
+GO
+
+USE MayPayHR;
+GO
+
+-- =============================================
+-- 1. tbRole - Vai trò
+-- =============================================
+CREATE TABLE tbRole (
+    role_id INT IDENTITY(199010000,1) PRIMARY KEY, 
+    [name] VARCHAR(100) UNIQUE NOT NULL,              
+    [description] TEXT                               
+);
+GO
+
+INSERT INTO tbRole (name, description) VALUES
+('Worker', 'Worker / Công nhân trực tiếp sản xuất (may, KCS, hoàn thành)'),
+('Manager', 'Line/Department Manager / Quản lý chuyền, quản lý bộ phận'),
+('Factory Manager', 'Factory Manager / Quản lý nhà máy, duyệt đơn, tăng ca'),
+('Factory Director', 'Factory Director / Giám đốc nhà máy, duyệt cuối cùng'),
+('HR', 'Human Resources / Nhân sự, quản lý hồ sơ, lịch sử'),
+('Admin', 'Administrator / Quản trị viên hệ thống');
+GO
+
+-- =============================================
+-- 2. tbLeaveReason - Lý do nghỉ
+-- =============================================
+CREATE TABLE tbLeaveReason (
+    leave_reason_id INT IDENTITY(199020000,1) PRIMARY KEY, 
+    reason VARCHAR(255) NOT NULL,                     -- Lý do nghỉ ngắn gọn
+    [description] TEXT                                -- Chi tiết lý do
+);
+GO
+
+INSERT INTO tbLeaveReason (reason, description) VALUES
+('Common Illness/Bệnh thông thường', 'Common Illness / Nghỉ ốm thông thường, nghỉ ốm có giấy bệnh viện, điều trị ngoại trú.'),
+('Serious Illness/Bệnh nặng', 'Serious Illness / Nghỉ ốm có giấy khám bệnh viện, điều trị nội trú.'),
+('Maternity Leave/Thai sản', 'Maternity Leave / Chế độ thai sản'),
+('Personal Leave/Việc riêng', 'Personal Leave / Cưới hỏi, ma chay, việc cá nhân.'),
+('Unauthorized Leave/Nghỉ không phép', 'Unauthorized Leave / Nghỉ không xin phép'),
+('Annual Leave/Nghỉ phép năm', 'Annual Leave / Nghỉ theo quy định 12 ngày/năm');
+GO
+
+-- =============================================
+-- 3. tbSkillLevel - Bậc tay nghề
+-- =============================================
+CREATE TABLE tbSkillLevel (
+    skill_level_id INT IDENTITY(199030000,1) PRIMARY KEY,  
+    [name] VARCHAR(100) NOT NULL,                     -- Tên bậc (Level 1-7)
+    [description] TEXT                                -- Mô tả kỹ năng
+);
+GO
+
+INSERT INTO tbSkillLevel (name, description) VALUES
+('Level 1', 'Beginner / Mới vào nghề, cần được hướng dẫn và giám sát chặt chẽ.'),
+('Level 2', 'Basic Experience / Kinh nghiệm cơ bản, cần được hướng dẫn thêm'),
+('Level 3', 'Solid Experience / Kinh nghiệm vững vàng, đã được đào tạo bài bản'),
+('Level 4', 'Senior Worker / Kinh nghiệm lâu năm, hướng dẫn người khác - Leader, Ass. leader'),
+('Level 5', 'Expert Worker / Kinh nghiệm lâu năm, xử lý sản phẩm khó'),
+('Level 6', 'Sample Maker / Thợ may mẫu, có tay nghề cao và khả năng đọc, hiểu các bản vẽ kỹ thuật phức tạp'),
+('Level 7', 'Technical Master / Kỹ thuật may, tay nghề cao, chuyên sâu kỹ thuật may');
+GO
+
+-- =============================================
+-- 4. tbDepartment - Phòng ban
+-- =============================================
+CREATE TABLE tbDepartment (
+    department_id INT IDENTITY(199040000,1) PRIMARY KEY,  
+    [name] VARCHAR(100) NOT NULL,                     -- Tên phòng ban
+    manager_id INT NULL,                              -- Quản lý phòng ban (FK)
+    [description] TEXT                                -- Mô tả công việc
+);
+GO
+
+INSERT INTO tbDepartment (name, manager_id, description) VALUES
+('HR/Hành Chính', NULL, 'Human Resources Department / Thống kê lao động, Y tế, Bảo vệ, Tạp vụ, Tài xế.'),
+('Planning/Kế hoạch', NULL, 'Planning / Kế Hoạch sản xuất hàng, Kho nguyên liệu, Kho phụ liệu.'),
+('FQC', NULL, 'Final Quality Control / Quản lý chất lượng'),
+('Technical/Kỹ thuật', NULL, 'Technical / Kỹ thuật, Cơ điện, LEAN'),
+('Production/Sản xuất', NULL, 'Production / Rập mẫu, Tổ cắt, Chuyền may, KCS TW'),
+('Finishing Center/Trung tâm hoàn thành', NULL, 'Finishing Center / Tổ hoàn thành 1, tổ hoàn thành 2, tổ hoàn thành 3, Tổ hậu cần, KCS SW, Tổ Xuất hàng');
+GO
+
+-- =============================================
+-- 5. tbUser - Nhân viên
+-- =============================================
+CREATE TABLE tbUser (
+    user_id INT IDENTITY(199050000,1) PRIMARY KEY,     -- ID nhân viên
+    full_name VARCHAR(255) NOT NULL,                   -- Họ tên
+    email VARCHAR(255),
+    password_hash VARCHAR(255),                          
+    phone VARCHAR(20) NOT NULL,                        -- SĐT
+    role_id INT,                                       -- Vai trò
+    department_id INT,                                 -- Phòng ban
+    line_id INT NULL,                                  -- Chuyền/tổ
+    face_data TEXT,                                    -- Dữ liệu khuôn mặt
+    salary_type VARCHAR(20) DEFAULT 'TimeBased' 
+        CHECK (salary_type IN ('ProductBased', 'TimeBased')), -- Loại lương
+    base_salary DECIMAL(10,2) DEFAULT 0,               -- Lương cơ bản
+    skill_level_id INT,                                -- Bậc tay nghề
+    hire_date DATE,                                    -- Ngày vào làm
+    [status] VARCHAR(20) DEFAULT 'Active' 
+        CHECK (status IN ('Active', 'Inactive', 'Terminated')), -- Trạng thái
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,     -- Ngày tạo
+
+    CONSTRAINT FK_User_Role FOREIGN KEY (role_id) REFERENCES tbRole(role_id),
+    CONSTRAINT FK_User_Department FOREIGN KEY (department_id) REFERENCES tbDepartment(department_id),
+    CONSTRAINT FK_User_SkillLevel FOREIGN KEY (skill_level_id) REFERENCES tbSkillLevel(skill_level_id)
+);
+GO
+
+-- Cập nhật manager_id cho các phòng ban
+DECLARE @FactoryDirector INT, @FactoryManager1 INT, @FactoryManager2 INT;
+
+-- Tạo quản lý cấp cao
+INSERT INTO tbUser (full_name, email,password_hash, phone, role_id, department_id, salary_type, base_salary, skill_level_id, hire_date, [status])
+SELECT 'Dương Thị N', 'factorydirector@maypro.com','$2a$10$jcw0c1yYkDzTO4XTg/kTmeD3UggCAaQwpw1v1R76VMupvQMwelxwq', '0901111000', role_id, 
+       (SELECT department_id FROM tbDepartment WHERE name = 'Finishing Center/Trung tâm hoàn thành'), 
+       'TimeBased', 25000000, (SELECT skill_level_id FROM tbSkillLevel WHERE name = 'Level 7'), '2017-01-10', 'Active'
+FROM tbRole WHERE name = 'Factory Director';
+
+INSERT INTO tbUser (full_name, email,password_hash, phone, role_id, department_id, salary_type, base_salary, skill_level_id, hire_date, [status])
+SELECT 'Nguyễn Thị A', 'factorymanager1@maypro.com','$2a$10$jcw0c1yYkDzTO4XTg/kTmeD3UggCAaQwpw1v1R76VMupvQMwelxwq', '0901111022', role_id, 
+       (SELECT department_id FROM tbDepartment WHERE name = 'Finishing Center/Trung tâm hoàn thành'), 
+       'TimeBased', 20000000, (SELECT skill_level_id FROM tbSkillLevel WHERE name = 'Level 7'), '2018-01-10', 'Active'
+FROM tbRole WHERE name = 'Factory Manager';
+
+INSERT INTO tbUser (full_name, email,password_hash, phone, role_id, department_id, salary_type, base_salary, skill_level_id, hire_date, [status])
+SELECT 'Trần Thị B', 'manager1@maypro.com','$2a$10$jcw0c1yYkDzTO4XTg/kTmeD3UggCAaQwpw1v1R76VMupvQMwelxwq', '0901111001', role_id, 
+       (SELECT department_id FROM tbDepartment WHERE name = 'Finishing Center/Trung tâm hoàn thành'), 
+       'TimeBased', 18000000, (SELECT skill_level_id FROM tbSkillLevel WHERE name = 'Level 6'), '2019-03-15', 'Active'
+FROM tbRole WHERE name = 'Manager';
+
+INSERT INTO tbUser (full_name, email,password_hash, phone, role_id, department_id, salary_type, base_salary, skill_level_id, hire_date, [status])
+SELECT 'Đoàn Thị C', 'manager2@maypro.com','$2a$10$jcw0c1yYkDzTO4XTg/kTmeD3UggCAaQwpw1v1R76VMupvQMwelxwq', '0901111033', role_id, 
+       (SELECT department_id FROM tbDepartment WHERE name = 'Finishing Center/Trung tâm hoàn thành'), 
+       'TimeBased', 15000000, (SELECT skill_level_id FROM tbSkillLevel WHERE name = 'Level 5'), '2020-03-15', 'Active'
+FROM tbRole WHERE name = 'Manager';
+
+-- Lấy ID
+SELECT @FactoryDirector = user_id FROM tbUser WHERE full_name = 'Dương Thị N';
+SELECT @FactoryManager1 = user_id FROM tbUser WHERE full_name = 'Nguyễn Thị A';
+
+-- Cập nhật manager_id cho phòng ban
+UPDATE tbDepartment SET manager_id = @FactoryManager1 WHERE name = 'Finishing Center/Trung tâm hoàn thành';
+GO
+
+-- =============================================
+-- 6. tbLine - Chuyền/Tổ
+-- =============================================
+CREATE TABLE tbLine (
+    line_id INT IDENTITY(199060000,1) PRIMARY KEY,   
+    department_id INT NOT NULL,                        -- Phòng ban
+    [name] VARCHAR(100) NOT NULL,                      -- Tên chuyền
+    [description] TEXT,                                -- Mô tả
+    manager_id INT NULL,                               -- Quản lý chuyền
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,     
+
+    CONSTRAINT FK_Line_Department FOREIGN KEY (department_id) REFERENCES tbDepartment(department_id),
+    CONSTRAINT FK_Line_Manager FOREIGN KEY (manager_id) REFERENCES tbUser(user_id),
+    CONSTRAINT UQ_Line_Name_Dept UNIQUE (department_id, name)
+);
+GO
+
+-- Tạo line trong Trung tâm hoàn thành
+DECLARE @DeptHoanThanh INT = (SELECT department_id FROM tbDepartment WHERE name = 'Finishing Center/Trung tâm hoàn thành');
+DECLARE @Manager1 INT = (SELECT user_id FROM tbUser WHERE full_name = 'Trần Thị B');
+DECLARE @Manager2 INT = (SELECT user_id FROM tbUser WHERE full_name = 'Đoàn Thị C');
+
+INSERT INTO tbLine (department_id, name, description, manager_id) VALUES
+(@DeptHoanThanh, N'Finishing Team 1/Tổ Hoàn Thành 1', N'Finishing Team 1 / Hoàn thiện sản phẩm, đóng gói', @Manager1),
+(@DeptHoanThanh, N'Finishing Team 2/Tổ Hoàn Thành 2', N'Finishing Team 2 / Đóng nút, ép logo, kiểm KCS', @Manager1),
+(@DeptHoanThanh, N'Finishing Team 3/Tổ Hoàn Thành 3', N'Finishing Team 3 / Hoàn tất, dán size, dán mã hàng', @Manager2),
+(@DeptHoanThanh, N'Logistics Team/Tổ Hậu Cần', N'Logistics Team / Phụ liệu, đóng thùng, dán tem, chuyển hàng', @Manager2),
+(@DeptHoanThanh, N'KCS SW', N'Final QC / Kiểm hàng, kiểm lỗi cuối cùng trước xuất', @Manager1),
+(@DeptHoanThanh, N'Shipping Team/Tổ Xuất Hàng', N'Shipping Team / Đóng container, kiểm số lượng xuất', @Manager2);
+GO
+
+-- Thêm FK line_id vào tbUser
+ALTER TABLE tbUser ADD CONSTRAINT FK_User_Line FOREIGN KEY (line_id) REFERENCES tbLine(line_id);
+GO
+
+-- Tạo 200 công nhân
+DECLARE @i INT = 1;
+DECLARE @DeptHoanThanh INT = (SELECT department_id FROM tbDepartment WHERE name = 'Finishing Center/Trung tâm hoàn thành');
+DECLARE @RoleWorker INT = (SELECT role_id FROM tbRole WHERE name = 'Worker');
+DECLARE @L2 INT = (SELECT skill_level_id FROM tbSkillLevel WHERE name = 'Level 2');
+DECLARE @L3 INT = (SELECT skill_level_id FROM tbSkillLevel WHERE name = 'Level 3');
+DECLARE @L4 INT = (SELECT skill_level_id FROM tbSkillLevel WHERE name = 'Level 4');
+DECLARE @L5 INT = (SELECT skill_level_id FROM tbSkillLevel WHERE name = 'Level 5');
+
+WHILE @i <= 200
+BEGIN
+    DECLARE @name NVARCHAR(100) = N'CN ' + CAST(@i AS NVARCHAR);
+    DECLARE @password_hash VARCHAR(255) = '$2a$10$jcw0c1yYkDzTO4XTg/kTmeD3UggCAaQwpw1v1R76VMupvQMwelxwq'
+    DECLARE @phone VARCHAR(20) = '0905' + RIGHT('0000' + CAST(@i AS VARCHAR(4)), 4);
+    DECLARE @email VARCHAR(100) = 'cn' + CAST(@i AS VARCHAR(4)) + '@maypro.com';
+    DECLARE @line_id INT;
+    DECLARE @skill_id INT;
+    DECLARE @salary DECIMAL(10,2);
+
+    IF @i <= 40 SET @line_id = (SELECT line_id FROM tbLine WHERE name = N'Finishing Team 1/Tổ Hoàn Thành 1');
+    ELSE IF @i <= 80 SET @line_id = (SELECT line_id FROM tbLine WHERE name = N'Finishing Team 2/Tổ Hoàn Thành 2');
+    ELSE IF @i <= 120 SET @line_id = (SELECT line_id FROM tbLine WHERE name = N'Finishing Team 3/Tổ Hoàn Thành 3');
+    ELSE IF @i <= 145 SET @line_id = (SELECT line_id FROM tbLine WHERE name = N'Logistics Team/Tổ Hậu Cần');
+    ELSE IF @i <= 175 SET @line_id = (SELECT line_id FROM tbLine WHERE name = N'KCS SW');
+    ELSE SET @line_id = (SELECT line_id FROM tbLine WHERE name = N'Shipping Team/Tổ Xuất Hàng');
+
+    IF @i % 7 = 0 SET @skill_id = @L5;
+    ELSE IF @i % 5 = 0 SET @skill_id = @L4;
+    ELSE IF @i % 3 = 0 SET @skill_id = @L3;
+    ELSE SET @skill_id = @L2;
+
+    SET @salary = 6500000 + (@i % 6) * 250000;
+
+    INSERT INTO tbUser (full_name, email,password_hash, phone, role_id, department_id, line_id, salary_type, base_salary, skill_level_id, hire_date)
+    VALUES (@name, @email,@password_hash, @phone, @RoleWorker, @DeptHoanThanh, @line_id, 'ProductBased', @salary, @skill_id, DATEADD(DAY, -@i, GETDATE()));
+
+    SET @i = @i + 1;
+END
+GO
+
+-- =============================================
+-- 7. tbWorkSchedule - Lịch làm việc
+-- =============================================
+CREATE TABLE tbWorkSchedule (
+    schedule_id INT IDENTITY(199070000,1) PRIMARY KEY,  
+    user_id INT NOT NULL,                              -- Nhân viên
+    [date] DATE NOT NULL,                              -- Ngày
+    shift_start TIME,                                  -- Giờ vào
+    shift_end TIME,                                    -- Giờ ra
+    is_holiday BIT DEFAULT 0,                          -- Nghỉ lễ
+    CONSTRAINT FK_WorkSchedule_User FOREIGN KEY (user_id) REFERENCES tbUser(user_id)
+);
+GO
+
+INSERT INTO tbWorkSchedule (user_id, date, shift_start, shift_end, is_holiday)
+SELECT TOP 5 user_id, '2025-10-30', '08:00', '17:00', 0
+FROM tbUser WHERE role_id = (SELECT role_id FROM tbRole WHERE name = 'Worker');
+GO
+
+-- =============================================
+-- 8. tbAttendance - Chấm công
+-- =============================================
+CREATE TABLE tbAttendance (
+    attendance_id INT IDENTITY(199080000,1) PRIMARY KEY, 
+    user_id INT NOT NULL,                              -- Nhân viên
+    [date] DATE NOT NULL,                              -- Ngày
+    time_in TIME,                                      -- Giờ vào
+    time_out TIME,                                     -- Giờ ra
+    [status] VARCHAR(20) NOT NULL 
+        CHECK (status IN ('success', 'late', 'manual', 'error')),
+    reason TEXT,                                       -- Lý do
+    manual_updated_by INT,                             -- Người sửa
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT FK_Attendance_User FOREIGN KEY (user_id) REFERENCES tbUser(user_id),
+    CONSTRAINT FK_Attendance_UpdatedBy FOREIGN KEY (manual_updated_by) REFERENCES tbUser(user_id),
+    INDEX idx_user_date NONCLUSTERED (user_id, date)
+);
+GO
+
+INSERT INTO tbAttendance (user_id, date, time_in, time_out, status, reason)
+SELECT TOP 3 user_id, '2025-10-30', 
+       CASE WHEN ROW_NUMBER() OVER (ORDER BY user_id) = 1 THEN '08:02' ELSE '07:58' END,
+       CASE WHEN ROW_NUMBER() OVER (ORDER BY user_id) = 1 THEN '17:03' ELSE '17:00' END,
+       CASE WHEN ROW_NUMBER() OVER (ORDER BY user_id) = 1 THEN 'success' ELSE 'late' END,
+       CASE WHEN ROW_NUMBER() OVER (ORDER BY user_id) = 1 THEN NULL ELSE 'Kẹt xe' END
+FROM tbUser WHERE role_id = (SELECT role_id FROM tbRole WHERE name = 'Worker');
+GO
+
+-- =============================================
+-- 9. tbLeaveRequest - Đơn xin nghỉ
+-- =============================================
+CREATE TABLE tbLeaveRequest (
+    request_id INT IDENTITY(199090000,1) PRIMARY KEY,    
+    user_id INT NOT NULL,                              -- Người xin
+    leave_reason_id INT NOT NULL,                      -- Lý do
+    [type] VARCHAR(20) NOT NULL 
+        CHECK (type IN ('ShortTerm', 'LongTerm', 'Maternity', 'Accident', 'Other')),
+    [start_date] DATE NOT NULL,                        
+    end_date DATE NOT NULL,                            
+    reason TEXT,                                       
+    [comment] TEXT,                                    
+    [status] VARCHAR(20) DEFAULT 'pending' 
+        CHECK (status IN ('pending', 'confirmed', 'approved', 'rejected')),
+    confirmed_by INT,                                  
+    approved_by INT,                                   
+    reject_reason TEXT,                                
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT FK_LeaveRequest_User FOREIGN KEY (user_id) REFERENCES tbUser(user_id),
+    CONSTRAINT FK_LeaveRequest_Reason FOREIGN KEY (leave_reason_id) REFERENCES tbLeaveReason(leave_reason_id),
+    CONSTRAINT FK_LeaveRequest_ConfirmedBy FOREIGN KEY (confirmed_by) REFERENCES tbUser(user_id),
+    CONSTRAINT FK_LeaveRequest_ApprovedBy FOREIGN KEY (approved_by) REFERENCES tbUser(user_id),
+    INDEX idx_user_status NONCLUSTERED (user_id, status)
+);
+GO
+
+INSERT INTO tbLeaveRequest (user_id, leave_reason_id, type, start_date, end_date, reason, comment, status, confirmed_by, approved_by)
+SELECT TOP 1 
+    u.user_id,
+    (SELECT TOP 1 leave_reason_id FROM tbLeaveReason WHERE reason = 'Common Illness/Bệnh thông thường'),
+    'ShortTerm', '2025-11-01', '2025-11-02', 'Ốm nhẹ', 'Đã xác nhận', 'approved',
+    (SELECT user_id FROM tbUser WHERE full_name = 'Trần Thị B'),
+    (SELECT user_id FROM tbUser WHERE full_name = 'Nguyễn Thị A')
+FROM tbUser u WHERE u.role_id = (SELECT role_id FROM tbRole WHERE name = 'Worker');
+GO
+
+-- =============================================
+-- 10. tbProposal - Đề xuất
+-- =============================================
+CREATE TABLE tbProposal (
+    proposal_id INT IDENTITY(199100000,1) PRIMARY KEY,   
+    [type] VARCHAR(30) NOT NULL 
+        CHECK (type IN ('SalaryIncrease', 'PositionChange', 'SkillLevelChange')),
+    proposer_id INT NOT NULL,                          
+    target_user_id INT NOT NULL,                       
+    details NVARCHAR(MAX),                             
+    reason TEXT,                                       
+    [status] VARCHAR(20) DEFAULT 'pending' 
+        CHECK (status IN ('pending', 'confirmed', 'approved', 'rejected')),
+    approved_by INT,                                   
+    reject_reason TEXT,                                
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT FK_Proposal_Proposer FOREIGN KEY (proposer_id) REFERENCES tbUser(user_id),
+    CONSTRAINT FK_Proposal_Target FOREIGN KEY (target_user_id) REFERENCES tbUser(user_id),
+    CONSTRAINT FK_Proposal_ApprovedBy FOREIGN KEY (approved_by) REFERENCES tbUser(user_id),
+    INDEX idx_target_status NONCLUSTERED (target_user_id, status)
+);
+GO
+
+INSERT INTO tbProposal (type, proposer_id, target_user_id, details, reason, status, approved_by)
+SELECT 'SalaryIncrease', 
+       (SELECT user_id FROM tbUser WHERE full_name = 'Trần Thị B'),
+       (SELECT TOP 1 user_id FROM tbUser WHERE role_id = (SELECT role_id FROM tbRole WHERE name = 'Worker')),
+       N'Tăng lương 500,000', N'Hoàn thành xuất sắc', 'approved',
+       (SELECT user_id FROM tbUser WHERE full_name = 'Nguyễn Thị A');
+GO
+
+-- =============================================
+-- 11. tbOvertimeRequest - Yêu cầu tăng ca
+-- =============================================
+CREATE TABLE tbOvertimeRequest (
+    request_id INT IDENTITY(199110000,1) PRIMARY KEY,    
+    factory_manager_id INT NOT NULL,                   
+    department_id INT NOT NULL, 
+    overtime_date DATE NOT NULL,                       
+    start_time TIME NOT NULL DEFAULT '17:00:00',
+    end_time TIME NOT NULL,
+    overtime_time FLOAT NOT NULL,                      
+    [status] VARCHAR(20) DEFAULT 'pending' 
+        CHECK (status IN ('pending', 'open', 'processed', 'rejected', 'expired')),
+    details TEXT,                                      
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT FK_OvertimeRequest_Manager FOREIGN KEY (factory_manager_id) REFERENCES tbUser(user_id),
+    CONSTRAINT FK_OvertimeRequest_Department FOREIGN KEY (department_id) REFERENCES tbDepartment(department_id)
+);
+GO
+
+-- =============================================
+-- 11.1 tbOvertimeRequestDetail - Chi tiết số lượng theo chuyền
+-- =============================================
+CREATE TABLE tbOvertimeRequestDetail (
+    detail_id INT IDENTITY(1,1) PRIMARY KEY,
+    request_id INT NOT NULL,
+    line_id INT NOT NULL,
+    num_employees INT NOT NULL CHECK (num_employees > 0), 
+    
+    CONSTRAINT FK_RequestDetail_Request FOREIGN KEY (request_id) 
+        REFERENCES tbOvertimeRequest(request_id) ON DELETE CASCADE,
+    CONSTRAINT FK_RequestDetail_Line FOREIGN KEY (line_id) 
+        REFERENCES tbLine(line_id),
+    
+    CONSTRAINT UQ_RequestDetail_Line UNIQUE (request_id, line_id) 
+);
+GO
+
+DECLARE @DeptHoanThanh INT = (SELECT department_id FROM tbDepartment WHERE name = 'Finishing Center/Trung tâm hoàn thành');
+INSERT INTO tbOvertimeRequest (factory_manager_id, department_id, overtime_date, start_time, end_time, overtime_time, status, details)
+VALUES ((SELECT user_id FROM tbUser WHERE full_name = 'Nguyễn Thị A'), @DeptHoanThanh, '2025-12-30', '17:00:00', '20:30:00', 3.5, 'open', 'Tăng ca hoàn thành đơn hàng gấp');
+
+INSERT INTO tbOvertimeRequestDetail (request_id, line_id, num_employees)
+VALUES 
+((SELECT MAX(request_id) FROM tbOvertimeRequest), (SELECT line_id FROM tbLine WHERE line_id = 199060000), 30),
+((SELECT MAX(request_id) FROM tbOvertimeRequest), (SELECT line_id FROM tbLine WHERE line_id = 199060001), 20);
+GO
+
+-- =============================================
+-- 12. tbOvertimeTicket - Phiếu tăng ca
+-- =============================================
+CREATE TABLE tbOvertimeTicket (
+    ticket_id INT IDENTITY(199120000,1) PRIMARY KEY,     
+    manager_id INT NOT NULL,                           
+    request_id INT,                                    
+    reason TEXT,                                       
+    [status] VARCHAR(20) DEFAULT 'pending' 
+        CHECK (status IN ('pending', 'submitted', 'confirmed', 'approved', 'rejected')),
+    confirmed_by INT,                                  
+    approved_by INT,                                   
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT FK_OvertimeTicket_Manager FOREIGN KEY (manager_id) REFERENCES tbUser(user_id),
+    CONSTRAINT FK_OvertimeTicket_Request FOREIGN KEY (request_id) REFERENCES tbOvertimeRequest(request_id),
+    CONSTRAINT FK_OvertimeTicket_ConfirmedBy FOREIGN KEY (confirmed_by) REFERENCES tbUser(user_id),
+    CONSTRAINT FK_OvertimeTicket_ApprovedBy FOREIGN KEY (approved_by) REFERENCES tbUser(user_id)
+);
+GO
+
+INSERT INTO tbOvertimeTicket (manager_id, request_id, reason, status, confirmed_by, approved_by)
+VALUES (
+    (SELECT user_id FROM tbUser WHERE full_name = 'Trần Thị B'),
+    (SELECT MAX(request_id) FROM tbOvertimeRequest),
+    'Hoàn thành đơn hàng', 'approved',
+    (SELECT user_id FROM tbUser WHERE full_name = 'Nguyễn Thị A'),
+    (SELECT user_id FROM tbUser WHERE full_name = 'Dương Thị N')
+);
+GO
+
+-- =============================================
+-- 12.1. tb_overtime_ticket_employees - Chi tiết nhân viên tăng ca
+-- =============================================
+CREATE TABLE tb_overtime_ticket_employees (
+    id INT IDENTITY(1,1) PRIMARY KEY, -- Added ID for easier JPA handling
+    overtime_ticket_id INT NOT NULL,
+    user_id INT NOT NULL,
+    line_id INT NULL,
+    
+    -- [UPDATED STATUS] 'accepted' is better than 'ok'
+    [status] VARCHAR(20) DEFAULT 'pending'
+        CHECK (status IN ('pending', 'accepted', 'rejected')), 
+    
+    -- Prevent duplicate invites for the same ticket
+    CONSTRAINT UQ_Ticket_User UNIQUE (overtime_ticket_id, user_id), 
+    
+    CONSTRAINT FK_OvertimeEmployees_Ticket FOREIGN KEY (overtime_ticket_id) 
+        REFERENCES tbOvertimeTicket(ticket_id) ON DELETE CASCADE,
+    CONSTRAINT FK_OvertimeEmployees_User FOREIGN KEY (user_id) 
+        REFERENCES tbUser(user_id) ON DELETE CASCADE,
+    CONSTRAINT FK_OvertimeEmployees_Line FOREIGN KEY (line_id) 
+        REFERENCES tbLine(line_id)
+);
+GO
+
+INSERT INTO tb_overtime_ticket_employees (overtime_ticket_id, user_id, status, line_id)
+SELECT TOP 3
+    (SELECT MAX(ticket_id) FROM tbOvertimeTicket),
+    user_id,
+    'accepted',
+    (SELECT line_id FROM tbLine WHERE line_id = 199060000)
+FROM tbUser
+WHERE role_id = (SELECT role_id FROM tbRole WHERE name = 'Worker')
+ORDER BY user_id;
+GO
+
+-- =============================================
+-- 13. tbProduction - Sản lượng (theo bộ phận)
+-- =============================================
+CREATE TABLE tbProduction (
+    production_id INT IDENTITY(199130000,1) PRIMARY KEY, 
+    department_id INT NOT NULL,                        
+    product_count INT NOT NULL,                        
+    DOP DATE NOT NULL,                                 
+    unit_price DECIMAL(15,1) DEFAULT 0,                
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT FK_Production_Department 
+        FOREIGN KEY (department_id) REFERENCES tbDepartment(department_id),
+
+    INDEX idx_dept_date NONCLUSTERED (department_id, DOP)
+);
+GO
+
+DECLARE @DeptHoanThanh INT = (SELECT department_id FROM tbDepartment WHERE name = 'Finishing Center/Trung tâm hoàn thành');
+
+INSERT INTO tbProduction (department_id, product_count, DOP, unit_price)
+VALUES (@DeptHoanThanh, 1200, '2025-10-29', 150.5),
+       (@DeptHoanThanh, 1350, '2025-10-30', 152.0);
+GO
+
+-- =============================================
+-- 14. tbPayroll - Bảng lương
+-- =============================================
+CREATE TABLE tbPayroll (
+    payroll_id INT IDENTITY(199140000,1) PRIMARY KEY,    
+    [month] DATE NOT NULL,                             
+    department_id INT NOT NULL,                        
+    total_salary DECIMAL(12,2) NOT NULL,               
+    details NVARCHAR(MAX),                             
+    [status] VARCHAR(20) DEFAULT 'pending' 
+        CHECK (status IN ('pending', 'balanced', 'approved', 'rejected')),
+    created_by INT NOT NULL,                           
+    approved_by INT,                                   
+    balance_note TEXT,                                 
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT FK_Payroll_Department FOREIGN KEY (department_id) REFERENCES tbDepartment(department_id),
+    CONSTRAINT FK_Payroll_CreatedBy FOREIGN KEY (created_by) REFERENCES tbUser(user_id),
+    CONSTRAINT FK_Payroll_ApprovedBy FOREIGN KEY (approved_by) REFERENCES tbUser(user_id),
+    INDEX idx_month_status NONCLUSTERED (month, status)
+);
+GO
+DECLARE @DeptHoanThanh INT = (SELECT department_id FROM tbDepartment WHERE name = 'Finishing Center/Trung tâm hoàn thành');
+
+INSERT INTO tbPayroll (month, department_id, total_salary, details, status, created_by, approved_by)
+VALUES ('2025-10-01', @DeptHoanThanh, 850000000.00, N'Bảng lương tháng 10', 'approved',
+        (SELECT user_id FROM tbUser WHERE full_name = 'Nguyễn Thị A'),
+        (SELECT user_id FROM tbUser WHERE full_name = 'Dương Thị N'));
+GO
+
+-- =============================================
+-- 15. tbReservedPayroll - Quỹ dự phòng
+-- =============================================
+CREATE TABLE tbReservedPayroll (
+    reserved_id INT IDENTITY(199150000,1) PRIMARY KEY,   
+    payroll_id INT NOT NULL,                           
+    reserved_amount DECIMAL(12,2) NOT NULL,            
+    details NVARCHAR(MAX),                             
+    created_by INT NOT NULL,                           
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT FK_ReservedPayroll_Payroll FOREIGN KEY (payroll_id) REFERENCES tbPayroll(payroll_id),
+    CONSTRAINT FK_ReservedPayroll_CreatedBy FOREIGN KEY (created_by) REFERENCES tbUser(user_id)
+);
+GO
+
+INSERT INTO tbReservedPayroll (payroll_id, reserved_amount, details, created_by)
+VALUES ((SELECT MAX(payroll_id) FROM tbPayroll), 50000000.00, 'Dự phòng thưởng cuối năm', 
+        (SELECT user_id FROM tbUser WHERE full_name = 'Nguyễn Thị A'));
+GO
+
+-- =============================================
+-- 16. tbUserHistory - Lịch sử thay đổi
+-- =============================================
+CREATE TABLE tbUserHistory (
+    history_id INT IDENTITY(199160000,1) PRIMARY KEY,    
+    user_id INT NOT NULL,                              
+    field_changed VARCHAR(100) NOT NULL,               
+    old_value TEXT,                                    
+    new_value TEXT,                                    
+    updated_by INT NOT NULL,                           
+    [timestamp] DATETIME DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT FK_UserHistory_User FOREIGN KEY (user_id) REFERENCES tbUser(user_id),
+    CONSTRAINT FK_UserHistory_UpdatedBy FOREIGN KEY (updated_by) REFERENCES tbUser(user_id)
+);
+GO
+
+INSERT INTO tbUserHistory (user_id, field_changed, old_value, new_value, updated_by)
+SELECT TOP 1 user_id, 'base_salary', '6500000', '7000000', 
+       (SELECT user_id FROM tbUser WHERE full_name = 'Nguyễn Thị A')
+FROM tbUser WHERE role_id = (SELECT role_id FROM tbRole WHERE name = 'Worker');
+GO
+
+-- =============================================
+-- 17. tbNotification - Thông báo
+-- =============================================
+CREATE TABLE tbNotification (
+    notification_id INT IDENTITY(199170000,1) PRIMARY KEY, 
+    recipient_id INT NOT NULL,                         
+    [type] VARCHAR(20) NOT NULL 
+        CHECK (type IN ('error', 'approval', 'rejection', 'other')),
+    [message] TEXT NOT NULL,                           
+    sent_date DATETIME DEFAULT CURRENT_TIMESTAMP,      
+    [status] VARCHAR(10) DEFAULT 'sent' 
+        CHECK (status IN ('sent', 'read')),
+    CONSTRAINT FK_Notification_Recipient FOREIGN KEY (recipient_id) REFERENCES tbUser(user_id)
+);
+GO
+
+INSERT INTO tbNotification (recipient_id, type, message, status)
+VALUES ((SELECT user_id FROM tbUser WHERE full_name = 'Dương Thị N'), 'approval', 'Đơn nghỉ phép đã được duyệt', 'read');
+GO
+
+-- =============================================
+-- 18. Chi tiết lương từng nhân viên theo tháng
+-- =============================================
+CREATE TABLE tbEmployeePayroll (
+    detail_id INT IDENTITY(199180000,1) PRIMARY KEY,           -- ID chi tiết lương
+    payroll_id INT NOT NULL,                                   -- Liên kết bảng lương tháng (tbPayroll)
+    user_id INT NOT NULL,                                      -- Nhân viên
+    base_salary DECIMAL(12,2) NOT NULL,                        -- Lương cơ bản
+    product_bonus DECIMAL(12,2) DEFAULT 0,                     -- Thưởng sản lượng
+    overtime_pay DECIMAL(12,2) DEFAULT 0,                      -- Tiền tăng ca
+    allowance DECIMAL(12,2) DEFAULT 0,                         -- Phụ cấp
+    deduction DECIMAL(12,2) DEFAULT 0,                         -- Khấu trừ (phạt, nghỉ không phép)
+    total_pay DECIMAL(12,2) NOT NULL,                          -- Tổng thực nhận
+    note TEXT,                                                 -- Ghi chú
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,             -- Ngày tính lương
+
+    CONSTRAINT FK_EmployeePayroll_Payroll 
+        FOREIGN KEY (payroll_id) REFERENCES tbPayroll(payroll_id),
+    CONSTRAINT FK_EmployeePayroll_User 
+        FOREIGN KEY (user_id) REFERENCES tbUser(user_id),
+
+    INDEX idx_user_payroll NONCLUSTERED (user_id, payroll_id)
+);
+GO
+
+-- Sample insert: add one example employee payroll using the latest payroll
+INSERT INTO tbEmployeePayroll (payroll_id, user_id, base_salary, product_bonus, overtime_pay, allowance, deduction, total_pay, note)
+VALUES (
+    (SELECT MAX(payroll_id) FROM tbPayroll),
+    (SELECT TOP 1 user_id FROM tbUser WHERE role_id = (SELECT role_id FROM tbRole WHERE name = 'Worker')),
+    6500000.00,
+    6500000.00 * 0.15,   -- 15% product bonus for ProductBased example
+    300000.00,
+    200000.00,
+    0.00,
+    6500000.00 + (6500000.00 * 0.15) + 300000.00 + 200000.00,
+    N'Example: auto-inserted payroll detail'
+);
+GO
+
+-- Lấy payroll_id của bảng lương tháng 10
+DECLARE @PayrollID INT = (SELECT MAX(payroll_id) FROM tbPayroll);
+
+-- Lấy 5 nhân viên Worker đầu tiên
+INSERT INTO tbEmployeePayroll (payroll_id, user_id, base_salary, product_bonus, overtime_pay, allowance, deduction, total_pay, note)
+SELECT TOP 5
+    @PayrollID,
+    user_id,
+    base_salary,
+    CASE 
+        WHEN salary_type = 'ProductBased' THEN base_salary * 0.15  -- Thưởng 15% nếu theo sản lượng
+        ELSE 0 
+    END,
+    CASE WHEN user_id % 3 = 0 THEN 500000 ELSE 300000 END,      -- Tăng ca ngẫu nhiên
+    200000,                                                     -- Phụ cấp cố định
+    CASE WHEN user_id % 10 = 0 THEN 100000 ELSE 0 END,          -- Phạt (nghỉ không phép)
+    base_salary 
+        + (CASE WHEN salary_type = 'ProductBased' THEN base_salary * 0.15 ELSE 0 END)
+        + (CASE WHEN user_id % 3 = 0 THEN 500000 ELSE 300000 END)
+        + 200000
+        - (CASE WHEN user_id % 10 = 0 THEN 100000 ELSE 0 END),
+    N'Lương tháng 10 - ' + 
+    CASE 
+        WHEN user_id % 10 = 0 THEN 'Có khấu trừ nghỉ không phép'
+        ELSE 'Đầy đủ'
+    END
+FROM tbUser 
+WHERE role_id = (SELECT role_id FROM tbRole WHERE name = 'Worker')
+  AND department_id = (SELECT department_id FROM tbDepartment WHERE name = 'Trung tâm hoàn thành');
+GO
+CREATE TABLE tbPasswordResetToken (
+    token_id INT IDENTITY(1,1) PRIMARY KEY,
+    token VARCHAR(500) NOT NULL UNIQUE,
+    user_id INT NOT NULL,
+    expiry_date DATETIME NOT NULL,
+    used BIT NOT NULL DEFAULT 0,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    
+    CONSTRAINT FK_PasswordResetToken_User 
+        FOREIGN KEY (user_id) REFERENCES tbUser(user_id) ON DELETE CASCADE
+);
+
+CREATE INDEX idx_token ON tbPasswordResetToken(token);
+CREATE INDEX idx_user_used ON tbPasswordResetToken(user_id, used);
+GO
+
+SELECT * FROM tbRole
+SELECT * FROM tbLeaveReason
+SELECT * FROM tbSkillLevel
+SELECT * FROM tbDepartment
+SELECT * FROM tbUser
+SELECT * FROM tbLine
+SELECT * FROM tbWorkSchedule
+SELECT * FROM tbAttendance
+SELECT * FROM tbLeaveRequest
+SELECT * FROM tbProposal
+SELECT * FROM tbOvertimeRequest
+SELECT * FROM tbOvertimeTicket
+SELECT * FROM tbProduction
+SELECT * FROM tbPayroll
+SELECT * FROM tbReservedPayroll
+SELECT * FROM tbUserHistory
+SELECT * FROM tbNotification
+SELECT * FROM tbEmployeePayroll
+SELECT * FROM tbPasswordResetToken
+
