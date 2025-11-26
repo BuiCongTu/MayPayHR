@@ -1,29 +1,28 @@
 import 'package:flutter/material.dart';
-import 'package:flutterapp/services/auth_service.dart';
-import '../auth/login_screen.dart';
+import 'package:provider/provider.dart';
+import '../../providers/auth_provider.dart';
 
-class UserHomeScreen extends StatelessWidget {
-  const UserHomeScreen({super.key});
-
+class UserHome extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
+    final auth = Provider.of<AuthProvider>(context);
+
     return Scaffold(
       appBar: AppBar(
-        title: const Text("User Dashboard"),
+        title: Text("User Home"),
         actions: [
           IconButton(
-            icon: const Icon(Icons.logout),
-            onPressed: () async {
-              await AuthService.logout();
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (_) => LoginScreen()),
-              );
+            onPressed: () {
+              auth.logout();
+              Navigator.pop(context);
             },
-          ),
+            icon: Icon(Icons.logout),
+          )
         ],
       ),
-      body: const Center(child: Text("Welcome, User!")),
+      body: Center(
+        child: Text("Welcome User: ${auth.currentUser?["fullName"]}"),
+      ),
     );
   }
 }

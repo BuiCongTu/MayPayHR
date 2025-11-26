@@ -1,19 +1,22 @@
 class LoginRequest {
-  String? email;
+  String? phone;
   String? password;
 
-  LoginRequest({this.email, this.password});
+  LoginRequest({this.phone, this.password});
 
   Map<String, dynamic> toMap() {
     return {
-      'email': this.email,
-      'password': this.password,
+      'phone': phone,
+      'password': password,
     };
   }
 
+
   factory LoginRequest.fromMap(Map<String, dynamic> map) {
     return LoginRequest(
-      email: map['email'] as String ?? '',
-      password: map['password'] as String ?? '',
+      phone: map['phone'] as String? ?? '',
+      password: map['password'] as String? ?? '',
     );
-  }}
+  }
+    }
+

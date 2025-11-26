@@ -17,16 +17,27 @@ public class CustomUserDetailsService implements UserDetailsService {
 
     @Autowired
     private UserRepository userRepository;
-@Override
+
+   @Override
 public UserDetails loadUserByUsername(String phone) throws UsernameNotFoundException {
     System.out.println("Checking user with phone: " + phone);
     TbUser user = userRepository.findByPhone(phone)
             .orElseThrow(() -> new UsernameNotFoundException("User not found with phone: " + phone));
 
+    String password;
+    if (user.getPasswordHash() == null || user.getPasswordHash().isEmpty()) {
+        System.out.println(" User has no password in DB, using default password 123456");
+        password = new BCryptPasswordEncoder().encode("123456");
+    } else {
+        password = user.getPasswordHash();
+    }
+
     return new org.springframework.security.core.userdetails.User(
             user.getPhone(),
-            user.getPasswordHash(), // dùng hash đã có trong DB
+            password,
             Collections.emptyList()
     );
 }
+
+
 }

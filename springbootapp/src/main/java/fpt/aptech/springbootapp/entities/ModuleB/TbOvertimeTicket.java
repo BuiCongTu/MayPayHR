@@ -3,13 +3,15 @@ package fpt.aptech.springbootapp.entities.ModuleB;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import fpt.aptech.springbootapp.entities.Core.*;
 import jakarta.persistence.*;
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.*;
 import lombok.*;
 import org.hibernate.annotations.*;
 
-import java.math.*;
 import java.time.*;
+import java.util.Set;
+import java.util.HashSet;
 
 @Getter
 @Setter
@@ -24,7 +26,6 @@ public class TbOvertimeTicket {
     @Column(name = "ticket_id", nullable = false)
     private Integer id;
 
-    // manager
     @NotNull
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "manager_id", nullable = false)
@@ -34,16 +35,10 @@ public class TbOvertimeTicket {
     @JoinColumn(name = "request_id")
     private TbOvertimeRequest overtimeRequest;
 
-    @NotNull
-    @Lob // khai bao dang large text
-    @Column(name = "employee_list", nullable = false)
-    private String employeeList;
+    @OneToMany(mappedBy = "overtimeTicket", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<TbOvertimeTicketEmployee> overtimeEmployees = new HashSet<>();
 
-    @NotNull
-    @Column(name = "overtime_time", nullable = false, precision = 15, scale = 2)
-    private BigDecimal overtimeTime;
-
-    @Lob // khai bao dang large text
+    @Lob
     @Column(name = "reason")
     private String reason;
 
@@ -65,7 +60,10 @@ public class TbOvertimeTicket {
     private Instant createdAt;
 
     public enum OvertimeTicketStatus {
-        pending, confirmed, approved, rejected
+        pending,    // Registration Open
+        submitted,  // Manager Submitted -> Waiting for FM
+        confirmed,  // FM Confirmed -> Waiting for FD
+        approved,   // FD Approved
+        rejected    // Rejected
     }
-
 }

@@ -1,8 +1,9 @@
 package fpt.aptech.springbootapp.api.ModuleB;
 
-import fpt.aptech.springbootapp.dtos.OvertimeRequestDTO;
+import fpt.aptech.springbootapp.dtos.ModuleB.OvertimeRequestDTO;
 import fpt.aptech.springbootapp.filter.OvertimeRequestFilter;
 import fpt.aptech.springbootapp.entities.ModuleB.TbOvertimeRequest;
+import fpt.aptech.springbootapp.mappers.ModuleB.OvertimeRequestMapper;
 import fpt.aptech.springbootapp.services.interfaces.OvertimeRequestService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,10 +20,13 @@ import java.util.List;
 public class OvertimeRequestController {
 
     final OvertimeRequestService overtimeRequestService;
+    private final OvertimeRequestMapper overtimeRequestMapper;
 
     @Autowired
-    public OvertimeRequestController(OvertimeRequestService overtimeRequestService) {
+    public OvertimeRequestController(OvertimeRequestService overtimeRequestService,
+                                     OvertimeRequestMapper overtimeRequestMapper) {
         this.overtimeRequestService = overtimeRequestService;
+        this.overtimeRequestMapper = overtimeRequestMapper;
     }
 
     @GetMapping("/list")
@@ -35,7 +39,7 @@ public class OvertimeRequestController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<TbOvertimeRequest> read(@PathVariable int id) {
+    public ResponseEntity<OvertimeRequestDTO> read(@PathVariable int id) {
         try {
             return ResponseEntity.ok(overtimeRequestService.read(id));
         } catch (Exception e) {
@@ -44,20 +48,40 @@ public class OvertimeRequestController {
     }
 
     @PostMapping("/create")
-    public ResponseEntity<?> create(@Valid @RequestBody TbOvertimeRequest overtimeRequest) {
+    public ResponseEntity<?> createOvertimeRequest(@Valid @RequestBody OvertimeRequestDTO requestDTO) {
         try {
-            overtimeRequestService.create(overtimeRequest);
+            TbOvertimeRequest entity = overtimeRequestMapper.toEntity(requestDTO);
+            overtimeRequestService.create(entity);
             return ResponseEntity.ok().build();
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         } catch (Exception e) {
-            return ResponseEntity.internalServerError().build();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(e.getMessage());
         }
     }
 
     @GetMapping("/")
     @ResponseStatus(code = HttpStatus.OK)
-    public Page<OvertimeRequestDTO> getFiltered(@ModelAttribute OvertimeRequestFilter filter, Pageable pageable){
+    public Page<OvertimeRequestDTO> getFiltered(@ModelAttribute OvertimeRequestFilter filter, Pageable pageable) {
         return overtimeRequestService.getFilteredRequests(filter, pageable);
+    }
+
+    @PostMapping("/{id}/approve")
+    @ResponseStatus(code = HttpStatus.OK)
+    public OvertimeRequestDTO approveRequest(@PathVariable Integer id) {
+        return overtimeRequestService.approveRequest(id);
+    }
+
+    @PostMapping("/{id}/reject")
+    @ResponseStatus(code = HttpStatus.OK)
+    public OvertimeRequestDTO rejectRequest(@PathVariable Integer id) {
+        return overtimeRequestService.rejectRequest(id);
+    }
+
+    @PostMapping("/{id}/process")
+    @ResponseStatus(code = HttpStatus.OK)
+    public OvertimeRequestDTO processRequest(@PathVariable Integer id) {
+        return overtimeRequestService.processRequest(id);
     }
 }

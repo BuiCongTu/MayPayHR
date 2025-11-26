@@ -16,8 +16,10 @@ public interface UserService {
 
     // User CRUD
     TbUser createOrUpdateUser(TbUser user);
+    
     //sua doi thong tin nguoi dung
     TbUser updateUser(Integer id, TbUser user);
+
     Optional<TbUser> findByPhone(String phone);
     UserResponseDto getUserByPhone(String phone);
     List<TbUser> findAllUsers();
@@ -26,5 +28,7 @@ public interface UserService {
     void changePassword(String phone, ChangePassReq request);
     void forgotPassword(String phone);
     void resetPassword(String token, String newPassword);
+
+    List<UserResponseDto> getUsersByDepartment(Integer departmentId);
 }
 

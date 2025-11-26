@@ -30,6 +30,22 @@ public class OvertimeRequestSpecification {
                 predicates.add(cb.like(root.get("department").get("name"), "%" + filter.getDepartmentName() + "%"));
             }
 
+            if(filter.getOvertimeTime() != null){
+                predicates.add(cb.equal(root.get("overtimeTime"), filter.getOvertimeTime()));
+            }
+
+            if (filter.getOvertimeDate() != null) {
+                predicates.add(cb.equal(root.get("overtimeDate"), filter.getOvertimeDate()));
+            }
+
+            if (filter.getOvertimeDateStart() != null) {
+                predicates.add(cb.greaterThanOrEqualTo(root.get("overtimeDate"), filter.getOvertimeDateStart()));
+            }
+
+            if (filter.getOvertimeDateEnd() != null) {
+                predicates.add(cb.lessThanOrEqualTo(root.get("overtimeDate"), filter.getOvertimeDateEnd()));
+            }
+
             if (filter.getStatus() != null) {
                 predicates.add(cb.equal(root.get("status"), filter.getStatus()));
             }

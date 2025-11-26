@@ -1,9 +1,9 @@
 package fpt.aptech.springbootapp.services.implementations;
 
-import fpt.aptech.springbootapp.dtos.ProposalDTO;
+import fpt.aptech.springbootapp.dtos.ModuleB.ProposalDTO;
 import fpt.aptech.springbootapp.entities.ModuleB.TbProposal;
 import fpt.aptech.springbootapp.filter.ProposalFilter;
-import fpt.aptech.springbootapp.mappers.ProposalMapper;
+import fpt.aptech.springbootapp.mappers.ModuleB.ProposalMapper;
 import fpt.aptech.springbootapp.repositories.ModuleB.ProposalRepository;
 import fpt.aptech.springbootapp.services.interfaces.ProposalService;
 import fpt.aptech.springbootapp.specifications.ProposalSpecification;

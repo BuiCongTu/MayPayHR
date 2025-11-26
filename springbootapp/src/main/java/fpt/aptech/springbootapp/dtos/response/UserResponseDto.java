@@ -1,5 +1,7 @@
 package fpt.aptech.springbootapp.dtos.response;
 
+import fpt.aptech.springbootapp.entities.Core.TbUser.SalaryType;
+import fpt.aptech.springbootapp.entities.Core.TbUser.UserStatus;
 import lombok.*;
 
 import java.math.BigDecimal;
@@ -29,10 +31,10 @@ public class UserResponseDto {
     private Integer skillLevelId;
     private String skillLevelName;
 
-    private String salaryType;
+    private SalaryType salaryType;
     private BigDecimal baseSalary;
     private LocalDate hireDate;
-    private String status;
+    private UserStatus status;
     private Instant createdAt;
 
 }

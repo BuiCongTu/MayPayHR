@@ -5,9 +5,9 @@ class PayrollDetailScreen extends StatelessWidget {
   final PayrollModel payroll;
 
   const PayrollDetailScreen({
-    Key? key,
+    super.key,
     required this.payroll,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -104,7 +104,7 @@ class PayrollDetailScreen extends StatelessWidget {
             ...items.map((item) {
               final (label, amount) = item;
               return _buildDetailRow(label, amount);
-            }).toList(),
+            }),
 
             if (showTotal && totalLabel != null && totalAmount != null) ...[
               const Divider(height: 16, thickness: 1),

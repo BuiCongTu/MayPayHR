@@ -1,8 +1,13 @@
 // api_config:
 class ApiConfig {
   // Cấu hình URL backend
+<<<<<<< HEAD
   static const String baseUrl = 'http://10.210.93.195:9999';
   // static const String baseUrl = 'http://172.16.1.92:9999';
+=======
+  // static const String baseUrl = 'http://192.168.2.14:9999';
+  static const String baseUrl = 'http://172.16.3.234:9999';
+>>>>>>> f95b4f1a80b43d611a2cbcfda300d13d2d660221
 
   // API Timeouts (milliseconds)
   static const int connectionTimeout = 10000;
@@ -14,7 +19,7 @@ class ApiConfig {
   static const String registerEndpoint = '/api/auth/register';
   static const String logoutEndpoint = '/api/auth/logout';
   static const String getCurrentUserEndpoint = '/api/auth/me';
-  static const String getUserByEmailEndpoint = '/api/auth/getemp';
+  static const String getUserByPhoneEndpoint = '/api/auth/getemp';
   static const String getAllEmployeesEndpoint = '/api/auth/getallemp';
   static const String updateUserEndpoint = '/api/auth/updateuser';
   static const String changePasswordEndpoint = '/api/auth/change-password';

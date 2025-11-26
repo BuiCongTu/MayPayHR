@@ -1,6 +1,6 @@
 package fpt.aptech.springbootapp.api.ModuleB;
 
-import fpt.aptech.springbootapp.dtos.ProposalDTO;
+import fpt.aptech.springbootapp.dtos.ModuleB.ProposalDTO;
 import fpt.aptech.springbootapp.entities.ModuleB.TbProposal.ProposalType;
 import fpt.aptech.springbootapp.filter.ProposalFilter;
 import fpt.aptech.springbootapp.services.interfaces.ProposalService;

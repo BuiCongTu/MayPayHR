@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 import 'package:flutter/material.dart';
 import '../../services/auth_service.dart';
 import '../auth/login_screen.dart';
@@ -27,3 +28,33 @@ class AdminHomeScreen extends StatelessWidget {
     );
   }
 }
+=======
+import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../../providers/auth_provider.dart';
+
+class AdminHome extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    final auth = Provider.of<AuthProvider>(context);
+
+    return Scaffold(
+      appBar: AppBar(
+        title: Text("Admin Home"),
+        actions: [
+          IconButton(
+            onPressed: () {
+              auth.logout();
+              Navigator.pop(context);
+            },
+            icon: Icon(Icons.logout),
+          )
+        ],
+      ),
+      body: Center(
+        child: Text("Welcome Admin: ${auth.currentUser?["fullName"]}"),
+      ),
+    );
+  }
+}
+>>>>>>> f95b4f1a80b43d611a2cbcfda300d13d2d660221

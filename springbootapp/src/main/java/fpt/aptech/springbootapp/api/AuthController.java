@@ -8,19 +8,16 @@ import fpt.aptech.springbootapp.services.System.UserService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.*;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+
 @RestController
 @RequestMapping("/api/auth")
 public class AuthController {
-    @Autowired
-    private AuthenticationManager authenticationManager;
 
     private JwtUtils jwtUtils;
     private UserService userService;
@@ -28,42 +25,22 @@ public class AuthController {
     @Autowired
     public AuthController(
             JwtUtils jwtUtils,
-            UserService userService) {
+            UserService userService)
+    {
         this.jwtUtils = jwtUtils;
         this.userService = userService;
     }
 
     @PostMapping("/login")
-public ResponseEntity<ApiResponse<LoginResponse>> login(@Valid @RequestBody LoginReq request) {
-    try {
-        // authenticate bằng AuthenticationManager
-        Authentication authentication = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(request.getPhone(), request.getPassword())
-        );
-
-        // gán Authentication vào SecurityContext
-        SecurityContextHolder.getContext().setAuthentication(authentication);
-
-        // lấy user từ DB
-        TbUser user = userService.findByPhone(request.getPhone())
-                .orElseThrow(() -> new RuntimeException("User not found"));
-
-        // tạo token JWT
-        String token = jwtUtils.generateToken(user.getPhone(), user.getRole().getName());
-
-        LoginResponse loginResponse = LoginResponse.builder()
-                .token(token)
-                .tokenType("Bearer")
-                .user(userService.getUserByPhone(user.getPhone()))
-                .build();
-
-        return ResponseEntity.ok(ApiResponse.success("Login successful", loginResponse));
-
-    } catch (Exception e) {
-        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                .body(ApiResponse.error("Invalid phone or password"));
+    public ResponseEntity<ApiResponse<LoginResponse>> login(@Valid @RequestBody LoginReq request) {
+        try {
+            LoginResponse loginResponse = userService.login(request);
+            return ResponseEntity.ok(ApiResponse.success("Login successful", loginResponse));
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(ApiResponse.error(e.getMessage()));
+        }
     }
-}
 
     @GetMapping("/logout")
     public ResponseEntity<ApiResponse<String>> logout() {
@@ -93,7 +70,7 @@ public ResponseEntity<ApiResponse<LoginResponse>> login(@Valid @RequestBody Logi
         }
     }
 
-    // TIen: chỉnh sua lại login bang phone
+
     @GetMapping("/getemp/{phone}")
     public ResponseEntity<ApiResponse<UserResponseDto>> getUserByPhone(@PathVariable String phone) {
         try {
@@ -109,6 +86,7 @@ public ResponseEntity<ApiResponse<LoginResponse>> login(@Valid @RequestBody Logi
                     .body(ApiResponse.error(e.getMessage()));
         }
     }
+
 
     @PutMapping("/updateuser/{phone}")
     public ResponseEntity<ApiResponse<UserResponseDto>> updateUser(
@@ -174,7 +152,7 @@ public ResponseEntity<ApiResponse<LoginResponse>> login(@Valid @RequestBody Logi
         }
     }
 
-    // lay thong tin user hiện tại từ JWT token
+        //lay thong tin user hiện tại từ JWT token
     @GetMapping("/me")
     public ResponseEntity<ApiResponse<UserResponseDto>> getCurrentUser() {
         try {
@@ -191,10 +169,10 @@ public ResponseEntity<ApiResponse<LoginResponse>> login(@Valid @RequestBody Logi
 
     @PutMapping("/change-password")
     public ResponseEntity<ApiResponse<String>> changePassword(
-            @RequestParam String email,
+            @RequestParam String phone,
             @Valid @RequestBody ChangePassReq request) {
         try {
-            userService.changePassword(email, request);
+            userService.changePassword(phone, request);
             return ResponseEntity.ok(ApiResponse.success("Password changed successfully", null));
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest()
@@ -203,9 +181,9 @@ public ResponseEntity<ApiResponse<LoginResponse>> login(@Valid @RequestBody Logi
     }
 
     @PostMapping("/forgot-password")
-    public ResponseEntity<ApiResponse<String>> forgotPassword(@RequestParam String email) {
+    public ResponseEntity<ApiResponse<String>> forgotPassword(@RequestParam String phone) {
         try {
-            userService.forgotPassword(email);
+            userService.forgotPassword(phone);
             return ResponseEntity.ok(
                     ApiResponse.success("Password reset link sent to your email", null));
         } catch (RuntimeException e) {
@@ -227,3 +205,4 @@ public ResponseEntity<ApiResponse<LoginResponse>> login(@Valid @RequestBody Logi
         }
     }
 }
+

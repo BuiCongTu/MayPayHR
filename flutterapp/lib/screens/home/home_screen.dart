@@ -16,7 +16,7 @@ class _HomeScreenState extends State<HomeScreen> {
   final TextEditingController _tokenController = TextEditingController();
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
 
-  bool _showPayrollForm = false;
+  final bool _showPayrollForm = false;
 
   @override
   void dispose() {

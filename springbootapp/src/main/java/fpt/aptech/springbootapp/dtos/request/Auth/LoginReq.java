@@ -10,7 +10,6 @@ import jakarta.validation.constraints.*;
 @AllArgsConstructor
 public class LoginReq {
     @NotBlank(message = "Phone is required")
-   
     private String phone;
 
     @NotBlank(message = "Password is required")

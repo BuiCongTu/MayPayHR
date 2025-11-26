@@ -1,7 +1,11 @@
 package fpt.aptech.springbootapp.services.System;
 
 import java.time.Instant;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
 import java.util.*;
+import java.util.stream.Collectors;
 
 import fpt.aptech.springbootapp.dtos.request.Auth.*;
 import fpt.aptech.springbootapp.dtos.response.*;
@@ -191,8 +195,16 @@ public class UserServiceImp implements UserService {
                 .phone(user.getPhone())
                 .roleId(user.getRole() != null ? user.getRole().getId() : null)
                 .roleName(user.getRole() != null ? user.getRole().getName() : null)
-                .status(user.getStatus() != null ? user.getStatus().name() : null)
+                .status(user.getStatus())
                 .createdAt(user.getCreatedAt())
                 .build();
+    }
+
+    @Override
+    public List<UserResponseDto> getUsersByDepartment(Integer departmentId) {
+        List<TbUser> users = userRepository.findByDepartmentIdAndRoleName(departmentId, "Worker");
+        return users.stream()
+                .map(this::buildUserResponseDto)
+                .collect(Collectors.toList());
     }
 }
