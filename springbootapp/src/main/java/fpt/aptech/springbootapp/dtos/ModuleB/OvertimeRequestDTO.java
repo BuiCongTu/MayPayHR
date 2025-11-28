@@ -1,0 +1,43 @@
+package fpt.aptech.springbootapp.dtos.ModuleB;
+
+import fpt.aptech.springbootapp.entities.ModuleB.TbOvertimeRequest.OvertimeRequestStatus;
+import lombok.Getter;
+import lombok.Setter;
+
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.LocalTime;
+import java.util.List;
+
+@Getter
+@Setter
+public class OvertimeRequestDTO {
+    private Integer id;
+    private OvertimeRequestStatus status;
+    private LocalDate overtimeDate;
+    private LocalTime startTime;
+    private LocalTime endTime;
+    private Double overtimeTime;
+
+    private List<OvertimeRequestDetailDTO> lineDetails;
+
+    private String details;
+    private Instant createdAt;
+
+    private Integer departmentId;
+    private String departmentName;
+
+    private Integer factoryManagerId;
+    private String factoryManagerName;
+
+    private List<OvertimeTicketDTO> overtimeTickets;
+
+    public Integer getNumEmployees() {
+        if (lineDetails == null || lineDetails.isEmpty()) {
+            return 0;
+        }
+        return lineDetails.stream()
+                .mapToInt(detail -> detail.getNumEmployees() == null ? 0 : detail.getNumEmployees())
+                .sum();
+    }
+}

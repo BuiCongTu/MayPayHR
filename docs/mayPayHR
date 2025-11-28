@@ -1,0 +1,589 @@
+MayPayHR/
+│
+├── .idea/                                  # IntelliJ IDEA config
+│
+├── docs/                                   #  DOCUMENTATION
+│   ├── api/
+│   ├── database/
+│   ├── setup/
+│   └── usecase/
+│
+├── flutterapp/                             #  MOBILE APP (Flutter)
+│   ├── lib/
+│   │   ├── configs/
+│   │   ├── models/
+│   │   ├── screens/
+│   │   ├── services/
+│   │   ├── providers/
+│   │   ├── widgets/
+│   │   ├── utils/
+│   │   └── main.dart
+│   ├── assets/
+│   ├── android/
+│   └── pubspec.yaml
+│
+├── reactapp/                               #  FRONTEND WEB (React)
+│   ├── node_modules/
+│   ├── public/
+│   ├── src/
+│   │   ├── components/
+│   │   │   ├── common/
+│   │   │   └── layout/
+│   │   ├── pages/
+│   │   │   ├── auth/
+│   │   │   ├── dashboard/
+│   │   │   ├── user/
+│   │   │   ├── department/
+│   │   │   ├── ModuleA_Time_Attendance/
+│   │   │   │   ├── attendance/
+│   │   │   │   └── leave/
+│   │   │   ├── ModuleB_Line_Assignment/
+│   │   │   │   ├── overtime/
+│   │   │   │   ├── proposal/
+│   │   │   │   └── assignment/
+│   │   │   ├── ModuleC_Payroll/
+│   │   │   │   ├── production/
+│   │   │   │   └── payroll/
+│   │   │   └── notification/
+│   │   ├── services/
+│   │   │   ├── api.js
+│   │   │   ├── authService.js
+│   │   │   ├── userService.js
+│   │   │   ├── ModuleA/
+│   │   │   ├── ModuleB/
+│   │   │   └── ModuleC/
+│   │   ├── utils/
+│   │   ├── styles/
+│   │   ├── App.js
+│   │   └── index.js
+│   ├── package.json
+│   └── .env
+│
+├── springbootapp/                          #  BACKEND API (Spring Boot)
+│   ├── .mvn/
+│   ├── src/
+│   │   ├── main/
+│   │   │   ├── java/fpt/aptech/springbootapp/
+│   │   │   │   │
+│   │   │   │   ├── api/                    # ✅ CONTROLLERS (Organized by Module)
+│   │   │   │   │   ├── ModuleA_Time_Attendance/
+│   │   │   │   │   │   ├── AttendanceController.java
+│   │   │   │   │   │   ├── FaceScanController.java
+│   │   │   │   │   │   ├── LeaveRequestController.java
+│   │   │   │   │   │   └── WorkScheduleController.java
+│   │   │   │   │   │
+│   │   │   │   │   ├── ModuleB_Line_Assignment/
+│   │   │   │   │   │   ├── OvertimeController.java
+│   │   │   │   │   │   └── ProposalController.java
+│   │   │   │   │   │
+│   │   │   │   │   ├── ModuleC_Payroll/
+│   │   │   │   │   │   ├── PayrollController.java
+│   │   │   │   │   │   └── ProductionController.java
+│   │   │   │   │   │
+│   │   │   │   │   # Core Controllers
+│   │   │   │   │   ├── AuthController.java
+│   │   │   │   │   ├── UserController.java
+│   │   │   │   │   ├── DepartmentController.java
+│   │   │   │   │   ├── LineController.java
+│   │   │   │   │   └── NotificationController.java
+│   │   │   │   │
+│   │   │   │   ├── configs/                # ✅ CONFIGURATIONS
+│   │   │   │   │   ├── SecurityConfig.java
+│   │   │   │   │   └── WebConfiguration.java
+│   │   │   │   │
+│   │   │   │   ├── dtos/                   # ✅ DATA TRANSFER OBJECTS
+│   │   │   │   │   ├── request/
+│   │   │   │   │   │   # Auth
+│   │   │   │   │   │   ├── LoginRequest.java
+│   │   │   │   │   │   ├── RegisterRequest.java
+│   │   │   │   │   │   │
+│   │   │   │   │   │   # Module A
+│   │   │   │   │   │   ├── FaceScanRequest.java
+│   │   │   │   │   │   ├── AttendanceManualRequest.java
+│   │   │   │   │   │   ├── LeaveRequestDTO.java
+│   │   │   │   │   │   │
+│   │   │   │   │   │   # Module B
+│   │   │   │   │   │   ├── OvertimeRequestDTO.java
+│   │   │   │   │   │   ├── OvertimeTicketDTO.java
+│   │   │   │   │   │   ├── SalaryProposalDTO.java
+│   │   │   │   │   │   ├── PositionProposalDTO.java
+│   │   │   │   │   │   ├── SkillLevelProposalDTO.java
+│   │   │   │   │   │   │
+│   │   │   │   │   │   # Module C
+│   │   │   │   │   │   ├── CreatePayrollRequest.java
+│   │   │   │   │   │   ├── BalancePayrollRequest.java
+│   │   │   │   │   │   └── ProductionDataRequest.java
+│   │   │   │   │   │
+│   │   │   │   │   └── response/
+│   │   │   │   │       ├── ApiResponse.java
+│   │   │   │   │       ├── LoginResponse.java
+│   │   │   │   │       ├── UserResponse.java
+│   │   │   │   │       ├── AttendanceResponse.java
+│   │   │   │   │       ├── LeaveRequestResponse.java
+│   │   │   │   │       ├── PayrollResponse.java
+│   │   │   │   │       └── ReportResponse.java
+│   │   │   │   │
+│   │   │   │   ├── entities/               # ✅ JPA ENTITIES (Organized by Module)
+│   │   │   │   │   ├── Core/
+│   │   │   │   │   │   ├── Role.java               # tbRole
+│   │   │   │   │   │   ├── User.java               # tbUser
+│   │   │   │   │   │   ├── Department.java         # tbDepartment
+│   │   │   │   │   │   ├── Line.java               # tbLine
+│   │   │   │   │   │   └── SkillLevel.java         # tbSkillLevel
+│   │   │   │   │   │
+│   │   │   │   │   ├── ModuleA_Time_Attendance/
+│   │   │   │   │   │   ├── WorkSchedule.java       # tbWorkSchedule
+│   │   │   │   │   │   ├── Attendance.java         # tbAttendance
+│   │   │   │   │   │   ├── LeaveReason.java        # tbLeaveReason
+│   │   │   │   │   │   └── LeaveRequest.java       # tbLeaveRequest
+│   │   │   │   │   │
+│   │   │   │   │   ├── ModuleB_Line_Assignment/
+│   │   │   │   │   │   ├── OvertimeRequest.java    # tbOvertimeRequest
+│   │   │   │   │   │   ├── OvertimeTicket.java     # tbOvertimeTicket
+│   │   │   │   │   │   └── Proposal.java           # tbProposal
+│   │   │   │   │   │
+│   │   │   │   │   ├── ModuleC_Payroll/
+│   │   │   │   │   │   ├── Production.java         # tbProduction
+│   │   │   │   │   │   ├── Payroll.java            # tbPayroll
+│   │   │   │   │   │   ├── EmployeePayroll.java    # tbEmployeePayroll
+│   │   │   │   │   │   └── ReservedPayroll.java    # tbReservedPayroll
+│   │   │   │   │   │
+│   │   │   │   │   └── System/
+│   │   │   │   │       ├── UserHistory.java        # tbUserHistory
+│   │   │   │   │       └── Notification.java       # tbNotification
+│   │   │   │   │
+│   │   │   │   ├── repositories/           # ✅ SPRING DATA JPA REPOSITORIES
+│   │   │   │   │   ├── Core/
+│   │   │   │   │   │   ├── RoleRepository.java
+│   │   │   │   │   │   ├── UserRepository.java
+│   │   │   │   │   │   ├── DepartmentRepository.java
+│   │   │   │   │   │   ├── LineRepository.java
+│   │   │   │   │   │   └── SkillLevelRepository.java
+│   │   │   │   │   │
+│   │   │   │   │   ├── ModuleA_Time_Attendance/
+│   │   │   │   │   │   ├── WorkScheduleRepository.java
+│   │   │   │   │   │   ├── AttendanceRepository.java
+│   │   │   │   │   │   ├── LeaveReasonRepository.java
+│   │   │   │   │   │   └── LeaveRequestRepository.java
+│   │   │   │   │   │
+│   │   │   │   │   ├── ModuleB_Line_Assignment/
+│   │   │   │   │   │   ├── OvertimeRequestRepository.java
+│   │   │   │   │   │   ├── OvertimeTicketRepository.java
+│   │   │   │   │   │   └── ProposalRepository.java
+│   │   │   │   │   │
+│   │   │   │   │   ├── ModuleC_Payroll/
+│   │   │   │   │   │   ├── ProductionRepository.java
+│   │   │   │   │   │   ├── PayrollRepository.java
+│   │   │   │   │   │   ├── EmployeePayrollRepository.java
+│   │   │   │   │   │   └── ReservedPayrollRepository.java
+│   │   │   │   │   │
+│   │   │   │   │   └── System/
+│   │   │   │   │       ├── UserHistoryRepository.java
+│   │   │   │   │       └── NotificationRepository.java
+│   │   │   │   │
+│   │   │   │   ├── securities/             # ✅ SECURITY (JWT)
+│   │   │   │   │   ├── JwtAuthenticationFilter.java
+│   │   │   │   │   └── JwtUtils.java
+│   │   │   │   │
+│   │   │   │   ├── services/               # ✅ BUSINESS LOGIC SERVICES
+│   │   │   │   │   ├── Core/
+│   │   │   │   │   │   ├── AuthService.java
+│   │   │   │   │   │   ├── UserService.java
+│   │   │   │   │   │   ├── DepartmentService.java
+│   │   │   │   │   │   └── LineService.java
+│   │   │   │   │   │
+│   │   │   │   │   ├── ModuleA_Time_Attendance/
+│   │   │   │   │   │   ├── FaceScanService.java
+│   │   │   │   │   │   ├── AttendanceService.java
+│   │   │   │   │   │   ├── LeaveRequestService.java
+│   │   │   │   │   │   └── AttendanceReportService.java
+│   │   │   │   │   │
+│   │   │   │   │   ├── ModuleB_Line_Assignment/
+│   │   │   │   │   │   ├── OvertimeService.java
+│   │   │   │   │   │   └── ProposalService.java
+│   │   │   │   │   │
+│   │   │   │   │   ├── ModuleC_Payroll/
+│   │   │   │   │   │   ├── PayrollService.java
+│   │   │   │   │   │   ├── PayrollCalculationService.java
+│   │   │   │   │   │   └── ProductionService.java
+│   │   │   │   │   │
+│   │   │   │   │   └── System/
+│   │   │   │   │       ├── NotificationService.java
+│   │   │   │   │       └── UserHistoryService.java
+│   │   │   │   │
+│   │   │   │   └── SpringbootappApplication.java
+│   │   │   │
+│   │   │   └── resources/
+│   │   │       └── application.properties
+│   │   │
+│   │   └── test/
+│   │
+│   ├── .gitattributes
+│   ├── .gitignore
+│   ├── HELP.md
+│   ├── mvnw
+│   ├── mvnw.cmd
+│   └── pom.xml
+│
+├── .gitattributes
+├── .gitignore
+├── README.md
+└── Use Case ver2.xlsx
+--------------------------------------------------
+##Phân chia Module:
+ModuleA_Time_Attendance/
+├── Entities: WorkSchedule, Attendance, LeaveReason, LeaveRequest
+├── Repositories: 4 repositories
+├── Services: FaceScan, Attendance, LeaveRequest, Report
+└── Controllers: Attendance, FaceScan, LeaveRequest, WorkSchedule
+
+ModuleB_Line_Assignment/
+├── Entities: OvertimeRequest, OvertimeTicket, Proposal
+├── Repositories: 3 repositories
+├── Services: Overtime, Proposal
+└── Controllers: Overtime, Proposal
+
+ModuleC_Payroll/
+├── Entities: Production, Payroll, EmployeePayroll, ReservedPayroll
+├── Repositories: 4 repositories
+├── Services: Payroll, PayrollCalculation, Production
+└── Controllers: Payroll, Production
+
+
+## PHÂN QUYỀN THEO VAI TRÒ (ROLE-BASED ACCESS)
+### **Worker** (Công nhân)
+**Platform:** Flutter Mobile
+- ✅ Xem lịch làm việc
+- ✅ Xem lịch sử chấm công
+- ✅ Gửi đơn xin nghỉ phép
+- ✅ Xem bảng lương cá nhân
+- ✅ Nhận thông báo
+
+### **Manager** (Quản lý chuyền/bộ phận)
+**Platform:** React Web
+- ✅ Xác nhận đơn nghỉ phép (Worker/Leader/Assistant Leader)
+- ✅ Lập phiếu tăng ca
+- ✅ Đề xuất thay đổi bậc tay nghề
+- ✅ Xem báo cáo bộ phận
+
+### **Factory Manager** (Quản lý nhà máy)
+**Platform:** React Web
+- ✅ Duyệt đơn nghỉ phép (từ Manager)
+- ✅ Yêu cầu lập phiếu tăng ca
+- ✅ Xác nhận phiếu tăng ca (từ Manager)
+- ✅ Đề xuất tăng lương
+- ✅ Đề xuất thay đổi vị trí
+- ✅ Tạo bảng lương (theo bộ phận)
+- ✅ Cân đối lương
+- ✅ Nhập dữ liệu sản lượng
+
+### **Factory Director** (Giám đốc nhà máy)
+**Platform:** React Web
+- ✅ Duyệt tất cả đề xuất (tăng ca, tăng lương, thay đổi vị trí/tay nghề)
+- ✅ Duyệt bảng lương
+- ✅ Lập bảng lương bảo lưu
+
+### **HR** (Nhân sự)
+**Platform:** React Web
+- ✅ Quản lý toàn bộ nhân viên (CRUD)
+- ✅ Xử lý lỗi quét mặt, chấm công thủ công
+- ✅ Tạo báo cáo chấm công
+- ✅ Tạo báo cáo lương
+- ✅ Cập nhật hồ sơ nhân viên (theo lệnh từ Factory Director)
+- ✅ Xem lịch sử thay đổi (UserHistory)
+
+### ⚪ **Admin** (Quản trị viên hệ thống)
+**Platform:** React Web
+- ✅ Quản lý toàn bộ hệ thống
+- ✅ Quản lý Role, Department, Line
+- ✅ Backup/Restore database
+
+## MAPPING USE CASE VỚI CẤU TRÚC
+### **Module A: Time Attendance - Face Scan**
+
+| Use Case | Actor | Backend Service | React Page | Flutter Screen |
+| --- | --- | --- | --- | --- |
+| Check-In/Out Face Scan | Worker | FaceScanService | - | - (Web Kiosk) |
+| Handle Face Scan Error | HR | AttendanceService | AttendanceErrorList, AttendanceManual | - |
+| Submit Leave Request | Worker/Leader/Manager | LeaveRequestService | - | leave_form_screen |
+| Manager Confirm Leave | Manager | LeaveRequestService | LeaveConfirm | - |
+| Factory Manager Approve Leave | Factory Manager | LeaveRequestService | LeaveApprove | - |
+| Generate Attendance Report | HR | AttendanceReportService | AttendanceReport | - |
+### **Module B: Line Assignment**
+
+| Use Case | Actor | Backend Service | React Page | Flutter Screen |
+| --- | --- | --- | --- | --- |
+| Request Overtime | Factory Manager | OvertimeService | OvertimeRequestForm | - |
+| Create Overtime Ticket | Manager | OvertimeService | OvertimeTicketForm | - |
+| Confirm Overtime Ticket | Factory Manager | OvertimeService | OvertimeConfirm | - |
+| Propose Salary Increase | Factory Manager | ProposalService | SalaryProposalForm | - |
+| Propose Position Change | Factory Manager | ProposalService | PositionProposalForm | - |
+| Propose Skill Level Change | Manager | ProposalService | SkillProposalForm | - |
+| Approve Proposals | Factory Director | ProposalService | ProposalApprove | - |
+| Update System Records | HR | UserService, UserHistoryService | UpdateEmployee | - |
+### **Module C: Payroll Management**
+
+| Use Case | Actor | Backend Service | React Page | Flutter Screen |
+| --- | --- | --- | --- | --- |
+| Create Payroll Table | Factory Manager | PayrollService, PayrollCalculationService | CreatePayroll | - |
+| Balance Payroll | Factory Manager | PayrollService | BalancePayroll | - |
+| Approve Payroll | Factory Director | PayrollService | PayrollApprove | - |
+| Create Reserved Payroll | Factory Director | PayrollService | ReservedPayroll | - |
+| Generate Payroll Report | HR | PayrollService | PayrollReport | - |
+| View Personal Payroll | Worker | PayrollService | - | payroll_detail_screen |
+## API ENDPOINTS CHÍNH (Tóm tắt)
+### **Authentication**
+- `POST /api/auth/login`   POST http://localhost:9999/api/auth/login
+                            {
+                              "email": "cn1@maypro.com",
+                              "password": "123456"
+                            }
+                            Lấy token dán vào:
+                            GET http://localhost:9999/api/auth/getemp/cn1@maypro.com (header: Authorization: Bearer <token>)
+
+- `POST /api/auth/logout`
+- `POST /api/auth/register`
+- `POST /api/auth/forgotpassword`
+- `GET /api/auth/me`
+
+### **Module A: Time Attendance**
+- `POST /api/attendance/face-scan`
+- `POST /api/attendance/sync`
+- `GET /api/attendance/errors`
+- `POST /api/attendance/manual`
+- `GET /api/attendance/report`
+- `POST /api/leave/request`
+- `GET /api/leave/requests`
+- `PUT /api/leave/confirm/{id}`
+- `PUT /api/leave/approve/{id}`
+
+### **Module B: Line Assignment**
+- `POST /api/overtime/request`
+- `GET /api/overtime/requests`
+- `POST /api/overtime/ticket`
+- `GET /api/overtime/tickets`
+- `PUT /api/overtime/confirm/{id}`
+- `POST /api/proposal/salary`
+- `POST /api/proposal/position`
+- `POST /api/proposal/skill`
+- `GET /api/proposal/list`
+- `PUT /api/proposal/approve/{id}`
+- `PUT /api/user/update/{id}`
+
+### **Module C: Payroll**
+- `POST /api/production/data`
+- `GET /api/production/list`
+- `POST /api/payroll/create`
+- `GET /api/payroll/preview`
+- `PUT /api/payroll/balance/{id}`
+- `PUT /api/payroll/approve/{id}`
+- `POST /api/payroll/reserved`
+- `GET /api/payroll/report`
+- `GET /api/payroll/employee/{userId}`
+
+### **System**
+- `GET /api/notification/list`
+- `POST /api/notification/send`
+- `GET /api/user/history/{userId}`
+
+## ✅ TÓM TẮT
+### **Backend (Spring Boot)**
+- **18 Entities** (map với 18 bảng database)
+- **18 Repositories**
+- **15+ Services** (chia theo module)
+- **10+ Controllers**
+
+### **Frontend Web (React)**
+- **3 Module chính** (A, B, C)
+- **40+ Pages** (theo role và module)
+- **10+ Services** (API calls)
+
+### **Mobile App (Flutter)**
+- **Chỉ cho Worker/Leader**
+- **8+ Screens** (Login, Home, Attendance, Leave, Payroll, Profile)
+- **5+ Services**
+
+
+POST MAN:
+1. test Login -> OK
+Post http://localhost:9999/api/auth/login
+
+{
+  "email": "cn1@maypro.com",
+  "password": "123456"
+}
+
+2. register -> ok
+
+POST http://localhost:9999/api/auth/register
+
+{
+  "fullName": "Test User 1",
+  "email": "testuser@maypro.com",
+  "password": "123456",
+  "phone": "0123456789",
+  "roleId": 199010000
+}
+
+3. Get me -> Ok
+
+GET http://localhost:9999/api/auth/me
+Authorization: chọn Type: Bearer Token và điền token
+
+
+4. get user by email -> ok
+
+GET http://localhost:9999/api/auth/getemp/cn1@maypro.com
+Authorization: chọn Type: Bearer Token và điền token
+
+5. get all users -> còn lỗi
+GET http://localhost:9999/api/auth/getallemp
+Authorization: chọn Type: Bearer Token và điền token
+
+6. update ủe -> ok
+PUT http://localhost:9999/api/auth/updateuser/cn1@maypro.com
+Authorization: chọn Type: Bearer Token và điền token
+-> {
+  "fullName": "CN 1 Updated",
+  "phone": "0905999999",
+  "baseSalary": 7000000
+}
+
+7. change pass -> còn lỗi
+PUT http://localhost:9999/api/auth/change-password?email=cn1@maypro.com
+{
+  "oldPassword": "123456",
+  "newPassword": "newpass123",
+  "confirmPassword": "newpass123"
+}
+
+8. logout -> ok
+
+luồng xly user quên pas:
+┌─────────────────┐
+│  User quên mật  │
+│     khẩu        │
+└────────┬────────┘
+         │
+         ▼
+┌─────────────────┐
+│ POST /forgot-   │
+│   password      │──── Input: email
+└────────┬────────┘
+         │
+         ▼
+┌─────────────────┐
+│ 1. Tìm user     │
+│ 2. Tạo UUID     │
+│ 3. Lưu DB       │
+│ 4. Gửi email    │
+└────────┬────────┘
+         │
+         ▼
+┌─────────────────┐
+│ User nhận email │
+│ Click link với  │
+│     token       │
+└────────┬────────┘
+         │
+         ▼
+┌─────────────────┐
+│ POST /reset-    │
+│   password      │──── Input: token + newPassword
+└────────┬────────┘
+         │
+         ▼
+┌─────────────────┐
+│ 1. Validate     │
+│ 2. Check expiry │
+│ 3. Update pass  │
+│ 4. Mark used    │
+└────────┬────────┘
+         │
+         ▼
+┌─────────────────┐
+│  Login thành    │
+│  công với pass  │
+│       mới       │
+└─────────────────┘
+
+9. ForgotPassword: -> ok
+POST http://localhost:9999/api/auth/forgot-password?email=cn1@maypro.com
+sẽ nhận đc email, đang dặt thời gian hết hạn token là 5 phút.
+đã test quá 5 phút -> ok( dongf 198 trong UserServiceImp)
+
+10. ResetPassword: -> ok
+POST http://localhost:9999/api/auth/reset-password?token=701038c7-b99d-4f3f-afdd-8759047c806e&newPassword=password123
+
+11. Filter and get overtime-ticket. Use param to filter (ex: ?status=processed)
+GET http://localhost:9999/api/overtime-ticket/
+
+12. Filter and get overtime-request. Use param to filter (ex: ?status=processed)
+GET http://localhost:9999/api/overtime-request/
+
+13. Filter and get proposal (each type). Use param to filter (ex: ?status=processed)
+GET http://localhost:9999/api/proposal/salary-increase
+GET http://localhost:9999/api/proposal/position-change
+GET http://localhost:9999/api/proposal/skill-level
+
+14. GET http://localhost:9999/api/payroll/employee/199050004/history
+[
+    {
+        "id": 199180000,
+        "baseSalary": 6500000.00,
+        "productBonus": 975000.00,
+        "overtimePay": 300000.00,
+        "allowance": 200000.00,
+        "deduction": 0.00,
+        "totalPay": 7975000.00,
+        "note": "Example: auto-inserted payroll detail",
+        "createdAt": "2025-11-09T16:36:11.297Z"
+    }
+]
+
+//face scan:
+1. FaceScanLog.isMatched = true → Nhân viên được nhận dạng ✅
+2. FaceScanLog.scanDate = HH:MM:SS → Time in/out
+3. TbAttendance.user_id = scan.user_id
+4. TbAttendance.date = TODAY
+5. TbAttendance.time_in = FIRST successful scan
+6. TbAttendance.time_out = LAST successful scan
+7. TbAttendance.status = SUCCESS/LATE
+
+
+POST /api/face-training/train: Train gương mặt
+
+----28/11/2025
+GET /api/lines/department/1 -> Lấy tất cả lines của dept 1
+GET /api/lines/hierarchy/1 -> Lấy toàn bộ cấu trúc phân cấp dept 1 (theo level) |
+GET /api/lines/tree/1 -> Lấy cây phân cấp hoàn chỉnh (with children) |
+GET /api/lines/root/1 -> Lấy tất cả root lines (level 1) của dept 1 |
+GET /api/lines/children/5 -> Lấy các sub section/work unit của line 5 |
+GET /api/lines/path/12 -> Lấy đường dẫn từ root → line 12 |
+GET /api/lines/ancestors/12 -> Lấy tất cả parent của line 12 |
+GET /api/lines/by-level/1/2 -> Lấy tất cả Sub Sections (level 2) của dept 1 |
+
+
+ngày 28/11/2025:
+1. Register User mới bằng xác thực email và otp( chưa test opt trên đt)
+POST   http://localhost:9999/api/auth/register
+{
+  "fullName": "Nguyễn Văn A",
+  "email": "congtu7677@gmail.com",
+  "password": "Matkhau123",
+  "phone": "0903787677",
+  "roleId": 1007,
+  "departmentId": 1005,
+  "lineId": 1006,
+  "skillLevelId": 1000,
+  "salaryType": "TimeBased",
+  "baseSalary": 5000000,
+  "hireDate": "2025-11-28",
+  "verificationMethod": "EMAIL"
+}
+=> OK
+
+2. sửa Login Logout trên React với các role Admin + HR có DashBoard chung.
+các role khác có DashBoard chung
+
+3. sửa AuthController, lineController, Usercontroller

@@ -1,0 +1,297 @@
+//vào trang https://dbdiagram.io 
+//copy và paste
+
+// ============= CORE TABLES =============
+
+Table TbRole {
+  role_id int [pk, increment]
+  name varchar(100) [unique, not null]
+  description text
+}
+
+Table TbLeaveReason {
+  leave_reason_id int [pk, increment]
+  reason varchar(255) [not null]
+  description text
+}
+
+Table TbSkillLevel {
+  skill_level_id int [pk, increment]
+  name varchar(100) [not null]
+  description text
+}
+
+Table TbDepartment {
+  department_id int [pk, increment]
+  name varchar(100) [not null]
+  manager_id int [null, note: 'FK to TbUser']
+  description text
+}
+
+Table TbLine {
+  line_id int [pk, increment]
+  department_id int [not null, ref: > TbDepartment.department_id]
+  parent_id int [null, ref: > TbLine.line_id, note: 'Self-referencing for hierarchy']
+  level int [note: 'Management level, starts from level 3']
+  name varchar(100) [not null]
+  description text
+  manager_id int [null, note: 'FK to TbUser']
+  created_at datetime
+}
+
+Table TbUser {
+  user_id int [pk, increment]
+  full_name varchar(255) [not null]
+  email varchar(255) [unique]
+  password_hash varchar(255)
+  phone varchar(20) [not null]
+  gender bit [default: 0, note: '0: female, 1: male']
+  role_id int [ref: > TbRole.role_id]
+  department_id int [ref: > TbDepartment.department_id]
+  line_id int [null, ref: > TbLine.line_id]
+  face_data text
+  salary_type varchar(20) [default: 'TimeBased', note: 'ProductBased or TimeBased']
+  base_salary decimal(10,2) [default: 0]
+  skill_level_id int [ref: > TbSkillLevel.skill_level_id]
+  hire_date date
+  status varchar(20) [default: 'Active', note: 'Active, Inactive, or Terminated']
+  created_at datetime
+}
+
+// ============= MODULE A: TIME & ATTENDANCE =============
+
+Table TbWorkSchedule {
+  schedule_id int [pk, increment]
+  user_id int [not null, ref: > TbUser.user_id]
+  date date [not null]
+  shift_start time
+  shift_end time
+  is_holiday bit [default: 0]
+}
+
+Table TbAttendance {
+  attendance_id int [pk, increment]
+  user_id int [not null, ref: > TbUser.user_id]
+  date date [not null]
+  time_in time
+  time_out time
+  status varchar(20) [not null, note: 'success, late, manual, error']
+  reason text
+  manual_updated_by int [ref: > TbUser.user_id]
+  created_at datetime
+  
+  indexes {
+    (user_id, date) [name: 'idx_user_date']
+  }
+}
+
+Table TbLeaveRequest {
+  request_id int [pk, increment]
+  user_id int [not null, ref: > TbUser.user_id]
+  leave_reason_id int [not null, ref: > TbLeaveReason.leave_reason_id]
+  type varchar(20) [not null, note: 'ShortTerm, LongTerm, Maternity, Accident, Other']
+  start_date date [not null]
+  end_date date [not null]
+  reason text
+  comment text
+  status varchar(20) [default: 'pending', note: 'pending, confirmed, approved, rejected']
+  confirmed_by int [ref: > TbUser.user_id]
+  approved_by int [ref: > TbUser.user_id]
+  reject_reason text
+  created_at datetime
+  
+  indexes {
+    (user_id, status) [name: 'idx_user_status']
+  }
+}
+
+// ============= MODULE B: OVERTIME & PROPOSALS =============
+
+Table TbProposal {
+  proposal_id int [pk, increment]
+  type varchar(30) [not null, note: 'SalaryIncrease, PositionChange, SkillLevelChange']
+  proposer_id int [not null, ref: > TbUser.user_id]
+  target_user_id int [not null, ref: > TbUser.user_id]
+  details nvarchar
+  reason text
+  status varchar(20) [default: 'pending', note: 'pending, confirmed, approved, rejected']
+  approved_by int [ref: > TbUser.user_id]
+  reject_reason text
+  created_at datetime
+  
+  indexes {
+    (target_user_id, status) [name: 'idx_target_status']
+  }
+}
+
+Table TbOvertimeRequest {
+  request_id int [pk, increment]
+  factory_manager_id int [not null, ref: > TbUser.user_id]
+  department_id int [not null, ref: > TbDepartment.department_id]
+  overtime_date date [not null]
+  start_time time [not null, default: '17:00:00']
+  end_time time [not null]
+  overtime_time float [not null]
+  status varchar(20) [default: 'pending', note: 'pending, open, processed, rejected, expired']
+  details text
+  created_at datetime
+}
+
+Table TbOvertimeRequestDetail {
+  detail_id int [pk, increment]
+  request_id int [not null, ref: > TbOvertimeRequest.request_id]
+  line_id int [not null, ref: > TbLine.line_id]
+  num_employees int [not null, note: 'Must be > 0']
+  
+  indexes {
+    (request_id, line_id) [unique, name: 'UQ_RequestDetail_Line']
+  }
+}
+
+Table TbOvertimeTicket {
+  ticket_id int [pk, increment]
+  manager_id int [not null, ref: > TbUser.user_id]
+  request_id int [ref: > TbOvertimeRequest.request_id]
+  reason text
+  status varchar(20) [default: 'pending', note: 'pending, submitted, confirmed, approved, rejected']
+  confirmed_by int [ref: > TbUser.user_id]
+  approved_by int [ref: > TbUser.user_id]
+  created_at datetime
+}
+
+Table TbOvertimeTicketEmployees {
+  id int [pk, increment]
+  overtime_ticket_id int [not null, ref: > TbOvertimeTicket.ticket_id]
+  user_id int [not null, ref: > TbUser.user_id]
+  line_id int [null, ref: > TbLine.line_id]
+  status varchar(20) [default: 'pending', note: 'pending, accepted, rejected']
+  
+  indexes {
+    (overtime_ticket_id, user_id) [unique, name: 'UQ_Ticket_User']
+  }
+}
+
+// ============= MODULE C: PAYROLL & PRODUCTION =============
+
+Table TbProduction {
+  production_id int [pk, increment]
+  department_id int [not null, ref: > TbDepartment.department_id]
+  product_count int [not null]
+  DOP date [not null, note: 'Date of Production']
+  unit_price decimal(15,1) [default: 0]
+  created_at datetime
+  
+  indexes {
+    (department_id, DOP) [name: 'idx_dept_date']
+  }
+}
+
+Table TbPayroll {
+  payroll_id int [pk, increment]
+  month date [not null]
+  department_id int [not null, ref: > TbDepartment.department_id]
+  total_salary decimal(12,2) [not null]
+  details nvarchar
+  status varchar(20) [default: 'pending', note: 'pending, balanced, approved, rejected']
+  created_by int [not null, ref: > TbUser.user_id]
+  approved_by int [ref: > TbUser.user_id]
+  balance_note text
+  created_at datetime
+  
+  indexes {
+    (month, status) [name: 'idx_month_status']
+  }
+}
+
+Table TbReservedPayroll {
+  reserved_id int [pk, increment]
+  payroll_id int [not null, ref: > TbPayroll.payroll_id]
+  reserved_amount decimal(12,2) [not null]
+  details nvarchar
+  created_by int [not null, ref: > TbUser.user_id]
+  created_at datetime
+}
+
+Table TbEmployeePayroll {
+  detail_id int [pk, increment]
+  payroll_id int [not null, ref: > TbPayroll.payroll_id]
+  user_id int [not null, ref: > TbUser.user_id]
+  base_salary decimal(15,2) [not null]
+  product_bonus decimal(15,2) [default: 0]
+  overtime_pay decimal(15,2) [default: 0]
+  allowance decimal(15,2) [default: 0]
+  deduction decimal(15,2) [default: 0]
+  total_pay decimal(15,2) [not null]
+  note text
+  created_at datetime
+  
+  indexes {
+    (user_id, payroll_id) [name: 'idx_user_payroll']
+  }
+}
+
+// ============= SYSTEM TABLES =============
+
+Table TbUserHistory {
+  history_id int [pk, increment]
+  user_id int [not null, ref: > TbUser.user_id]
+  field_changed varchar(100) [not null]
+  old_value text
+  new_value text
+  updated_by int [not null, ref: > TbUser.user_id]
+  timestamp datetime
+}
+
+Table TbNotification {
+  notification_id int [pk, increment]
+  recipient_id int [not null, ref: > TbUser.user_id]
+  type varchar(20) [not null, note: 'error, approval, rejection, other']
+  message text [not null]
+  sent_date datetime
+  status varchar(10) [default: 'sent', note: 'sent or read']
+}
+
+Table TbPasswordResetToken {
+  token_id int [pk, increment]
+  token varchar(500) [not null, unique]
+  user_id int [not null, ref: > TbUser.user_id]
+  expiry_date datetime [not null]
+  used bit [not null, default: 0]
+  created_at datetime
+  
+  indexes {
+    token [name: 'idx_token']
+    (user_id, used) [name: 'idx_user_used']
+  }
+}
+
+// ============= FACE RECOGNITION =============
+
+Table TbFaceTraining {
+  face_id int [pk, increment]
+  user_id int [not null, ref: > TbUser.user_id]
+  trained_by_user_id int [ref: > TbUser.user_id]
+  confidence numeric(5,4)
+  is_trained bit [default: 0]
+  model_version varchar(50)
+  face_image_path varchar(500)
+  face_embedding varbinary
+  notes nvarchar
+  created_at datetime
+  training_date datetime
+  updated_at datetime
+}
+
+Table TbFaceScanLog {
+  id bigint [pk, increment]
+  user_id int [ref: > TbUser.user_id]
+  matched_face_id int [ref: > TbFaceTraining.face_id]
+  attendance_id int
+  scan_type varchar(20) [note: 'CHECK_IN or CHECK_OUT']
+  is_recognized bit [default: 0]
+  is_matched bit [default: 0]
+  matched_confidence numeric(5,4)
+  scan_image_path varchar(500)
+  scan_date datetime
+  created_at datetime
+}

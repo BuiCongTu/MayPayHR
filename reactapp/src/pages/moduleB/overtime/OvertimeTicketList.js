@@ -1,0 +1,302 @@
+import React, {useState, useEffect} from 'react';
+import {getFilteredOvertimeTickets, submitOvertimeTicket} from "../../../services/moduleB/overtimeService";
+import {useNavigate} from "react-router-dom";
+
+import {
+    Box,
+    Typography,
+    Button,
+    Paper,
+    TextField,
+    InputAdornment,
+    ToggleButton,
+    ToggleButtonGroup,
+    Table,
+    TableBody,
+    TableCell,
+    TableContainer,
+    TableHead,
+    TableRow,
+    TableSortLabel,
+    Chip,
+    colors,
+    Grid,
+    Card,
+    CardContent,
+    Stack,
+    Tooltip,
+    IconButton
+} from '@mui/material';
+
+import SearchIcon from '@mui/icons-material/Search';
+import AddIcon from '@mui/icons-material/Add';
+import VisibilityIcon from '@mui/icons-material/Visibility';
+import AssignmentIcon from '@mui/icons-material/Assignment';
+import PendingActionsIcon from '@mui/icons-material/PendingActions';
+import CancelIcon from '@mui/icons-material/Cancel';
+import SendIcon from '@mui/icons-material/Send';
+import {visuallyHidden} from '@mui/utils';
+
+// --- Mock Auth ---
+const useAuth = () => {
+    return {user: {id: 199050002}}; // Mock Manager ID
+};
+
+// --- Components ---
+function StatCard({ title, value, icon, color }) {
+    return (
+        <Card elevation={0} sx={{ border: '1px solid #e0e0e0', borderRadius: 2, height: '100%' }}>
+            <CardContent sx={{ pb: 1 }}>
+                <Stack direction="row" justifyContent="space-between" alignItems="flex-start">
+                    <Box>
+                        <Typography color="textSecondary" variant="caption" fontWeight="bold" textTransform="uppercase">
+                            {title}
+                        </Typography>
+                        <Typography variant="h4" fontWeight="bold" sx={{ mt: 1 }}>
+                            {value}
+                        </Typography>
+                    </Box>
+                    <Box sx={{ p: 1, bgcolor: `${color}15`, borderRadius: 2, color: color }}>
+                        {icon}
+                    </Box>
+                </Stack>
+            </CardContent>
+        </Card>
+    );
+}
+
+const headCells = [
+    {id: 'id', label: 'Ticket ID', width: '10%'},
+    {id: 'overtimeRequest.overtimeDate', label: 'Date', width: '15%'},
+    {id: 'overtimeRequest.startTime', label: 'Time', width: '20%'},
+    {id: 'requestId', label: 'Request Ref', width: '15%'},
+    {id: 'status', label: 'Status', width: '15%'},
+    {id: 'action', label: 'Action', width: '15%'}
+];
+
+function EnhancedTableHead(props) {
+    const {order, orderBy, onRequestSort} = props;
+    const createSortHandler = (property) => (event) => {
+        onRequestSort(event, property);
+    };
+
+    return (
+        <TableHead>
+            <TableRow sx={{"& th": {fontWeight: 'bold', backgroundColor: colors.blue[50]}}}>
+                {headCells.map((headCell) => (
+                    <TableCell
+                        key={headCell.id}
+                        align="left"
+                        sortDirection={orderBy === headCell.id ? order : false}
+                        width={headCell.width}
+                    >
+                        <TableSortLabel
+                            active={orderBy === headCell.id}
+                            direction={orderBy === headCell.id ? order : 'asc'}
+                            onClick={createSortHandler(headCell.id)}
+                        >
+                            {headCell.label}
+                            {orderBy === headCell.id ? (
+                                <Box component="span" sx={visuallyHidden}>
+                                    {order === 'desc' ? 'sorted descending' : 'sorted ascending'}
+                                </Box>
+                            ) : null}
+                        </TableSortLabel>
+                    </TableCell>
+                ))}
+            </TableRow>
+        </TableHead>
+    );
+}
+
+export default function OvertimeTicketList() {
+    const navigate = useNavigate();
+    const {user: currentUser} = useAuth();
+
+    const [tickets, setTickets] = useState([]);
+    const [stats, setStats] = useState({ total: 0, pending: 0, rejected: 0 });
+    const [page, setPage] = useState(0);
+
+    // Filters
+    const [order, setOrder] = useState('desc');
+    const [orderBy, setOrderBy] = useState('id');
+    const [statusFilter, setStatusFilter] = useState('all'); // Default 'all' for toggle group
+    const [search, setSearch] = useState('');
+    const [debouncedSearch, setDebouncedSearch] = useState('');
+
+    useEffect(() => {
+        const t = setTimeout(() => setDebouncedSearch(search), 500);
+        return () => clearTimeout(t);
+    }, [search]);
+
+    const loadData = async () => {
+        if (!currentUser?.id) return;
+
+        // Backend uses "null" for all
+        const apiStatus = statusFilter === 'all' ? null : statusFilter;
+
+        const filter = {
+            managerId: currentUser.id,
+            status: apiStatus,
+        };
+
+        const pageable = { page, size: 20, sort: `${orderBy},${order}` };
+
+        try {
+            const data = await getFilteredOvertimeTickets(filter, pageable);
+            setTickets(data?.content || []);
+
+            // Stats logic (simplified)
+            if (statusFilter === 'all') {
+                setStats({
+                    total: data.totalElements,
+                    pending: data.content.filter(t => t.status === 'submitted').length,
+                    rejected: data.content.filter(t => t.status === 'rejected').length
+                });
+            }
+        } catch (err) {
+            console.error("Failed to fetch tickets", err);
+        }
+    };
+
+    useEffect(() => {
+        loadData();
+    }, [page, statusFilter, debouncedSearch, order, orderBy, currentUser?.id]);
+
+    const handleSortRequest = (event, property) => {
+        const isAsc = orderBy === property && order === 'asc';
+        setOrder(isAsc ? 'desc' : 'asc');
+        setOrderBy(property);
+    };
+
+    const handleSubmitTicket = async (e, ticketId) => {
+        e.stopPropagation();
+        if (!window.confirm("Submit this ticket for approval?")) return;
+        try {
+            await submitOvertimeTicket(ticketId);
+            loadData();
+        } catch (err) {
+            alert("Failed to submit ticket: " + err.message);
+        }
+    };
+
+    const getStatusChip = (status) => {
+        let color = 'default';
+        if (status === 'submitted') color = 'info';
+        if (status === 'approved') color = 'success';
+        if (status === 'rejected') color = 'error';
+        if (status === 'pending') color = 'warning';
+
+        return <Chip label={status?.toUpperCase()} color={color} size="small" sx={{ fontWeight: 'bold', minWidth: 80 }} />;
+    };
+
+    const formatTime = (t) => t ? t.substring(0, 5) : '';
+
+    return (
+        <Box>
+            {/* ZONE A: STATS */}
+            <Grid container spacing={2} sx={{ mb: 3 }}>
+                <Grid item xs={12} sm={4}>
+                    <StatCard title="My Tickets" value={stats.total} icon={<AssignmentIcon />} color="#1976d2" />
+                </Grid>
+                <Grid item xs={12} sm={4}>
+                    <StatCard title="Pending Approval" value={stats.pending} icon={<PendingActionsIcon />} color="#ed6c02" />
+                </Grid>
+                <Grid item xs={12} sm={4}>
+                    <StatCard title="Rejected" value={stats.rejected} icon={<CancelIcon />} color="#d32f2f" />
+                </Grid>
+            </Grid>
+
+            {/* ZONE B: ACTIONS (Request List Style) */}
+            <Paper elevation={0} sx={{
+                p: 2, mb: 2, bgcolor: 'white', border: '1px solid #eee',
+                display: 'flex', gap: 2, flexWrap: 'wrap', alignItems: 'center'
+            }}>
+                <Typography variant="h6" sx={{ fontWeight: 'bold', mr: 2 }}>My Tickets</Typography>
+
+                <TextField
+                    size="small"
+                    placeholder="Search by Ticket ID..."
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                    InputProps={{ startAdornment: <InputAdornment position="start"><SearchIcon /></InputAdornment> }}
+                    sx={{ width: 300 }}
+                />
+
+                <ToggleButtonGroup
+                    value={statusFilter}
+                    exclusive
+                    onChange={(e, v) => { if(v) setStatusFilter(v); }}
+                    size="small"
+                >
+                    <ToggleButton value="all">All</ToggleButton>
+                    <ToggleButton value="pending" color="warning">Pending</ToggleButton>
+                    <ToggleButton value="submitted" color="info">Submitted</ToggleButton>
+                    <ToggleButton value="approved" color="success">Approved</ToggleButton>
+                    <ToggleButton value="rejected" color="error">Rejected</ToggleButton>
+                </ToggleButtonGroup>
+
+                <Box flexGrow={1} />
+
+                <Button variant="contained" startIcon={<AddIcon />} onClick={() => navigate("/overtime-ticket/create")}>
+                    Create Ticket
+                </Button>
+            </Paper>
+
+            {/* ZONE C: TABLE */}
+            <Paper elevation={0} sx={{ border: '1px solid #e0e0e0' }}>
+                <TableContainer>
+                    <Table size="medium">
+                        <EnhancedTableHead order={order} orderBy={orderBy} onRequestSort={handleSortRequest} />
+                        <TableBody>
+                            {tickets.length === 0 ? (
+                                <TableRow><TableCell colSpan={6} align="center" sx={{ py: 4 }}>No tickets found.</TableCell></TableRow>
+                            ) : (
+                                tickets.map((ticket) => (
+                                    <TableRow
+                                        key={ticket.id}
+                                        hover
+                                        sx={{ cursor: 'pointer' }}
+                                        onClick={() => navigate(`/overtime-ticket/${ticket.id}`)}
+                                    >
+                                        <TableCell><strong>#{ticket.id}</strong></TableCell>
+                                        <TableCell>{ticket.overtimeDate}</TableCell>
+                                        <TableCell>{formatTime(ticket.startTime)} - {formatTime(ticket.endTime)}</TableCell>
+                                        <TableCell>
+                                            <Chip label={`Req #${ticket.requestId}`} size="small" variant="outlined" onClick={(e) => {
+                                                e.stopPropagation();
+                                                navigate(`/overtime-request/${ticket.requestId}`);
+                                            }} />
+                                        </TableCell>
+                                        <TableCell>{getStatusChip(ticket.status)}</TableCell>
+                                        <TableCell>
+                                            <Stack direction="row" spacing={1}>
+                                                <Tooltip title="View Detail">
+                                                    <IconButton size="small" onClick={() => navigate(`/overtime-ticket/${ticket.id}`)}>
+                                                        <VisibilityIcon fontSize="small" />
+                                                    </IconButton>
+                                                </Tooltip>
+                                                {/* ACTION BUTTON IN LIST */}
+                                                {ticket.status === 'pending' && (
+                                                    <Tooltip title="Submit for Approval">
+                                                        <IconButton
+                                                            size="small"
+                                                            color="primary"
+                                                            onClick={(e) => handleSubmitTicket(e, ticket.id)}
+                                                        >
+                                                            <SendIcon fontSize="small" />
+                                                        </IconButton>
+                                                    </Tooltip>
+                                                )}
+                                            </Stack>
+                                        </TableCell>
+                                    </TableRow>
+                                ))
+                            )}
+                        </TableBody>
+                    </Table>
+                </TableContainer>
+            </Paper>
+        </Box>
+    );
+}
