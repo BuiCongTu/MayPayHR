@@ -81,8 +81,8 @@ function LineRow({ row, isExpanded, onToggle }) {
     const { name, required, assigned, acceptedCount, employees } = row;
 
     // Progress Logic
-    const progressVal = required > 0 ? Math.min((acceptedCount / required) * 100, 100) : 0;
-    const isFullyAccepted = required > 0 && acceptedCount >= required;
+    const progressVal = assigned > 0 ? Math.min((acceptedCount / assigned) * 100, 100) : 0;
+    const isFullyAccepted = assigned > 0 && acceptedCount >= assigned;
     const color = isFullyAccepted ? 'success' : (progressVal > 50 ? 'primary' : 'warning');
 
     return (
@@ -100,7 +100,7 @@ function LineRow({ row, isExpanded, onToggle }) {
                 <TableCell align="right">{assigned}</TableCell>
                 <TableCell align="right">
                     <Chip
-                        label={`${acceptedCount} / ${required}`}
+                        label={`${acceptedCount} / ${assigned}`}
                         size="small"
                         color={isFullyAccepted ? "success" : "default"}
                         variant={isFullyAccepted ? "filled" : "outlined"}
