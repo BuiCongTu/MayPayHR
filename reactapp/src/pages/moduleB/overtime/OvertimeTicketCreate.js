@@ -2,30 +2,33 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { getFilteredOvertimeRequest, createOvertimeTicket } from '../../../services/moduleB/overtimeService';
 import { getUsersByDepartment } from '../../../services/userService';
+import { getLinesByDepartment } from '../../../services/departmentService';
 import { getCurrentUser } from '../../../services/authService';
 import EmployeeTransferList from './EmployeeTransferList';
 
 import {
     Box, Container, Paper, Typography, Autocomplete, TextField,
-    Table, TableBody, TableCell, TableContainer, TableHead, TableRow,
-    Checkbox, Button, Alert, CircularProgress, Stack, Chip
+    Button, Alert, CircularProgress, Stack, Table, TableBody,
+    TableCell, TableContainer, TableHead, TableRow, Chip,
+    Divider
 } from '@mui/material';
 
 import PersonAddIcon from '@mui/icons-material/PersonAdd';
 import SaveIcon from '@mui/icons-material/Save';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import EditIcon from '@mui/icons-material/Edit';
+import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 
 export default function OvertimeTicketCreate() {
     const navigate = useNavigate();
     const location = useLocation();
-
-    // Get real user.
     const user = getCurrentUser();
 
     // Data States
     const [requests, setRequests] = useState([]);
     const [selectedRequest, setSelectedRequest] = useState(null);
     const [deptEmployees, setDeptEmployees] = useState([]);
+    const [managedLineIds, setManagedLineIds] = useState(new Set());
 
     // Form States
     const [lines, setLines] = useState([]);
@@ -38,7 +41,7 @@ export default function OvertimeTicketCreate() {
     const [currentEditingLine, setCurrentEditingLine] = useState(null);
     const [error, setError] = useState(null);
 
-    // 1. Load Data & Handle Pre-selection
+    // 1. Load Data & Determine Ownership
     useEffect(() => {
         let isMounted = true;
 
@@ -60,18 +63,48 @@ export default function OvertimeTicketCreate() {
                     { page: 0, size: 50, sort: 'id,desc' }
                 );
 
+                // B. Fetch Employees & Lines
+                const usersPromise = departmentId ? getUsersByDepartment(departmentId) : Promise.resolve([]);
+                const linesPromise = departmentId ? getLinesByDepartment(departmentId) : Promise.resolve([]);
+
+                const [fetchedRequests, fetchedUsers, fetchedLines] = await Promise.all([
+                    Promise.resolve(reqData.content || []),
+                    usersPromise,
+                    linesPromise
+                ]);
+
                 if (!isMounted) return;
 
-                const fetchedRequests = reqData.content || [];
                 setRequests(fetchedRequests);
+                setDeptEmployees(fetchedUsers || []);
 
-                // B. Fetch Employees
-                if (departmentId) {
-                    const users = await getUsersByDepartment(departmentId);
-                    if (isMounted) setDeptEmployees(users || []);
+                // C. Determine Owned Lines
+                const owned = new Set();
+
+                // 1. Check User Session Profile
+                if (user.lineId) {
+                    owned.add(user.lineId);
+                }
+                // 2. Check User Entity from List
+                else if (fetchedUsers && fetchedUsers.length > 0) {
+                    const myProfile = fetchedUsers.find(u => String(u.id) === String(user.id));
+                    if (myProfile?.lineId) owned.add(myProfile.lineId);
+                    else if (myProfile?.line?.id) owned.add(myProfile.line.id);
                 }
 
-                // C. Handle Pre-selected Request (passed from List)
+                // 3. Fallback: Check Line Manager ID (Entity structure)
+                if (fetchedLines && Array.isArray(fetchedLines)) {
+                    fetchedLines.forEach(l => {
+                        const lineManagerId = l.manager?.id || l.managerId;
+                        if (lineManagerId && String(lineManagerId) === String(user.id)) {
+                            owned.add(l.id);
+                        }
+                    });
+                }
+
+                setManagedLineIds(owned);
+
+                // D. Handle Pre-selection
                 if (location.state?.preselectedRequestId) {
                     const targetReq = fetchedRequests.find(r => r.id === location.state.preselectedRequestId);
                     if (targetReq) {
@@ -89,28 +122,33 @@ export default function OvertimeTicketCreate() {
         }
 
         init();
-
         return () => { isMounted = false; };
     }, [user?.id, user?.departmentId, location.state]);
 
-    // Helper to setup lines
-    const setupLinesForRequest = (req) => {
-        if (req) {
-            const fulfilledLineIds = new Set();
-            if (req.overtimeTickets) {
-                req.overtimeTickets.forEach(ticket => {
-                    if (ticket.status !== 'rejected') {
-                        ticket.employeeList?.forEach(emp => fulfilledLineIds.add(emp.lineId));
+    // Helper: Count Server Assignments
+    const getServerAssignedCount = (req, lineId) => {
+        if (!req || !req.overtimeTickets) return 0;
+        let count = 0;
+        req.overtimeTickets.forEach(ticket => {
+            if (ticket.status !== 'rejected') {
+                ticket.employeeList?.forEach(emp => {
+                    if (emp.lineId === lineId && emp.status !== 'rejected') {
+                        count++;
                     }
                 });
             }
+        });
+        return count;
+    };
 
+    // Helper: Setup Lines State
+    const setupLinesForRequest = (req) => {
+        if (req) {
             const initialLines = req.lineDetails.map(d => ({
                 lineId: d.lineId,
                 lineName: d.lineName,
                 numEmployees: d.numEmployees,
-                selected: false,
-                isUnavailable: fulfilledLineIds.has(d.lineId)
+                serverAssigned: getServerAssignedCount(req, d.lineId)
             }));
             setLines(initialLines);
             setAllocations({});
@@ -120,20 +158,14 @@ export default function OvertimeTicketCreate() {
         }
     };
 
-    // 2. Handle Request Selection (User Interaction)
+    // Filter Logic: Only show lines managed by this user
+    const visibleLines = lines.filter(l => managedLineIds.has(l.lineId));
+
+    // Handlers
     const handleRequestChange = (event, newValue) => {
         setSelectedRequest(newValue);
         setError(null);
         setupLinesForRequest(newValue);
-    };
-
-    const handleLineToggle = (lineId) => {
-        setLines(prev => prev.map(l => {
-            if (l.lineId === lineId) {
-                return { ...l, selected: !l.selected };
-            }
-            return l;
-        }));
     };
 
     const openEmployeePicker = (line) => {
@@ -147,10 +179,6 @@ export default function OvertimeTicketCreate() {
                 ...prev,
                 [currentEditingLine.lineId]: selectedUsers
             }));
-
-            if (selectedUsers.length > 0) {
-                setLines(prev => prev.map(l => l.lineId === currentEditingLine.lineId ? { ...l, selected: true } : l));
-            }
         }
         setModalOpen(false);
         setCurrentEditingLine(null);
@@ -158,61 +186,39 @@ export default function OvertimeTicketCreate() {
 
     const getUnavailableEmployeesMap = (targetLineId) => {
         const unavailable = new Map();
-
-        if (selectedRequest && selectedRequest.overtimeTickets) {
-            selectedRequest.overtimeTickets.forEach(ticket => {
-                if (ticket.status !== 'rejected') {
-                    ticket.employeeList?.forEach(emp => {
-                        unavailable.set(emp.employeeId, `Ticket #${ticket.id}`);
-                    });
-                }
-            });
-        }
-
         Object.keys(allocations).forEach(lId => {
             const lineIdInt = parseInt(lId);
             if (lineIdInt !== targetLineId) {
                 const lineObj = lines.find(l => l.lineId === lineIdInt);
                 const lineName = lineObj ? lineObj.lineName : 'Other Line';
-
                 allocations[lId].forEach(u => {
-                    unavailable.set(u.id, `Assigned to ${lineName}`);
+                    unavailable.set(u.id, `Assigned to ${lineName} (Draft)`);
                 });
             }
         });
-
         return unavailable;
     };
 
     const handleSubmit = async () => {
         if (!selectedRequest) return;
-        if (!user || !user.id) {
-            setError("User session invalid.");
-            return;
-        }
 
-        const activeLines = lines.filter(l => l.selected);
+        // Find lines that have allocations
+        const activeAllocations = visibleLines
+            .map(l => ({
+                lineId: l.lineId,
+                employeeIds: (allocations[l.lineId] || []).map(u => u.id)
+            }))
+            .filter(a => a.employeeIds.length > 0);
 
-        if (activeLines.length === 0) {
-            setError("Please select at least one line.");
-            return;
-        }
-
-        const payloadAllocations = activeLines.map(l => ({
-            lineId: l.lineId,
-            employeeIds: (allocations[l.lineId] || []).map(u => u.id)
-        }));
-
-        const emptyLine = activeLines.find(l => !allocations[l.lineId] || allocations[l.lineId].length === 0);
-        if (emptyLine) {
-            setError(`Line "${emptyLine.lineName}" is selected but has no employees assigned.`);
+        if (activeAllocations.length === 0) {
+            setError("You haven't assigned any employees yet.");
             return;
         }
 
         const payload = {
             requestId: selectedRequest.id,
             managerId: user.id,
-            allocations: payloadAllocations
+            allocations: activeAllocations
         };
 
         setLoading(true);
@@ -223,7 +229,8 @@ export default function OvertimeTicketCreate() {
             alert("Ticket created successfully!");
             navigate('/overtime-ticket');
         } catch (err) {
-            setError(typeof err === 'string' ? err : (err.response?.data || "Failed to create ticket."));
+            const msg = typeof err === 'string' ? err : (err.response?.data || "Failed to create ticket.");
+            setError(msg);
         } finally {
             setLoading(false);
         }
@@ -231,128 +238,207 @@ export default function OvertimeTicketCreate() {
 
     return (
         <Container maxWidth="lg" sx={{ mt: 4, mb: 8 }}>
-            <Paper elevation={2} sx={{ p: 4 }}>
+            <Paper elevation={0} sx={{ p: 0, bgcolor: 'transparent' }}>
+                {/* Header */}
                 <Stack direction="row" alignItems="center" spacing={2} mb={3}>
-                    <Button startIcon={<ArrowBackIcon />} onClick={() => navigate('/overtime-ticket')} color="inherit">
+                    <Button startIcon={<ArrowBackIcon />} onClick={() => navigate('/overtime-ticket')} sx={{ color: 'text.secondary' }}>
                         Back
                     </Button>
-                    <Typography variant="h5" fontWeight="bold">Create Overtime Ticket</Typography>
+                    <Typography variant="h5" fontWeight="bold" color="text.primary">Create Overtime Ticket</Typography>
                 </Stack>
 
-                <Typography variant="subtitle2" color="primary" gutterBottom>STEP 1: SELECT REQUEST</Typography>
-                <Autocomplete
-                    id="request-select-autocomplete"
-                    options={requests}
-                    getOptionLabel={(option) => `Req #${option.id} - ${option.overtimeDate} (${option.startTime.substring(0,5)} - ${option.endTime.substring(0,5)})`}
-                    value={selectedRequest}
-                    onChange={handleRequestChange}
-                    loading={loadingReq}
-                    isOptionEqualToValue={(option, value) => option.id === value.id}
-                    renderInput={(params) => (
-                        <TextField {...params} label="Select Open Request" placeholder="Search by ID or Date..." fullWidth />
-                    )}
-                    renderOption={(props, option) => (
-                        <li {...props}>
-                            <Box>
-                                <Typography variant="body1" fontWeight="bold">Request #{option.id} - {option.overtimeDate}</Typography>
-                                <Typography variant="caption" color="textSecondary">
-                                    {option.departmentName} • {option.startTime.substring(0,5)} to {option.endTime.substring(0,5)}
-                                </Typography>
-                            </Box>
-                        </li>
-                    )}
-                    sx={{ mb: 4 }}
-                />
+                {/* Section 1: Request Selection */}
+                <Paper elevation={2} sx={{ p: 3, mb: 4, borderRadius: 2 }}>
+                    <Typography variant="subtitle2" color="primary" fontWeight="bold" gutterBottom>
+                        STEP 1: SELECT REQUEST
+                    </Typography>
+                    <Autocomplete
+                        id="request-select"
+                        options={requests}
+                        getOptionLabel={(option) => `Req #${option.id} (${option.overtimeDate})`}
+                        value={selectedRequest}
+                        onChange={handleRequestChange}
+                        loading={loadingReq}
+                        isOptionEqualToValue={(option, value) => option.id === value.id}
+                        renderInput={(params) => (
+                            <TextField {...params} placeholder="Search Open Requests..." fullWidth variant="outlined" size="medium" />
+                        )}
+                        renderOption={(props, option) => (
+                            <li {...props}>
+                                <Stack>
+                                    <Typography variant="body1" fontWeight="bold">
+                                        Request #{option.id} — {option.overtimeDate}
+                                    </Typography>
+                                    <Typography variant="caption" color="text.secondary">
+                                        {option.startTime.substring(0,5)} to {option.endTime.substring(0,5)} • {option.departmentName}
+                                    </Typography>
+                                </Stack>
+                            </li>
+                        )}
+                    />
+                </Paper>
 
+                {/* Section 2: Management Table */}
                 {selectedRequest && (
-                    <>
-                        <Typography variant="subtitle2" color="primary" gutterBottom>STEP 2: ASSIGN EMPLOYEES</Typography>
-                        <TableContainer component={Paper} variant="outlined" sx={{ mb: 4 }}>
-                            <Table>
-                                <TableHead sx={{ bgcolor: 'grey.100' }}>
-                                    <TableRow>
-                                        <TableCell padding="checkbox">Select</TableCell>
-                                        <TableCell>Line Name</TableCell>
-                                        <TableCell align="right">Required</TableCell>
-                                        <TableCell align="right">Assigned</TableCell>
-                                        <TableCell align="right">Actions</TableCell>
-                                    </TableRow>
-                                </TableHead>
-                                <TableBody>
-                                    {lines.map((line) => {
-                                        const assignedCount = (allocations[line.lineId] || []).length;
-                                        const isFulfilled = assignedCount >= line.numEmployees;
-                                        const isDisabled = line.isUnavailable;
+                    <Paper elevation={2} sx={{ p: 3, borderRadius: 2 }}>
+                        <Typography variant="subtitle2" color="primary" fontWeight="bold" gutterBottom>
+                            STEP 2: MANAGE STAFFING
+                        </Typography>
 
-                                        return (
-                                            <TableRow key={line.lineId} selected={line.selected} sx={{ opacity: isDisabled ? 0.6 : 1 }}>
-                                                <TableCell padding="checkbox">
-                                                    <Checkbox
-                                                        checked={line.selected}
-                                                        onChange={() => handleLineToggle(line.lineId)}
-                                                        color="primary"
-                                                        disabled={isDisabled}
-                                                    />
-                                                </TableCell>
-                                                <TableCell>
-                                                    <Typography fontWeight={isDisabled ? 'normal' : 'bold'}>
-                                                        {line.lineName}
-                                                    </Typography>
-                                                    {isDisabled && (
-                                                        <Chip label="Fulfilled in other ticket" size="small" color="default" sx={{ mt: 0.5, fontSize: '0.7rem' }} />
-                                                    )}
-                                                </TableCell>
-                                                <TableCell align="right">{line.numEmployees}</TableCell>
-                                                <TableCell align="right">
-                                                    <Chip
-                                                        label={assignedCount}
-                                                        color={assignedCount === 0 ? "default" : (isFulfilled ? "success" : "warning")}
-                                                        size="small"
-                                                    />
-                                                </TableCell>
-                                                <TableCell align="right">
-                                                    <Button
-                                                        variant={line.selected ? "contained" : "outlined"}
-                                                        size="small"
-                                                        startIcon={<PersonAddIcon />}
-                                                        onClick={() => openEmployeePicker(line)}
-                                                        disabled={!line.selected || isDisabled}
-                                                    >
-                                                        Manage Employees
-                                                    </Button>
-                                                </TableCell>
-                                            </TableRow>
-                                        );
-                                    })}
-                                </TableBody>
-                            </Table>
-                        </TableContainer>
+                        {visibleLines.length > 0 ? (
+                            <TableContainer sx={{ mt: 2, border: '1px solid #e0e0e0', borderRadius: 1 }}>
+                                <Table>
+                                    <TableHead sx={{ bgcolor: 'grey.50' }}>
+                                        <TableRow>
+                                            <TableCell width="25%"><strong>Line Name</strong></TableCell>
+                                            <TableCell width="15%"><strong>Status</strong></TableCell>
+                                            <TableCell width="40%"><strong>Staffing Overview</strong></TableCell>
+                                            <TableCell width="20%" align="right"><strong>Actions</strong></TableCell>
+                                        </TableRow>
+                                    </TableHead>
+                                    <TableBody>
+                                        {visibleLines.map((line) => {
+                                            const draftCount = (allocations[line.lineId] || []).length;
+                                            const serverCount = line.serverAssigned;
+                                            const totalRequired = line.numEmployees;
 
-                        {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
+                                            // STATIC VALUE: How many are available before this ticket
+                                            const availableSlots = Math.max(0, totalRequired - serverCount);
 
-                        <Box display="flex" justifyContent="flex-end">
-                            <Button
-                                variant="contained"
-                                size="large"
-                                startIcon={loading ? <CircularProgress size={20} color="inherit"/> : <SaveIcon />}
-                                onClick={handleSubmit}
-                                disabled={loading}
-                            >
-                                Create Ticket
-                            </Button>
-                        </Box>
-                    </>
+                                            // Validation: Are we exceeding?
+                                            const isOverLimit = draftCount > availableSlots;
+                                            const isQuotaFull = availableSlots === 0;
+
+                                            return (
+                                                <TableRow key={line.lineId} hover>
+                                                    {/* Column 1: Line Info */}
+                                                    <TableCell>
+                                                        <Typography variant="body1" fontWeight="bold">{line.lineName}</Typography>
+                                                        <Typography variant="caption" color="text.secondary">ID: {line.lineId}</Typography>
+                                                    </TableCell>
+
+                                                    {/* Column 2: Status Chip */}
+                                                    <TableCell>
+                                                        {isQuotaFull ? (
+                                                            <Chip
+                                                                icon={<CheckCircleIcon fontSize="small"/>}
+                                                                label="Quota Full"
+                                                                color="success"
+                                                                size="small"
+                                                                variant="outlined"
+                                                            />
+                                                        ) : (
+                                                            <Chip
+                                                                label="Open"
+                                                                color="primary"
+                                                                size="small"
+                                                                variant="outlined"
+                                                            />
+                                                        )}
+                                                    </TableCell>
+
+                                                    {/* Column 3: Stats Overview (Fixed Numbers) */}
+                                                    <TableCell>
+                                                        <Stack direction="row" spacing={3} alignItems="center" divider={<Divider orientation="vertical" flexItem />}>
+
+                                                            {/* 1. REQUESTED */}
+                                                            <Box sx={{ minWidth: 80 }}>
+                                                                <Typography variant="caption" color="text.secondary" display="block" sx={{ fontSize: '0.7rem' }}>
+                                                                    REQUESTED
+                                                                </Typography>
+                                                                <Typography variant="h6" fontWeight="bold">
+                                                                    {totalRequired}
+                                                                </Typography>
+                                                            </Box>
+
+                                                            {/* 2. AVAILABLE */}
+                                                            <Box sx={{ minWidth: 80 }}>
+                                                                <Typography variant="caption" color="text.secondary" display="block" sx={{ fontSize: '0.7rem' }}>
+                                                                    AVAILABLE
+                                                                </Typography>
+                                                                <Typography
+                                                                    variant="h6"
+                                                                    fontWeight="bold"
+                                                                    color={isQuotaFull ? "text.disabled" : "success.main"}
+                                                                >
+                                                                    {availableSlots}
+                                                                </Typography>
+                                                            </Box>
+
+                                                            {/* 3. SELECTED */}
+                                                            <Box sx={{ minWidth: 80 }}>
+                                                                <Typography variant="caption" color="text.secondary" display="block" sx={{ fontSize: '0.7rem' }}>
+                                                                    SELECTED
+                                                                </Typography>
+                                                                <Typography
+                                                                    variant="h6"
+                                                                    fontWeight="bold"
+                                                                    color={isOverLimit ? "error.main" : "primary.main"}
+                                                                >
+                                                                    {draftCount}
+                                                                </Typography>
+                                                            </Box>
+                                                        </Stack>
+                                                    </TableCell>
+
+                                                    {/* Column 4: Actions */}
+                                                    <TableCell align="right">
+                                                        <Button
+                                                            variant={draftCount > 0 ? "outlined" : "contained"}
+                                                            size="small"
+                                                            startIcon={draftCount > 0 ? <EditIcon /> : <PersonAddIcon />}
+                                                            onClick={() => openEmployeePicker(line)}
+                                                            disabled={isQuotaFull && draftCount === 0}
+                                                            color={isOverLimit ? "error" : "primary"}
+                                                        >
+                                                            {draftCount > 0 ? "Edit List" : "Add Staff"}
+                                                        </Button>
+                                                    </TableCell>
+                                                </TableRow>
+                                            );
+                                        })}
+                                    </TableBody>
+                                </Table>
+                            </TableContainer>
+                        ) : (
+                            <Alert severity="info" variant="outlined" sx={{ mt: 2 }}>
+                                This Request does not require staffing from any lines you currently manage.
+                            </Alert>
+                        )}
+
+                        {error && <Alert severity="error" sx={{ mt: 3, whiteSpace: 'pre-wrap' }}>{error}</Alert>}
+
+                        {/* Footer */}
+                        {visibleLines.some(l => (allocations[l.lineId] || []).length > 0) && (
+                            <Box sx={{ mt: 4, display: 'flex', justifyContent: 'flex-end', gap: 2 }}>
+                                <Button variant="text" color="inherit" onClick={() => navigate('/overtime-ticket')}>
+                                    Cancel
+                                </Button>
+                                <Button
+                                    variant="contained"
+                                    size="large"
+                                    startIcon={loading ? <CircularProgress size={24} color="inherit"/> : <SaveIcon />}
+                                    onClick={handleSubmit}
+                                    disabled={loading}
+                                    sx={{ px: 4 }}
+                                >
+                                    Create Ticket
+                                </Button>
+                            </Box>
+                        )}
+                    </Paper>
                 )}
             </Paper>
 
             <EmployeeTransferList
                 open={modalOpen}
                 onClose={() => setModalOpen(false)}
-                title={`Assign Employees: ${currentEditingLine?.lineName}`}
+                title={currentEditingLine ? `Assign Staff: ${currentEditingLine.lineName}` : ''}
                 allEmployees={deptEmployees}
                 initialSelected={currentEditingLine ? (allocations[currentEditingLine.lineId] || []) : []}
                 unavailableEmployees={currentEditingLine ? getUnavailableEmployeesMap(currentEditingLine.lineId) : new Map()}
-                requestedCount={currentEditingLine ? currentEditingLine.numEmployees : 0}
+                // Pass static available count so modal knows the limit
+                requestedCount={currentEditingLine ? Math.max(0, currentEditingLine.numEmployees - currentEditingLine.serverAssigned) : 0}
                 onSave={handleSaveAllocation}
             />
         </Container>

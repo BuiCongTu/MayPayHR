@@ -25,6 +25,7 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.sql.Time;
 import java.time.Instant;
 import java.util.HashSet;
 import java.util.Set;
@@ -120,15 +121,15 @@ public class OvertimeTicketServiceImpl implements OvertimeTicketService {
             throw new IllegalArgumentException("Missing required fields");
         }
 
-        // 1. Fetch Context
+        // 1. Validate Manager
         TbUser manager = userRepository.findById(dto.getManagerId())
                 .orElseThrow(() -> new IllegalArgumentException("Manager not found"));
 
-        //check role: manager
-        if(!manager.getRole().getName().equalsIgnoreCase("manager")) {
+        if (!manager.getRole().getName().equalsIgnoreCase("manager")) {
             throw new IllegalArgumentException("User is not a manager");
         }
 
+        // 2. Validate Request
         TbOvertimeRequest request = overtimeRequestRepository.findById(dto.getRequestId())
                 .orElseThrow(() -> new IllegalArgumentException("Overtime Request not found"));
 
@@ -139,7 +140,7 @@ public class OvertimeTicketServiceImpl implements OvertimeTicketService {
             throw new IllegalArgumentException("Cannot create ticket: The Request is not Open for submissions.");
         }
 
-        // 2. Create Ticket Shell
+        // 3. Create Ticket Object
         TbOvertimeTicket ticket = new TbOvertimeTicket();
         ticket.setManager(manager);
         ticket.setOvertimeRequest(request);
@@ -149,43 +150,84 @@ public class OvertimeTicketServiceImpl implements OvertimeTicketService {
         Set<TbOvertimeTicketEmployee> ticketEmployees = new HashSet<>();
         Set<Integer> processedEmployeeIds = new HashSet<>();
 
+        // 4. Process Allocations
         for (LineAllocationDTO allocation : dto.getAllocations()) {
             TbLine line = lineRepository.findById(allocation.getLineId())
                     .orElseThrow(() -> new IllegalArgumentException("Line not found: " + allocation.getLineId()));
 
-            // --- LOGIC: Check Line Exclusivity (Ticket cannot cover the same lines) ---
-            if (overtimeTicketRepository.existsByRequestIdAndLineId(request.getId(), line.getId())) {
-                throw new IllegalArgumentException("A ticket already exists for Line: " + line.getName());
+            // --- CONSTRAINT: Line Ownership ---
+            // We check if the Manager belongs to this Line (instead of checking if the Line points to the Manager)
+            if (manager.getLine() == null || !manager.getLine().getId().equals(line.getId())) {
+                throw new IllegalArgumentException("Unauthorized: You (" + manager.getFullName() +
+                        ") belong to Line '" + (manager.getLine() != null ? manager.getLine().getName() : "None") +
+                        "', but are trying to create a ticket for Line '" + line.getName() + "'.");
             }
 
-            // --- LOGIC: Check Quantity Limit ---
-            // Find the requirement for this line in the request
+            // --- LOGIC: Check Quantity Quota (Refill allowed if employees rejected) ---
+
+            // A. Get limit from Request
             TbOvertimeRequestDetail lineDetail = request.getLineDetails().stream()
                     .filter(d -> d.getLine().getId().equals(line.getId()))
                     .findFirst()
                     .orElseThrow(() -> new IllegalArgumentException("Line " + line.getName() + " is not part of this Overtime Request"));
 
-            if (allocation.getEmployeeIds().size() > lineDetail.getNumEmployees()) {
+            // B. Count ACTIVE assignments (Ignore rejected)
+            long currentAssignedCount = overtimeTicketRepository.countAssignedEmployeesByLine(request.getId(), line.getId());
+            int newAllocationCount = allocation.getEmployeeIds().size();
+
+            // C. Validate Quota
+            if (currentAssignedCount + newAllocationCount > lineDetail.getNumEmployees()) {
+                long remainingSlots = lineDetail.getNumEmployees() - currentAssignedCount;
                 throw new IllegalArgumentException(String.format(
-                        "Cannot assign %d employees to %s. Maximum allowed is %d.",
-                        allocation.getEmployeeIds().size(), line.getName(), lineDetail.getNumEmployees()
+                        "Quota exceeded for %s. Limit: %d. Active: %d. Remaining: %d. You tried to add: %d.",
+                        line.getName(), lineDetail.getNumEmployees(), currentAssignedCount, remainingSlots, newAllocationCount
                 ));
             }
 
+            // D. Process Employees
             for (Integer empId : allocation.getEmployeeIds()) {
-                // Check 1: Duplicate in payload
+                // Check Duplicate in Payload
                 if (processedEmployeeIds.contains(empId)) {
                     throw new IllegalArgumentException("Employee ID " + empId + " is assigned multiple times.");
                 }
-                // Check 2: Duplicate in DB
+
+                // Check Duplicate in DB
+                // We verify if this employee is already in another ticket for THIS request
                 if (overtimeTicketRepository.isEmployeeAlreadyAssigned(request.getId(), empId)) {
-                    throw new IllegalArgumentException("Employee ID " + empId + " is already assigned to another ticket.");
+                    throw new IllegalArgumentException("Employee ID " + empId + " is already assigned to another ticket in this request.");
+                }
+
+
+                // Check if this employee is busy in ANY other request at this specific time
+                if (overtimeTicketRepository.existsGlobalTimeConflict(
+                        empId,
+                        request.getOvertimeDate(),
+                        request.getStartTime(),
+                        request.getEndTime()) > 0) {
+
+                    // Fetch user name for a helpful error message
+                    TbUser conflictUser = userRepository.findById(empId).orElse(null);
+                    String name = conflictUser != null ? conflictUser.getFullName() : ("ID " + empId);
+
+                    throw new IllegalArgumentException(String.format(
+                            "Conflict: %s is already scheduled for overtime during this time slot (%s - %s on %s).",
+                            name, request.getStartTime(), request.getEndTime(), request.getOvertimeDate()
+                    ));
                 }
 
                 processedEmployeeIds.add(empId);
 
                 TbUser employee = userRepository.findById(empId)
                         .orElseThrow(() -> new IllegalArgumentException("Employee not found: " + empId));
+
+                // --- CONSTRAINT: Department Flexibility ---
+                // Employee must belong to the same department as the request/manager
+                if (!employee.getDepartment().getId().equals(request.getDepartment().getId())) {
+                    throw new IllegalArgumentException(String.format(
+                            "Employee %s does not belong to the Request's Department (%s).",
+                            employee.getFullName(), request.getDepartment().getName()
+                    ));
+                }
 
                 TbOvertimeTicketEmployee association = new TbOvertimeTicketEmployee();
                 association.setOvertimeTicket(ticket);
