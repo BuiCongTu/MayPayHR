@@ -19,18 +19,36 @@ const RegisterPage = () => {
   }, []);
 
   const fetchUsers = async () => {
-    try {
-      const response = await axios.get(`http://localhost:9999/api/users`);
-          const filtered = response.data.filter(u =>
-            u.role?.id === 199010000 || u.role?.id === 199010006
-          );
-      setAllUsers(filtered);
-      setUsers(filtered);
-      console.log('Fetched users:', filtered);
-    } catch (err) {
-      setError('Không thể tải danh sách nhân viên');
-    }
-  };
+  try {
+    const response = await axios.get(`http://localhost:9999/api/user`);
+
+    const data = response.data;
+
+    console.log("API trả về:", data);
+
+    // Chuẩn hóa roleId từ API
+    const normalizeRole = (u) => {
+      if (u.role?.id) return u.role.id;      // TH 1: role: {id:...}
+      if (u.roleId) return u.roleId;         // TH 2: roleId
+      if (u.role) return u.role;             // TH 3: role là number
+      return null;
+    };
+
+    const filtered = data.filter(u => {
+      const roleId = normalizeRole(u);
+      return roleId === 199010000 || roleId === 199010006; // Worker + User
+    });
+
+    setAllUsers(filtered);
+    setUsers(filtered);
+
+    console.log("Nhân viên lọc được:", filtered);
+
+  } catch (err) {
+    console.log(err);
+    setError('Không thể tải danh sách nhân viên');
+  }
+};
 
   const handleSearch = (query) => {
     const q = query.trim().toLowerCase();
