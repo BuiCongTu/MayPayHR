@@ -1,6 +1,7 @@
 package fpt.aptech.springbootapp.services.implementations;
 
 import fpt.aptech.springbootapp.dtos.ModuleB.LineAllocationDTO;
+import fpt.aptech.springbootapp.dtos.ModuleB.Mobile.OvertimeInviteDTO;
 import fpt.aptech.springbootapp.dtos.ModuleB.OvertimeTicketCreateDTO;
 import fpt.aptech.springbootapp.dtos.ModuleB.OvertimeTicketDTO;
 import fpt.aptech.springbootapp.entities.Core.TbLine;
@@ -14,6 +15,7 @@ import fpt.aptech.springbootapp.filter.OvertimeTicketFilter;
 import fpt.aptech.springbootapp.mappers.ModuleB.OvertimeTicketMapper;
 import fpt.aptech.springbootapp.repositories.LineRepository;
 import fpt.aptech.springbootapp.repositories.ModuleB.OvertimeRequestRepository;
+import fpt.aptech.springbootapp.repositories.ModuleB.OvertimeTicketEmployeeRepository;
 import fpt.aptech.springbootapp.repositories.ModuleB.OvertimeTicketRepository;
 import fpt.aptech.springbootapp.repositories.UserRepository;
 import fpt.aptech.springbootapp.services.interfaces.OvertimeTicketService;
@@ -28,7 +30,9 @@ import org.springframework.transaction.annotation.Transactional;
 import java.sql.Time;
 import java.time.Instant;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 public class OvertimeTicketServiceImpl implements OvertimeTicketService {
@@ -38,18 +42,21 @@ public class OvertimeTicketServiceImpl implements OvertimeTicketService {
     private final OvertimeRequestRepository overtimeRequestRepository;
     private final LineRepository lineRepository;
     private final OvertimeTicketMapper overtimeTicketMapper;
+    private final OvertimeTicketEmployeeRepository overtimeTicketEmployeeRepository;
 
     @Autowired
     public OvertimeTicketServiceImpl(OvertimeTicketRepository overtimeTicketRepository,
                                      UserRepository userRepository,
                                      OvertimeRequestRepository overtimeRequestRepository,
                                      LineRepository lineRepository,
-                                     OvertimeTicketMapper overtimeTicketMapper) {
+                                     OvertimeTicketMapper overtimeTicketMapper,
+                                     OvertimeTicketEmployeeRepository overtimeTicketEmployeeRepository) {
         this.overtimeTicketRepository = overtimeTicketRepository;
         this.userRepository = userRepository;
         this.overtimeRequestRepository = overtimeRequestRepository;
         this.lineRepository = lineRepository;
         this.overtimeTicketMapper = overtimeTicketMapper;
+        this.overtimeTicketEmployeeRepository = overtimeTicketEmployeeRepository;
     }
 
     @Override
@@ -245,5 +252,58 @@ public class OvertimeTicketServiceImpl implements OvertimeTicketService {
 
         ticket.setOvertimeEmployees(ticketEmployees);
         overtimeTicketRepository.save(ticket);
+    }
+
+    @Override
+    public List<OvertimeInviteDTO> getMobileInvites(Integer userId) {
+        List<TbOvertimeTicketEmployee> assignments = overtimeTicketEmployeeRepository.findByEmployeeId(userId);
+
+        return assignments.stream().map(a -> {
+            OvertimeInviteDTO dto = new OvertimeInviteDTO();
+            dto.setTicketId(a.getOvertimeTicket().getId());
+            dto.setStatus(a.getStatus().name());
+            dto.setLineName(a.getLine() != null ? a.getLine().getName() : "N/A");
+
+            // Navigate relationships safely
+            if (a.getOvertimeTicket().getOvertimeRequest() != null) {
+                var req = a.getOvertimeTicket().getOvertimeRequest();
+                dto.setOvertimeDate(req.getOvertimeDate());
+                dto.setStartTime(req.getStartTime());
+                dto.setEndTime(req.getEndTime());
+                dto.setHours(req.getOvertimeTime());
+                dto.setDepartmentName(req.getDepartment().getName());
+            }
+
+            if (a.getOvertimeTicket().getManager() != null) {
+                dto.setManagerName(a.getOvertimeTicket().getManager().getFullName());
+            }
+
+            return dto;
+        }).collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional
+    public void respondToInvite(Integer userId, Integer ticketId, String statusStr) {
+        TbOvertimeTicketEmployee assignment = overtimeTicketEmployeeRepository.findByTicketAndEmployee(ticketId, userId);
+
+        if (assignment == null) {
+            throw new IllegalArgumentException("Assignment not found for this user.");
+        }
+
+        if (assignment.getOvertimeTicket().getStatus() == TbOvertimeTicket.OvertimeTicketStatus.rejected) {
+            throw new IllegalArgumentException("This ticket has been rejected by the manager.");
+        }
+
+        try {
+            TbOvertimeTicketEmployee.EmployeeOvertimeStatus newStatus =
+                    TbOvertimeTicketEmployee.EmployeeOvertimeStatus.valueOf(statusStr.toLowerCase());
+
+            assignment.setStatus(newStatus);
+            overtimeTicketEmployeeRepository.save(assignment);
+
+        } catch (IllegalArgumentException e) {
+            throw new IllegalArgumentException("Invalid status. Use 'accepted' or 'rejected'.");
+        }
     }
 }
