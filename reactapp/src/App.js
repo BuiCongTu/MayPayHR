@@ -10,6 +10,8 @@ import RegisterFacePage from "./pages/attendance/RegisterFacePage";
 import Login from "./pages/auth/Login";
 import Logout from "./pages/auth/Logout";
 import VerifyRegistration from "./pages/auth/VerifyRegistration";
+import ForgotPassword from "./pages/auth/ForgotPassword";
+import ResetPassword from "./pages/auth/ResetPassword";
 import DashboardRouter from "./pages/dashboards/DashboardRouter";
 import OvertimeRequestDetail from "./pages/moduleB/overtime/OvertimeRequestDetail";
 import OvertimeRequestForm from "./pages/moduleB/overtime/OvertimeRequestForm";
@@ -69,6 +71,8 @@ function App()
                     <Route path="/logout" element={<Logout />} />
                     <Route path="/register" element={<Register />} />
                     <Route path="/verify-registration" element={<VerifyRegistration />} />
+                    <Route path="/forgot-password" element={<ForgotPassword />} />
+                    <Route path="/reset-password" element={<ResetPassword />} />
 
                 </Routes>
             </BrowserRouter>
