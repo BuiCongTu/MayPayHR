@@ -13,10 +13,10 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import fpt.aptech.springbootapp.dtos.request.UpdateProfileRequest;
 import fpt.aptech.springbootapp.dtos.request.Auth.ChangePassReq;
 import fpt.aptech.springbootapp.dtos.request.Auth.LoginReq;
 import fpt.aptech.springbootapp.dtos.request.Auth.RegisterReq;
-import fpt.aptech.springbootapp.dtos.request.UpdateProfileRequest;
 import fpt.aptech.springbootapp.dtos.response.LoginResponse;
 import fpt.aptech.springbootapp.dtos.response.UserResponseDto;
 import fpt.aptech.springbootapp.entities.Core.TbDepartment;
@@ -29,8 +29,8 @@ import fpt.aptech.springbootapp.repositories.DepartmentRepository;
 import fpt.aptech.springbootapp.repositories.LineRepository;
 import fpt.aptech.springbootapp.repositories.RoleRepository;
 import fpt.aptech.springbootapp.repositories.SkillLevelRepo;
-import fpt.aptech.springbootapp.repositories.System.PassResetTokenRepo;
 import fpt.aptech.springbootapp.repositories.UserRepository;
+import fpt.aptech.springbootapp.repositories.System.PassResetTokenRepo;
 import fpt.aptech.springbootapp.securities.JwtUtils;
 
 @Service
@@ -70,7 +70,22 @@ public class UserServiceImp implements UserService {
 
     @Override
     @Transactional
-    public String register(RegisterReq registerReq) {
+    public String register(RegisterReq registerReq, String currentUserEmail) {
+        if (currentUserEmail != null && !currentUserEmail.isEmpty()) {
+            Optional<TbUser> currentUserOpt = userRepo.findByEmail(currentUserEmail);
+            if (currentUserOpt.isPresent()) {
+                TbUser currentUser = currentUserOpt.get();
+                String currentUserRole = currentUser.getRole().getName();
+                String requestedRoleName = roleRepo.findById(registerReq.getRoleId())
+                        .map(TbRole::getName)
+                        .orElse("Unknown");
+
+                if (!hasPermissionToRegisterRole(currentUserRole, requestedRoleName)) {
+                    throw new RuntimeException("Permission denied: You cannot register a user with role '" + requestedRoleName + "'");
+                }
+            }
+        }
+
         if (userRepo.findByEmail(registerReq.getEmail()).isPresent()) {
             throw new RuntimeException("Email already exists");
         }
@@ -171,6 +186,25 @@ public class UserServiceImp implements UserService {
         // Return token
         System.out.println("User registered successfully: " + savedUser.getId());
         return token;
+    }
+
+    private boolean hasPermissionToRegisterRole(String currentUserRole, String targetRole) {
+        // Admin can register anyone except Admin
+        if ("Admin".equals(currentUserRole)) {
+            return !"Admin".equals(targetRole);
+        }
+
+        // HR can only register specific roles
+        if ("HR".equals(currentUserRole)) {
+            return targetRole.matches("Factory Manager|Manager|Leader|Assistant Leader|Worker");
+        }
+
+        // Admin can create Factory Director
+        if ("Factory Director".equals(currentUserRole)) {
+            return false;
+        }
+
+        return false;
     }
 
     @Override
@@ -329,7 +363,7 @@ public class UserServiceImp implements UserService {
 
     @Override
     @Transactional
-    public void forgotPassword(String emailOrPhone, String verificationMethod) {
+    public String forgotPassword(String emailOrPhone, String verificationMethod) {
         TbUser user = null;
         String contactValue = emailOrPhone;
 
@@ -371,6 +405,8 @@ public class UserServiceImp implements UserService {
         } catch (Exception e) {
             System.out.println("Failed to send OTP: " + e.getMessage());
         }
+
+        return newToken;
     }
 
     @Override
