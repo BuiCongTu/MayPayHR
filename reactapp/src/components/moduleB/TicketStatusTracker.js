@@ -9,10 +9,11 @@ import {
     stepConnectorClasses,
     styled
 } from '@mui/material';
-import EditNoteIcon from '@mui/icons-material/EditNote'; // Draft
+import EditNoteIcon from '@mui/icons-material/EditNote'; // Preparation
 import SendIcon from '@mui/icons-material/Send'; // Submitted
 import VerifiedIcon from '@mui/icons-material/Verified'; // Approved
 import CancelIcon from '@mui/icons-material/Cancel';
+import AssignmentIcon from '@mui/icons-material/Assignment';
 
 const ColorlibConnector = styled(StepConnector)(({ theme }) => ({
     [`&.${stepConnectorClasses.alternativeLabel}`]: { top: 22 },
@@ -60,9 +61,10 @@ function TicketStepIcon(props) {
     const { active, completed, className, icon, error } = props;
 
     const icons = {
-        1: <EditNoteIcon />,      // Draft/Pending
-        2: <SendIcon />,          // Submitted
-        3: <VerifiedIcon />,      // Approved
+        1: <AssignmentIcon />,
+        2: <EditNoteIcon />,
+        3: <SendIcon />,
+        4: <VerifiedIcon />,
     };
 
     let content = icons[String(icon)];
@@ -85,24 +87,29 @@ export default function TicketStatusTracker({ status, orientation = 'horizontal'
 
     switch (normalizedStatus) {
         case 'pending':
-            activeStep = 0;
+            // Created (0) done. Preparation/Draft (1) active.
+            activeStep = 1;
             break;
         case 'submitted':
-            activeStep = 1;
+            // Draft (1) done. Submitted (2) active (Waiting for FM).
+            activeStep = 2;
             break;
         case 'approved':
-            activeStep = 3;
+            // All done.
+            activeStep = 4;
             break;
         case 'rejected':
+            // Failed at Submitted (2).
             isError = true;
-            activeStep = 1;
+            activeStep = 2;
             break;
         default:
-            activeStep = 0;
+            activeStep = 1; // Default to prep
     }
 
     const steps = [
-        { label: 'Draft', sub: 'Manager Preparation' },
+        { label: 'Ticket Creation', sub: 'Created By Line Manager' },
+        { label: 'Preparation', sub: 'Assigning Employees' },
         { label: 'Submitted', sub: 'Waiting for FM' },
         { label: 'Approved', sub: 'Ticket Active' },
     ];

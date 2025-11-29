@@ -1,6 +1,7 @@
 import React, {useState, useEffect} from 'react';
 import {getFilteredOvertimeTickets, submitOvertimeTicket} from "../../../services/moduleB/overtimeService";
 import {useNavigate} from "react-router-dom";
+import { getCurrentUser } from '../../../services/authService';
 
 import {
     Box,
@@ -36,11 +37,6 @@ import PendingActionsIcon from '@mui/icons-material/PendingActions';
 import CancelIcon from '@mui/icons-material/Cancel';
 import SendIcon from '@mui/icons-material/Send';
 import {visuallyHidden} from '@mui/utils';
-
-// --- Mock Auth ---
-const useAuth = () => {
-    return {user: {id: 199050002}}; // Mock Manager ID
-};
 
 // --- Components ---
 function StatCard({ title, value, icon, color }) {
@@ -111,7 +107,7 @@ function EnhancedTableHead(props) {
 
 export default function OvertimeTicketList() {
     const navigate = useNavigate();
-    const {user: currentUser} = useAuth();
+    const currentUser = getCurrentUser();
 
     const [tickets, setTickets] = useState([]);
     const [stats, setStats] = useState({ total: 0, pending: 0, rejected: 0 });

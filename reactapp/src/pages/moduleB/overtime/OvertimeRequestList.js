@@ -1,10 +1,11 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { getFilteredOvertimeRequest } from "../../../services/moduleB/overtimeService";
 import { useNavigate } from "react-router-dom";
+import { getCurrentUser } from "../../../services/authService";
 import {
     Box, Typography, Button, Paper, TextField, InputAdornment, ToggleButton, ToggleButtonGroup,
     Table, TableBody, TableCell, TableContainer, TableHead, TableRow, TableSortLabel,
-    Collapse, Chip, colors, Grid, LinearProgress, IconButton, Tooltip, FormControlLabel, Switch, Stack
+    Collapse, Chip, colors, Grid, LinearProgress, IconButton, Tooltip, Stack
 } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
 import AddIcon from '@mui/icons-material/Add';
@@ -193,7 +194,7 @@ function LineBreakdownTable({ request, navigate }) {
 }
 
 // --- 4. MAIN ROW COMPONENT ---
-function RequestRow({ request, isExpanded, onToggle, navigate, isFactoryManager }) {
+function RequestRow({ request, isExpanded, onToggle, navigate, isLineManager }) {
     const getStatusChip = (status) => {
         let color = 'default';
         switch (status?.toLowerCase()) {
@@ -234,13 +235,15 @@ function RequestRow({ request, isExpanded, onToggle, navigate, isFactoryManager 
                             </IconButton>
                         </Tooltip>
 
-                        {/* MANAGER ACTION: Add Ticket */}
-                        {!isFactoryManager && request.status === 'open' && (
+                        {/* LINE MANAGER ACTION: Create Ticket */}
+                        {/* Only visible if user is a Line Manager AND request status is 'open' */}
+                        {isLineManager && request.status === 'open' && (
                             <Tooltip title="Create Ticket for this Request">
                                 <IconButton
                                     color="secondary"
                                     onClick={(e) => {
                                         e.stopPropagation();
+                                        // Navigate to create ticket, passing this request ID to pre-select it
                                         navigate(`/overtime-ticket/create`, { state: { preselectedRequestId: request.id } });
                                     }}
                                 >
@@ -296,8 +299,12 @@ export default function OvertimeRequestList() {
     const [order, setOrder] = useState('desc');
     const [orderBy, setOrderBy] = useState('id');
 
-    // --- DEMO STATE ---
-    const [isFactoryManager, setIsFactoryManager] = useState(true);
+    // Get Real User
+    const user = getCurrentUser();
+
+    // Determine Roles
+    const isFactoryManager = user?.roleName === 'Factory Manager' || user?.roleName === 'FManager';
+    const isLineManager = user?.roleName === 'Manager';
 
     useEffect(() => {
         const t = setTimeout(() => setDebouncedSearch(departmentSearch), 500);
@@ -307,15 +314,36 @@ export default function OvertimeRequestList() {
     useEffect(() => {
         async function load() {
             try {
-                const filter = { status: statusFilter || null, departmentName: debouncedSearch || null };
+                // Construct filter object
+                const filter = {
+                    status: statusFilter || null,
+                    departmentName: debouncedSearch || null
+                };
+
+                // [LOGIC] Department Filter for Line Manager
+                // Line managers can ONLY see requests for their own department.
+                if (isLineManager && user?.departmentId) {
+                    filter.departmentId = user.departmentId;
+                }
+
+                // Fetch data
                 const data = await getFilteredOvertimeRequest(filter, { page, size: 10, sort: `${orderBy},${order}` });
-                setRequests(data?.content || []);
+                let content = data?.content || [];
+
+                // [LOGIC] Status Filter for Line Manager
+                // Line managers should NOT see 'pending' requests (they are waiting for FD approval).
+                // They should only see 'open' (actionable) or 'processed' (history).
+                if (isLineManager) {
+                    content = content.filter(req => req.status !== 'pending');
+                }
+
+                setRequests(content);
             } catch (e) {
                 console.error(e);
             }
         }
         load();
-    }, [statusFilter, debouncedSearch, order, orderBy, page]);
+    }, [statusFilter, debouncedSearch, order, orderBy, page, isLineManager, user?.departmentId]);
 
     const handleMainSort = (event, property) => {
         const isAsc = orderBy === property && order === 'asc';
@@ -329,19 +357,22 @@ export default function OvertimeRequestList() {
             <Paper elevation={0} sx={{
                 p: 2, mb: 2, bgcolor: 'white', border: '1px solid #eee',
                 display: 'flex', gap: 2, alignItems: 'center',
-                flexWrap: 'nowrap', // FORCE SINGLE ROW
-                overflowX: 'auto' // Safe fallback for very small screens
+                flexWrap: 'nowrap',
+                overflowX: 'auto'
             }}>
                 <Typography variant="h6" sx={{ fontWeight: 'bold', mr: 2, whiteSpace: 'nowrap' }}>Overtime Overview</Typography>
 
-                <TextField
-                    size="small"
-                    placeholder="Search Department..."
-                    value={departmentSearch}
-                    onChange={e => setDepartmentSearch(e.target.value)}
-                    InputProps={{ startAdornment: <InputAdornment position="start"><SearchIcon /></InputAdornment> }}
-                    sx={{ minWidth: 200 }}
-                />
+                {/* Hide Department search for Line Managers since they are locked to their own Dept */}
+                {!isLineManager && (
+                    <TextField
+                        size="small"
+                        placeholder="Search Department..."
+                        value={departmentSearch}
+                        onChange={e => setDepartmentSearch(e.target.value)}
+                        InputProps={{ startAdornment: <InputAdornment position="start"><SearchIcon /></InputAdornment> }}
+                        sx={{ minWidth: 200 }}
+                    />
+                )}
 
                 <ToggleButtonGroup
                     value={statusFilter}
@@ -351,7 +382,8 @@ export default function OvertimeRequestList() {
                     sx={{ whiteSpace: 'nowrap' }}
                 >
                     <ToggleButton value="">All</ToggleButton>
-                    <ToggleButton value="pending" color="warning">Pending</ToggleButton>
+                    {/* Hide 'Pending' filter for Line Managers */}
+                    {!isLineManager && <ToggleButton value="pending" color="warning">Pending</ToggleButton>}
                     <ToggleButton value="open" color="info">Open</ToggleButton>
                     <ToggleButton value="processed" color="success">Processed</ToggleButton>
                 </ToggleButtonGroup>
@@ -360,12 +392,8 @@ export default function OvertimeRequestList() {
 
                 {/* ACTIONS GROUP */}
                 <Stack direction="row" spacing={2} alignItems="center" sx={{ whiteSpace: 'nowrap' }}>
-                    <FormControlLabel
-                        control={<Switch checked={isFactoryManager} onChange={() => setIsFactoryManager(!isFactoryManager)} size="small" />}
-                        label={<Typography variant="caption">{isFactoryManager ? "Factory Manager" : "Line Manager"}</Typography>}
-                        sx={{ border: '1px dashed #ccc', borderRadius: 1, px: 1, bgcolor: isFactoryManager ? 'primary.50' : 'secondary.50', m: 0 }}
-                    />
 
+                    {/* Only Factory Manager can create new Requests */}
                     {isFactoryManager && (
                         <Button variant="contained" startIcon={<AddIcon />} onClick={() => navigate("/overtime-request/create")}>
                             New Request
@@ -393,7 +421,7 @@ export default function OvertimeRequestList() {
                                 isExpanded={expanded === req.id}
                                 onToggle={() => setExpanded(expanded === req.id ? false : req.id)}
                                 navigate={navigate}
-                                isFactoryManager={isFactoryManager}
+                                isLineManager={isLineManager}
                             />
                         ))}
                     </TableBody>

@@ -8,6 +8,7 @@ import {
     rejectOvertimeRequest,
     processOvertimeRequest
 } from '../../../services/moduleB/overtimeService';
+import { getCurrentUser } from '../../../services/authService';
 import RequestStatusTracker from '../../../components/moduleB/RequestStatusTracker';
 import EmployeeListTable from './EmployeeList';
 import ActionReasonModal from './ActionReasonModal';
@@ -19,7 +20,7 @@ import {
     Accordion, AccordionSummary, AccordionDetails, Table, TableBody,
     TableCell, TableContainer, TableHead, TableRow, IconButton, Tooltip,
     Dialog, DialogTitle, DialogContent, Tabs, Tab, CardActionArea,
-    Drawer, Divider, Switch, FormControlLabel
+    Drawer, Divider
 } from '@mui/material';
 
 // Icons
@@ -145,12 +146,10 @@ function TicketStatusChip({status}) {
     return <Chip label={status?.toUpperCase()} color={color} size="small" sx={{fontWeight: 'bold', minWidth: 80}}/>;
 }
 
-const ROLE_FACTORY_MANAGER = 199010002;
-const ROLE_FACTORY_DIRECTOR = 199010003;
-
 export default function OvertimeRequestDetail() {
     const {id} = useParams();
     const navigate = useNavigate();
+    const user = getCurrentUser();
 
     const [request, setRequest] = useState(null);
     const [processedData, setProcessedData] = useState({stats: {}, lines: []});
@@ -161,9 +160,6 @@ export default function OvertimeRequestDetail() {
     const [tabValue, setTabValue] = useState(0);
     const [expandedAccordion, setExpandedAccordion] = useState(false);
     const [drawerOpen, setDrawerOpen] = useState(false);
-
-    // ROLE SIMULATION STATE
-    const [currentUserRole, setCurrentUserRole] = useState(ROLE_FACTORY_MANAGER);
 
     // Modals
     const [employeeModalOpen, setEmployeeModalOpen] = useState(false);
@@ -271,19 +267,14 @@ export default function OvertimeRequestDetail() {
 
     // --- RENDERERS ---
     const renderActionButtons = () => {
-        const isManager = currentUserRole === ROLE_FACTORY_MANAGER;
-        const isDirector = currentUserRole === ROLE_FACTORY_DIRECTOR;
+        // Check user roles based on string names used in Navbar
+        const isManager = user?.roleName === 'Factory Manager' || user?.roleName === 'FManager';
+        const isDirector = user?.roleName === 'Factory Director' || user?.roleName === 'FDirector';
+
         const status = request.status?.toLowerCase();
 
         return (
             <Stack direction="row" spacing={1} alignItems="center">
-
-                <FormControlLabel
-                    control={<Switch size="small" checked={isDirector}
-                                     onChange={() => setCurrentUserRole(isDirector ? ROLE_FACTORY_MANAGER : ROLE_FACTORY_DIRECTOR)}/>}
-                    label={<Typography variant="caption">Simulate Director</Typography>}
-                    sx={{mr: 2, border: '1px dashed #ccc', pr: 1, borderRadius: 1}}
-                />
 
                 <Button
                     variant="outlined"
@@ -597,7 +588,6 @@ export default function OvertimeRequestDetail() {
                         <Typography variant="body2" color="textSecondary" sx={{mb: 2}}>
                             Manage all submitted tickets in a single list.
                         </Typography>
-                        {/* --- UPDATED: Pass onRefresh prop --- */}
                         <RequestTicketList request={request} onRefresh={loadData}/>
                     </Box>
                 )}

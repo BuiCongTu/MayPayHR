@@ -56,8 +56,9 @@ public class OvertimeRequestServiceImpl implements OvertimeRequestService {
         if (factoryManager == null) {
             throw new IllegalArgumentException("Factory manager not found");
         }
-        //role 199010002 is Factory Manager
-        if (factoryManager.getRole().getId() != 199010002) {
+
+        //use role name to check: factory manager
+        if (!factoryManager.getRole().getName().equalsIgnoreCase("factory manager")) {
             throw new IllegalArgumentException("User is not a factory manager");
         }
 

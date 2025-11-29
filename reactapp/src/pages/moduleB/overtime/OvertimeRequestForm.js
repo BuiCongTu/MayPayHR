@@ -1,6 +1,10 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from "react-router-dom";
 import { createOvertimeRequest } from '../../../services/moduleB/overtimeService';
 import { getAllDepartments, getLinesByDepartment } from "../../../services/departmentService";
+import { getCurrentUser } from "../../../services/authService";
+import ErrorPage from '../../ErrorPage';
+
 import {
     Container,
     Box,
@@ -21,7 +25,6 @@ import {
     Checkbox,
     Grid
 } from '@mui/material';
-import {useNavigate} from "react-router-dom";
 
 const filter = createFilterOptions({
     matchFrom: 'any',
@@ -30,17 +33,23 @@ const filter = createFilterOptions({
 });
 
 function OvertimeRequestForm() {
+    const navigate = useNavigate();
+    const user = getCurrentUser();
+
+    // Role Check
+    const isFactoryManager = user?.roleName === 'Factory Manager' || user?.roleName === 'FManager';
+
+    // --- 1. DEFINE ALL STATE HOOKS FIRST ---
     const [formData, setFormData] = useState({
-        factoryManagerId: '',
+        factoryManagerId: user?.id || '',
         departmentId: '',
         overtimeDate: new Date().toISOString().split('T')[0],
-        startTime: '17:00', // Default start time
+        startTime: '17:00',
         endTime: '18:00',
         overtimeTime: 1.0,
         details: ''
     });
 
-    // Helper States
     const [departments, setDepartments] = useState([]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
@@ -48,10 +57,12 @@ function OvertimeRequestForm() {
     const [linesTableData, setLinesTableData] = useState([]);
     const [isSpecialDay, setIsSpecialDay] = useState(false);
 
-    //navigate
-    const navigate = useNavigate();
+    // --- 2. DEFINE ALL EFFECTS NEXT ---
 
+    // Effect 1: Load Departments
     useEffect(() => {
+        if (!isFactoryManager) return;
+
         async function loadData() {
             try {
                 const data = await getAllDepartments();
@@ -61,9 +72,12 @@ function OvertimeRequestForm() {
             }
         }
         loadData();
-    }, []);
+    }, [isFactoryManager]);
 
+    // Effect 2: Load Lines when Department changes
     useEffect(() => {
+        if (!isFactoryManager) return;
+
         async function fetchLines() {
             if (formData.departmentId) {
                 try {
@@ -84,14 +98,14 @@ function OvertimeRequestForm() {
             }
         }
         fetchLines();
-    }, [formData.departmentId]);
+    }, [formData.departmentId, isFactoryManager]);
 
+    // Effect 3: Calculate Time & Check Special Day
     useEffect(() => {
         // Check if Date is Sunday (0)
         if (formData.overtimeDate) {
             const dayOfWeek = new Date(formData.overtimeDate).getDay();
             const isSunday = dayOfWeek === 0;
-            // "Holiday" check can be added here later
             setIsSpecialDay(isSunday);
 
             // Reset to 17:00 if not special day
@@ -117,7 +131,7 @@ function OvertimeRequestForm() {
     }, [formData.overtimeDate, formData.startTime, formData.endTime]);
 
 
-    // --- HANDLERS ---
+    // --- 3. HANDLERS ---
 
     const handleMainChange = (e) => {
         const { name, value } = e.target;
@@ -167,7 +181,6 @@ function OvertimeRequestForm() {
             return;
         }
 
-        // Payload matching DTO/Entity
         const payload = {
             factoryManagerId: parseInt(formData.factoryManagerId),
             departmentId: parseInt(formData.departmentId),
@@ -184,11 +197,8 @@ function OvertimeRequestForm() {
 
         try {
             await createOvertimeRequest(payload);
-            setSuccess(`Successfully created request for ${totalEmployees} employees!`);
-            setFormData(prev => ({ ...prev, details: '' }));
-            setLinesTableData(prev => prev.map(l => ({ ...l, isSelected: false, numEmployees: '' })));
             alert(`Successfully created request for ${totalEmployees} employees!`);
-            navigate("/overtime-request")
+            navigate("/overtime-request");
         } catch (err) {
             setError(err.toString() || 'An unknown error occurred.');
         } finally {
@@ -196,6 +206,18 @@ function OvertimeRequestForm() {
         }
     };
 
+    // --- 4. CONDITIONAL RENDER (ACCESS CONTROL) ---
+    if (!isFactoryManager) {
+        return (
+            <ErrorPage
+                code={403}
+                title="Access Restricted"
+                message="Only Factory Managers can create overtime requests."
+            />
+        );
+    }
+
+    // --- 5. MAIN RENDER ---
     return (
         <Container maxWidth="md">
             <Paper elevation={3} sx={{ p: 4, mt: 4, borderRadius: 2 }}>
@@ -210,11 +232,12 @@ function OvertimeRequestForm() {
                             label="Factory Manager ID"
                             name="factoryManagerId"
                             value={formData.factoryManagerId}
-                            onChange={handleMainChange}
-                            required
-                            sx={{ flex: 1 }}
+                            disabled
+                            InputProps={{ readOnly: true }}
+                            sx={{ flex: 1, bgcolor: '#f5f5f5' }}
                         />
                         <Autocomplete
+                            id="department-select"
                             options={departments}
                             getOptionLabel={(option) => `${option.name} (${option.id})`}
                             filterOptions={filter}

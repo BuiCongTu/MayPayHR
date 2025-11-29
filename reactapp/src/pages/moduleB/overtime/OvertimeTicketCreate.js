@@ -1,7 +1,8 @@
-import React, { useState, useEffect, useMemo } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom'; // Added useLocation
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { getFilteredOvertimeRequest, createOvertimeTicket } from '../../../services/moduleB/overtimeService';
 import { getUsersByDepartment } from '../../../services/userService';
+import { getCurrentUser } from '../../../services/authService';
 import EmployeeTransferList from './EmployeeTransferList';
 
 import {
@@ -14,13 +15,12 @@ import PersonAddIcon from '@mui/icons-material/PersonAdd';
 import SaveIcon from '@mui/icons-material/Save';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 
-// --- MOCK AUTH ---
-const useAuth = () => ({ user: { id: 1005, departmentId: 1005 } });
-
 export default function OvertimeTicketCreate() {
     const navigate = useNavigate();
-    const location = useLocation(); // Get navigation state
-    const { user } = useAuth();
+    const location = useLocation();
+
+    // Get real user.
+    const user = getCurrentUser();
 
     // Data States
     const [requests, setRequests] = useState([]);
@@ -40,42 +40,58 @@ export default function OvertimeTicketCreate() {
 
     // 1. Load Data & Handle Pre-selection
     useEffect(() => {
+        let isMounted = true;
+
         async function init() {
+            if (!user) {
+                if (isMounted) {
+                    setError("User not authenticated.");
+                    setLoadingReq(false);
+                }
+                return;
+            }
+
+            const departmentId = user.departmentId;
+
             try {
                 // A. Fetch Requests
                 const reqData = await getFilteredOvertimeRequest(
-                    { status: 'open', departmentId: user.departmentId },
+                    { status: 'open', departmentId: departmentId },
                     { page: 0, size: 50, sort: 'id,desc' }
                 );
+
+                if (!isMounted) return;
+
                 const fetchedRequests = reqData.content || [];
                 setRequests(fetchedRequests);
 
                 // B. Fetch Employees
-                if (user.departmentId) {
-                    const users = await getUsersByDepartment(user.departmentId);
-                    setDeptEmployees(users || []);
+                if (departmentId) {
+                    const users = await getUsersByDepartment(departmentId);
+                    if (isMounted) setDeptEmployees(users || []);
                 }
 
                 // C. Handle Pre-selected Request (passed from List)
                 if (location.state?.preselectedRequestId) {
                     const targetReq = fetchedRequests.find(r => r.id === location.state.preselectedRequestId);
                     if (targetReq) {
-                        // Trigger the change logic manually
                         setSelectedRequest(targetReq);
-                        // Run the line setup logic immediately for this pre-selected item
                         setupLinesForRequest(targetReq);
                     }
                 }
 
             } catch (err) {
                 console.error(err);
-                setError("Failed to initialize data.");
+                if (isMounted) setError("Failed to initialize data.");
             } finally {
-                setLoadingReq(false);
+                if (isMounted) setLoadingReq(false);
             }
         }
+
         init();
-    }, [user.departmentId, location.state]);
+
+        return () => { isMounted = false; };
+    }, [user?.id, user?.departmentId, location.state]);
 
     // Helper to setup lines
     const setupLinesForRequest = (req) => {
@@ -170,6 +186,10 @@ export default function OvertimeTicketCreate() {
 
     const handleSubmit = async () => {
         if (!selectedRequest) return;
+        if (!user || !user.id) {
+            setError("User session invalid.");
+            return;
+        }
 
         const activeLines = lines.filter(l => l.selected);
 
@@ -221,11 +241,13 @@ export default function OvertimeTicketCreate() {
 
                 <Typography variant="subtitle2" color="primary" gutterBottom>STEP 1: SELECT REQUEST</Typography>
                 <Autocomplete
+                    id="request-select-autocomplete"
                     options={requests}
                     getOptionLabel={(option) => `Req #${option.id} - ${option.overtimeDate} (${option.startTime.substring(0,5)} - ${option.endTime.substring(0,5)})`}
                     value={selectedRequest}
                     onChange={handleRequestChange}
                     loading={loadingReq}
+                    isOptionEqualToValue={(option, value) => option.id === value.id}
                     renderInput={(params) => (
                         <TextField {...params} label="Select Open Request" placeholder="Search by ID or Date..." fullWidth />
                     )}
