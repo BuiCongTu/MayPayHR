@@ -36,18 +36,30 @@ export default function Register() {
 
     const [departments, setDepartments] = useState([]);
     const [roles, setRoles] = useState([]);
+    const [filteredRoles, setFilteredRoles] = useState([]);
     const [lines, setLines] = useState([]);
     const [skillLevels, setSkillLevels] = useState([]);
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
+    const [currentUser, setCurrentUser] = useState(null);
 
     useEffect(() => {
-        // Load departments and roles
         loadFormOptions();
     }, []);
 
+    useEffect(() => {
+        if (currentUser && roles.length > 0) {
+            filterAvailableRoles(currentUser.roleName, roles);
+        }
+    }, [currentUser, roles]);
+
     const loadFormOptions = async () => {
         try {
+            const user = authService.getCurrentUser();
+            if (user) {
+                setCurrentUser(user);
+            }
+
             const [depts, rolesList, skillLevelsList] = await Promise.all([
                 formDataService.getDepartments(),
                 formDataService.getRoles(),
@@ -58,22 +70,40 @@ export default function Register() {
             setSkillLevels(skillLevelsList || []);
         } catch (err) {
             console.error('Failed to load form options:', err);
-            setError('Không thể tải dữ liệu form');
+            setError('Failed to load form options');
         }
+    };
+
+    const filterAvailableRoles = (currentUserRole, allRoles) => {
+        let availableRoleNames = [];
+
+        if (currentUserRole === 'Admin') {
+            availableRoleNames = allRoles
+                .filter(role => role.name !== 'Admin')
+                .map(role => role.name);
+        } else if (currentUserRole === 'HR') {
+            availableRoleNames = ['Factory Manager', 'Manager', 'Leader', 'Assistant Leader', 'Worker'];
+        } else if (currentUserRole === 'Factory Director') {
+            availableRoleNames = [];
+        } else {
+            availableRoleNames = [];
+        }
+
+        const filtered = allRoles.filter(role => availableRoleNames.includes(role.name));
+        setFilteredRoles(filtered);
     };
 
     const onChange = async (e) => {
         const { name, value } = e.target;
         setForm({ ...form, [name]: value });
-        // Clear error khi user thay đổi
+
         if (error) setError('');
 
-        // Load lines when department changes
         if (name === 'departmentId' && value) {
             try {
                 const linesList = await formDataService.getLinesByDepartment(value);
                 setLines(linesList || []);
-                setForm(prev => ({ ...prev, lineId: '' })); // Reset line
+                setForm(prev => ({ ...prev, lineId: '' }));
             } catch (err) {
                 console.error('Failed to load lines:', err);
                 setLines([]);
@@ -83,28 +113,25 @@ export default function Register() {
 
     const validate = () => {
         // Kiểm tra các field bắt buộc
-        if (!form.fullName.trim()) return 'Họ và tên là bắt buộc.';
-        if (!form.email.trim()) return 'Email là bắt buộc.';
-        if (!form.phone.trim()) return 'Số điện thoại là bắt buộc.';
-        if (!form.password) return 'Mật khẩu là bắt buộc.';
-        if (!form.roleId) return 'Vui lòng chọn vị trí.';
-        if (!form.departmentId) return 'Vui lòng chọn phòng ban.';
-        if (form.gender === '') return 'Vui lòng chọn giới tính.';
+        if (!form.fullName.trim()) return 'Full name is required.';
+        if (!form.email.trim()) return 'Email is required.';
+        if (!form.phone.trim()) return 'Phone number is required.';
+        if (!form.password) return 'Password is required.';
+        if (!form.roleId) return 'Please select a role.';
+        if (!form.departmentId) return 'Please select a department.';
+        if (form.gender === '') return 'Please select a gender.';
 
-        // Validation email
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        if (!emailRegex.test(form.email)) return 'Email không hợp lệ.';
+        if (!emailRegex.test(form.email)) return 'Invalid email address.';
 
-        // Validation phone - 10-11 chữ số
+            // Validation phone - 10-11 digits
         const phoneRegex = /^[0-9]{10,11}$/;
-        if (!phoneRegex.test(form.phone)) return 'Số điện thoại phải từ 10-11 chữ số.';
+            if (!phoneRegex.test(form.phone)) return 'Phone number must be 10-11 digits.';
 
-        // Validation password
-        if (form.password.length < 6) return 'Mật khẩu phải ít nhất 6 ký tự.';
-        if (form.password !== form.confirmPassword) return 'Mật khẩu không trùng khớp.';
-
-        // Validation baseSalary if provided
-        if (form.baseSalary && isNaN(form.baseSalary)) return 'Lương cơ bản phải là số.';
+        if (form.password.length < 6) return 'Password must be at least 6 characters.';
+        if (form.password !== form.confirmPassword) return 'Passwords do not match.';
+        
+        if (form.baseSalary && isNaN(form.baseSalary)) return 'Base salary must be a number.';
 
         return '';
     };
@@ -149,7 +176,7 @@ export default function Register() {
                 });
             }
         } catch (err) {
-            setError(err.response?.data?.message || err.message || 'Đăng ký thất bại.');
+            setError(err.response?.data?.message || err.message || 'Registration failed.');
             console.error('Registration error:', err);
         } finally {
             setLoading(false);
@@ -178,10 +205,10 @@ export default function Register() {
                 >
                     <Box sx={{ textAlign: 'center', mb: 3 }}>
                         <Typography variant="h4" component="h1" fontWeight="bold" color="primary" gutterBottom>
-                            MayPayHR
+                            May Production Human Reource Management System
                         </Typography>
                         <Typography variant="h6" color="text.secondary">
-                            Đăng ký tài khoản nhân viên
+                            Register Employee Account
                         </Typography>
                     </Box>
 
@@ -195,13 +222,13 @@ export default function Register() {
                         {/* Full Name */}
                         <TextField
                             fullWidth
-                            label="Họ và tên"
+                            label="Full Name"
                             name="fullName"
                             value={form.fullName}
                             onChange={onChange}
                             margin="normal"
                             required
-                            placeholder="Nhập họ và tên"
+                            placeholder="Enter full name"
                             disabled={loading}
                         />
 
@@ -222,34 +249,34 @@ export default function Register() {
                         {/* Phone */}
                         <TextField
                             fullWidth
-                            label="Số điện thoại"
+                            label="Phone Number"
                             name="phone"
                             value={form.phone}
                             onChange={onChange}
                             margin="normal"
                             required
-                            placeholder="0123456789"
+                            placeholder="0123456789 ( 10-11 digits )"
                             disabled={loading}
                         />
 
                         {/* Password */}
                         <TextField
                             fullWidth
-                            label="Mật khẩu"
+                            label="Password"
                             name="password"
                             type="password"
                             value={form.password}
                             onChange={onChange}
                             margin="normal"
                             required
-                            placeholder="Ít nhất 6 ký tự"
+                            placeholder="At least 6 characters"
                             disabled={loading}
                         />
 
                         {/* Confirm Password */}
                         <TextField
                             fullWidth
-                            label="Xác nhận mật khẩu"
+                            label="Confirm Password"
                             name="confirmPassword"
                             type="password"
                             value={form.confirmPassword}
@@ -263,7 +290,7 @@ export default function Register() {
                         <TextField
                             fullWidth
                             select
-                            label="Giới tính"
+                            label="Gender"
                             name="gender"
                             value={form.gender}
                             onChange={onChange}
@@ -271,25 +298,32 @@ export default function Register() {
                             required
                             disabled={loading}
                         >
-                            <MenuItem value="">-- Chọn giới tính --</MenuItem>
-                            <MenuItem value="true">Nam</MenuItem>
-                            <MenuItem value="false">Nữ</MenuItem>
+                            <MenuItem value="">-- Select Gender --</MenuItem>
+                            <MenuItem value="true">Male</MenuItem>
+                            <MenuItem value="false">Female</MenuItem>
                         </TextField>
 
                         {/* Role ID */}
                         <TextField
                             fullWidth
                             select
-                            label="Vị trí công việc"
+                            label="Job Position"
                             name="roleId"
                             value={form.roleId}
                             onChange={onChange}
                             margin="normal"
                             required
-                            disabled={loading}
+                            disabled={loading || !currentUser || filteredRoles.length === 0}
+                            helperText={
+                                !currentUser
+                                    ? "Please log in to see available positions"
+                                    : filteredRoles.length === 0
+                                    ? "You do not have permission to register users with any positions"
+                                    : ""
+                            }
                         >
                             <MenuItem value="">-- Chọn vị trí --</MenuItem>
-                            {roles.map((role) => (
+                            {filteredRoles.map((role) => (
                                 <MenuItem key={role.id} value={role.id}>
                                     {role.name}
                                 </MenuItem>
@@ -300,7 +334,7 @@ export default function Register() {
                         <TextField
                             fullWidth
                             select
-                            label="Phòng ban"
+                            label="Department"
                             name="departmentId"
                             value={form.departmentId}
                             onChange={onChange}
@@ -308,7 +342,7 @@ export default function Register() {
                             required
                             disabled={loading}
                         >
-                            <MenuItem value="">-- Chọn phòng ban --</MenuItem>
+                            <MenuItem value="">-- Select Department --</MenuItem>
                             {departments.map((dept) => (
                                 <MenuItem key={dept.id} value={dept.id}>
                                     {dept.name}
@@ -320,15 +354,15 @@ export default function Register() {
                         <TextField
                             fullWidth
                             select
-                            label="Chuyền"
+                            label="Section"
                             name="lineId"
                             value={form.lineId}
                             onChange={onChange}
                             margin="normal"
                             disabled={loading || !form.departmentId}
-                            helperText={!form.departmentId ? "Vui lòng chọn phòng ban trước" : ""}
+                            helperText={!form.departmentId ? "Please select a department first" : ""}
                         >
-                            <MenuItem value="">-- Chọn chuyền --</MenuItem>
+                            <MenuItem value="">-- Select Section --</MenuItem>
                             {lines.map((line) => (
                                 <MenuItem key={line.id} value={line.id}>
                                     {line.name}
@@ -340,14 +374,14 @@ export default function Register() {
                         <TextField
                             fullWidth
                             select
-                            label="Trình độ kỹ năng"
+                            label="Skill Level"
                             name="skillLevelId"
                             value={form.skillLevelId}
                             onChange={onChange}
                             margin="normal"
                             disabled={loading}
                         >
-                            <MenuItem value="">-- Chọn trình độ --</MenuItem>
+                            <MenuItem value="">-- Select Skill Level --</MenuItem>
                             {skillLevels.map((level) => (
                                 <MenuItem key={level.id} value={level.id}>
                                     {level.name}
@@ -359,21 +393,21 @@ export default function Register() {
                         <TextField
                             fullWidth
                             select
-                            label="Loại lương"
+                            label="Salary Type"
                             name="salaryType"
                             value={form.salaryType}
                             onChange={onChange}
                             margin="normal"
                             disabled={loading}
                         >
-                            <MenuItem value="TimeBased">Theo thời gian</MenuItem>
-                            <MenuItem value="ProductBased">Theo sản phẩm</MenuItem>
+                            <MenuItem value="TimeBased">Time Based</MenuItem>
+                            <MenuItem value="ProductBased">Product Based</MenuItem>
                         </TextField>
 
                         {/* Base Salary */}
                         <TextField
                             fullWidth
-                            label="Lương cơ bản"
+                            label="Base Salary"
                             name="baseSalary"
                             type="number"
                             value={form.baseSalary}
@@ -386,7 +420,7 @@ export default function Register() {
                         {/* Hire Date */}
                         <TextField
                             fullWidth
-                            label="Ngày vào làm"
+                            label="Hire Date"
                             name="hireDate"
                             type="date"
                             value={form.hireDate}
@@ -400,7 +434,7 @@ export default function Register() {
                         <TextField
                             fullWidth
                             select
-                            label="Phương thức xác nhận"
+                            label="Verification Method"
                             name="verificationMethod"
                             value={form.verificationMethod}
                             onChange={onChange}
@@ -408,7 +442,7 @@ export default function Register() {
                             disabled={loading}
                         >
                             <MenuItem value="EMAIL">Email</MenuItem>
-                            <MenuItem value="PHONE">SMS (Số điện thoại)</MenuItem>
+                            <MenuItem value="PHONE">SMS (Phone Number)</MenuItem>
                         </TextField>
 
                         {/* Submit Button */}
@@ -433,7 +467,7 @@ export default function Register() {
                             {loading ? (
                                 <CircularProgress size={24} color="inherit" />
                             ) : (
-                                'Đăng ký'
+                                'Register'
                             )}
                         </Button>
                     </form>
@@ -441,7 +475,7 @@ export default function Register() {
                     {/* Link to Login */}
                     <Box sx={{ textAlign: 'center', mt: 2 }}>
                         <Typography variant="body2" color="text.secondary">
-                            Đã có tài khoản?{' '}
+                            Already have an account?{' '}
                             <span
                                 onClick={() => navigate('/login')}
                                 style={{
@@ -451,7 +485,7 @@ export default function Register() {
                                     textDecoration: 'underline'
                                 }}
                             >
-                Đăng nhập ngay
+                Login now
               </span>
                         </Typography>
                     </Box>
