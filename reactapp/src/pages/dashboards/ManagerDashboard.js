@@ -7,20 +7,20 @@ const ManagerDashboard = () =>
   const user = getCurrentUser();
 
   const stats = [
-    { title: 'Nhân viên quản lý', value: '0', icon: <Group />, color: '#1976d2' },
-    { title: 'Có mặt hôm nay', value: '0', icon: <AccessTime />, color: '#2e7d32' },
-    { title: 'Công việc chờ duyệt', value: '0', icon: <Assignment />, color: '#ed6c02' },
-    { title: 'Hiệu suất team', value: '92%', icon: <Star />, color: '#9c27b0' },
+    { title: 'Total Employees Managed', value: '0', icon: <Group />, color: '#1976d2' },
+    { title: 'Present Today', value: '0', icon: <AccessTime />, color: '#2e7d32' },
+    { title: 'Pending Approvals', value: '0', icon: <Assignment />, color: '#ed6c02' },
+    { title: 'Team Efficiency', value: '92%', icon: <Star />, color: '#9c27b0' },
   ];
 
   return (
     <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
       <Box sx={{ mb: 4 }}>
         <Typography variant="h4" gutterBottom>
-          Chào mừng Manager, {user?.fullName || 'User'}
+          Welcome Manager, {user?.fullName || 'User'}
         </Typography>
         <Typography variant="body1" color="text.secondary">
-          Quản lý team của bạn
+          Manage your team
         </Typography>
       </Box>
 
@@ -64,20 +64,20 @@ const ManagerDashboard = () =>
         <Grid item xs={12} md={8}>
           <Paper sx={{ p: 3 }}>
             <Typography variant="h6" gutterBottom>
-              Hoạt động của team
+              Team Activity Overview
             </Typography>
             <Typography variant="body2" color="text.secondary">
-              Chưa có hoạt động nào
+              No activities yet
             </Typography>
           </Paper>
         </Grid>
         <Grid item xs={12} md={4}>
           <Paper sx={{ p: 3 }}>
             <Typography variant="h6" gutterBottom>
-              Nhiệm vụ
+              Tasks
             </Typography>
             <Typography variant="body2" color="text.secondary">
-              Không có nhiệm vụ mới
+              No new tasks
             </Typography>
           </Paper>
         </Grid>

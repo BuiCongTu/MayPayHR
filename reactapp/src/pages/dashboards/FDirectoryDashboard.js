@@ -7,20 +7,20 @@ const FDirectoryDashboard = () =>
   const user = getCurrentUser();
 
   const stats = [
-    { title: 'Tổng nhà máy', value: '0', icon: <Business />, color: '#1976d2' },
-    { title: 'Tăng trưởng', value: '+5%', icon: <TrendingUp />, color: '#2e7d32' },
-    { title: 'Doanh thu', value: '0đ', icon: <AttachMoney />, color: '#ed6c02' },
-    { title: 'Hiệu quả', value: '94%', icon: <Insights />, color: '#9c27b0' },
+    { title: 'Total Departments', value: '0', icon: <Business />, color: '#1976d2' },
+    { title: 'Growth', value: '+5%', icon: <TrendingUp />, color: '#2e7d32' },
+    { title: 'Revenue', value: '0đ', icon: <AttachMoney />, color: '#ed6c02' },
+    { title: 'Efficiency', value: '94%', icon: <Insights />, color: '#9c27b0' },
   ];
 
   return (
     <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
       <Box sx={{ mb: 4 }}>
         <Typography variant="h4" gutterBottom>
-          Chào mừng, {user?.fullName || 'Director'}
+          Welcome, {user?.fullName || 'Director'}
         </Typography>
         <Typography variant="body1" color="text.secondary">
-          Tổng quan quản lý nhà máy
+          Factory Management Overview
         </Typography>
       </Box>
 
@@ -64,20 +64,20 @@ const FDirectoryDashboard = () =>
         <Grid item xs={12} md={8}>
           <Paper sx={{ p: 3 }}>
             <Typography variant="h6" gutterBottom>
-              Báo cáo tổng quan
+              Overview Report
             </Typography>
             <Typography variant="body2" color="text.secondary">
-              Chưa có báo cáo
+              No reports available
             </Typography>
           </Paper>
         </Grid>
         <Grid item xs={12} md={4}>
           <Paper sx={{ p: 3 }}>
             <Typography variant="h6" gutterBottom>
-              Quyết định quan trọng
+              Important Decisions
             </Typography>
             <Typography variant="body2" color="text.secondary">
-              Không có quyết định mới
+              No new decisions
             </Typography>
           </Paper>
         </Grid>

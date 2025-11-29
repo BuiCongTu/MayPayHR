@@ -41,7 +41,7 @@ const VerifyRegistration = () =>
 
     if (!otp || otp.trim().length !== 6)
     {
-      setError('Vui lòng nhập mã OTP 6 chữ số');
+      setError('Please enter a valid 6-digit OTP');
       return;
     }
 
@@ -49,7 +49,7 @@ const VerifyRegistration = () =>
     try
     {
       await verifyRegistration(token, otp);
-      setSuccess('Xác thực thành công! Đang chuyển hướng...');
+      setSuccess('Verification successful! Redirecting...');
 
       setTimeout(() =>
       {
@@ -57,7 +57,7 @@ const VerifyRegistration = () =>
       }, 2000);
     } catch (err)
     {
-      setError(err.response?.data?.message || err.message || 'Xác thực thất bại');
+      setError(err.response?.data?.message || err.message || 'Verification failed');
       console.error('Verification error:', err);
     } finally
     {
@@ -87,13 +87,13 @@ const VerifyRegistration = () =>
         >
           <Box sx={{ textAlign: 'center', mb: 3 }}>
             <Typography variant="h4" component="h1" fontWeight="bold" color="primary" gutterBottom>
-              MayPayHR
+              May Production Management System
             </Typography>
             <Typography variant="h6" color="text.secondary">
-              Xác thực đăng ký
+              Verify Registration
             </Typography>
             <Typography variant="body2" color="text.secondary" sx={{ mt: 2 }}>
-              Mã OTP đã được gửi đến {verificationMethod === 'EMAIL' ? 'email' : 'số điện thoại'} của bạn
+              The OTP has been sent to your {verificationMethod === 'EMAIL' ? 'email' : 'phone number'}
             </Typography>
           </Box>
 
@@ -117,7 +117,7 @@ const VerifyRegistration = () =>
               onChange={(e) => setOtp(e.target.value)}
               margin="normal"
               required
-              placeholder="Nhập mã OTP 6 chữ số"
+              placeholder="Enter 6-digit OTP"
               disabled={loading || !!success}
               inputProps={{
                 maxLength: 6,
@@ -146,19 +146,19 @@ const VerifyRegistration = () =>
               {loading ? (
                 <CircularProgress size={24} color="inherit" />
               ) : (
-                'Xác thực'
+                'Verify'
               )}
             </Button>
           </form>
 
           <Box sx={{ textAlign: 'center', mt: 3 }}>
             <Typography variant="body2" color="text.secondary">
-              Chưa nhận được mã?{' '}
+              Didn't receive the code?{' '}
               <span
                 onClick={() =>
                 {
                   // TODO: Implement resend OTP
-                  setError('Chức năng gửi lại OTP sẽ được cập nhật sau');
+                  setError('Resend OTP feature will be available soon');
                 }}
                 style={{
                   color: '#667eea',
@@ -167,11 +167,11 @@ const VerifyRegistration = () =>
                   textDecoration: 'underline'
                 }}
               >
-                Gửi lại
+                Resend OTP
               </span>
             </Typography>
             <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-              Quay lại{' '}
+              Back to{' '}
               <span
                 onClick={() => navigate('/register')}
                 style={{
@@ -181,7 +181,7 @@ const VerifyRegistration = () =>
                   textDecoration: 'underline'
                 }}
               >
-                Đăng ký
+                Register
               </span>
             </Typography>
           </Box>

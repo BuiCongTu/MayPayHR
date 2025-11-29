@@ -8,10 +8,10 @@ const HRDashboard = () =>
   const user = getCurrentUser();
 
   const stats = [
-    { title: 'Nhân viên mới', value: '0', icon: <People />, color: '#1976d2' },
-    { title: 'Chấm công hôm nay', value: '0', icon: <CheckCircle />, color: '#2e7d32' },
-    { title: 'Đơn chờ duyệt', value: '0', icon: <Schedule />, color: '#ed6c02' },
-    { title: 'Hiệu suất', value: '95%', icon: <TrendingUp />, color: '#9c27b0' },
+    { title: 'New Employees', value: '0', icon: <People />, color: '#1976d2' },
+    { title: 'Today\'s Attendance', value: '0', icon: <CheckCircle />, color: '#2e7d32' },
+    { title: 'Pending Requests', value: '0', icon: <Schedule />, color: '#ed6c02' },
+    { title: 'Performance', value: '95%', icon: <TrendingUp />, color: '#9c27b0' },
   ];
 
   return (
@@ -23,7 +23,7 @@ const HRDashboard = () =>
             Chào mừng HR, {user?.fullName || 'User'}
           </Typography>
           <Typography variant="body1" color="text.secondary">
-            Quản lý nhân sự MayPayHR
+            MayPayHR Human Resources Management System Dashboard
           </Typography>
         </Box>
 
@@ -67,20 +67,20 @@ const HRDashboard = () =>
           <Grid item xs={12} md={8}>
             <Paper sx={{ p: 3 }}>
               <Typography variant="h6" gutterBottom>
-                Đơn từ cần xử lý
+                Pending Requests
               </Typography>
               <Typography variant="body2" color="text.secondary">
-                Chưa có đơn từ nào
+                No pending requests
               </Typography>
             </Paper>
           </Grid>
           <Grid item xs={12} md={4}>
             <Paper sx={{ p: 3 }}>
               <Typography variant="h6" gutterBottom>
-                Nhắc nhở
+                Reminders
               </Typography>
               <Typography variant="body2" color="text.secondary">
-                Không có nhắc nhở
+                No reminders
               </Typography>
             </Paper>
           </Grid>

@@ -9,14 +9,11 @@ const Logout = () =>
 
   useEffect(() =>
   {
-    // Thực hiện logout
     logout();
 
-    // Hiển thị thông báo
     setTimeout(() =>
     {
-      alert('Đăng xuất thành công!');
-      // Chuyển về trang login
+      alert('Logout successful');
       navigate('/login');
     }, 500);
   }, [navigate]);
@@ -33,7 +30,7 @@ const Logout = () =>
       }}
     >
       <CircularProgress />
-      <Typography variant="h6">Đang đăng xuất...</Typography>
+      <Typography variant="h6">Logging out...</Typography>
     </Box>
   );
 };

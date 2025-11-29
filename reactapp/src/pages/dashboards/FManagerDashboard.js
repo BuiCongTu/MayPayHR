@@ -7,20 +7,20 @@ const FManagerDashboard = () =>
   const user = getCurrentUser();
 
   const stats = [
-    { title: 'Số dây sản xuất', value: '0', icon: <Factory />, color: '#1976d2' },
-    { title: 'Hoàn thành hôm nay', value: '0', icon: <CheckCircle />, color: '#2e7d32' },
-    { title: 'Cảnh báo', value: '0', icon: <Warning />, color: '#ed6c02' },
-    { title: 'Hiệu suất', value: '88%', icon: <Speed />, color: '#9c27b0' },
+    { title: 'Total Sections', value: '0', icon: <Factory />, color: '#1976d2' },
+    { title: 'Completed Today', value: '0', icon: <CheckCircle />, color: '#2e7d32' },
+    { title: 'Warnings', value: '0', icon: <Warning />, color: '#ed6c02' },
+    { title: 'Efficiency', value: '88%', icon: <Speed />, color: '#9c27b0' },
   ];
 
   return (
     <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
       <Box sx={{ mb: 4 }}>
         <Typography variant="h4" gutterBottom>
-          Chào mừng, {user?.fullName || 'Factory Manager'}
+          Welcome, {user?.fullName || 'Factory Manager'}
         </Typography>
         <Typography variant="body1" color="text.secondary">
-          Quản lý sản xuất
+          Production Management Dashboard
         </Typography>
       </Box>
 
@@ -64,20 +64,20 @@ const FManagerDashboard = () =>
         <Grid item xs={12} md={8}>
           <Paper sx={{ p: 3 }}>
             <Typography variant="h6" gutterBottom>
-              Tiến độ sản xuất
+              Production Overview
             </Typography>
             <Typography variant="body2" color="text.secondary">
-              Chưa có dữ liệu
+              No data available
             </Typography>
           </Paper>
         </Grid>
         <Grid item xs={12} md={4}>
           <Paper sx={{ p: 3 }}>
             <Typography variant="h6" gutterBottom>
-              Vấn đề cần xử lý
+              Issues to Address
             </Typography>
             <Typography variant="body2" color="text.secondary">
-              Không có vấn đề
+              No issues detected
             </Typography>
           </Paper>
         </Grid>

@@ -43,7 +43,6 @@ const Login = () =>
       ...prev,
       [name]: value
     }));
-    // Clear error when user types
     if (error) setError('');
   };
 
@@ -54,7 +53,7 @@ const Login = () =>
     // Validation
     if (!formData.loginId || !formData.password)
     {
-      setError('Vui lòng nhập đầy đủ email/số điện thoại và mật khẩu');
+      setError('Please fill in all required fields');
       return;
     }
 
@@ -68,13 +67,13 @@ const Login = () =>
 
       if (response.success)
       {
-        // Login thành công - redirect to dashboard
+        // Login successful - redirect to dashboard
         console.log('Login successful, navigating to /');
         navigate('/');
       } else
       {
         console.log('Login failed:', response.message);
-        setError(response.message || 'Đăng nhập thất bại');
+        setError(response.message || 'Login failed. Please try again.');
       }
     } catch (err)
     {
@@ -82,7 +81,7 @@ const Login = () =>
       console.error('Error response:', err.response);
       setError(
         err.response?.data?.message ||
-        'Đăng nhập thất bại. Vui lòng kiểm tra lại email/số điện thoại và mật khẩu.'
+        'Login failed. Please check your email/phone number and password.'
       );
     } finally
     {
@@ -133,14 +132,14 @@ const Login = () =>
           <form onSubmit={handleSubmit}>
             <TextField
               fullWidth
-              label="Email hoặc Số điện thoại"
+              label="Email or Phone Number"
               name="loginId"
               value={formData.loginId}
               onChange={handleChange}
               margin="normal"
               required
               autoFocus
-              placeholder="admin@example.com hoặc 0123456789"
+              placeholder="admin@admin.com or '0123456789'"
               InputProps={{
                 startAdornment: (
                   <InputAdornment position="start">
@@ -153,7 +152,7 @@ const Login = () =>
 
             <TextField
               fullWidth
-              label="Mật khẩu"
+              label="Password"
               name="password"
               type={showPassword ? 'text' : 'password'}
               value={formData.password}
@@ -190,7 +189,7 @@ const Login = () =>
                   fontSize: '14px'
                 }}
               >
-                Quên mật khẩu?
+                Forgot Password?
               </Link>
             </Box>
 
@@ -215,14 +214,14 @@ const Login = () =>
               {loading ? (
                 <CircularProgress size={24} color="inherit" />
               ) : (
-                'Đăng nhập'
+                'Login'
               )}
             </Button>
           </form>
 
           <Box sx={{ textAlign: 'center', mt: 2 }}>
             <Typography variant="body2" color="text.secondary">
-              Chưa có tài khoản?{' '}
+              Don't have an account?{' '}
               <Link
                 to="/register"
                 style={{
@@ -231,7 +230,7 @@ const Login = () =>
                   fontWeight: 'bold'
                 }}
               >
-                Đăng ký ngay
+                Register now
               </Link>
             </Typography>
           </Box>

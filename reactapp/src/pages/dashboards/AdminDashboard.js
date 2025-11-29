@@ -8,10 +8,10 @@ const AdminDashboard = () =>
   const user = getCurrentUser();
 
   const stats = [
-    { title: 'Tổng nhân viên', value: '0', icon: <People />, color: '#1976d2' },
-    { title: 'Chấm công hôm nay', value: '0', icon: <EventNote />, color: '#2e7d32' },
-    { title: 'Đang làm việc', value: '0', icon: <AccessTime />, color: '#ed6c02' },
-    { title: 'Báo cáo chờ duyệt', value: '0', icon: <Assessment />, color: '#9c27b0' },
+    { title: 'Total Employees', value: '0', icon: <People />, color: '#1976d2' },
+    { title: 'Today\'s Attendance', value: '0', icon: <EventNote />, color: '#2e7d32' },
+    { title: 'Currently Working', value: '0', icon: <AccessTime />, color: '#ed6c02' },
+    { title: 'Pending Reports', value: '0', icon: <Assessment />, color: '#9c27b0' },
   ];
 
   return (
@@ -20,10 +20,10 @@ const AdminDashboard = () =>
       <Container maxWidth="lg" sx={{ mt: 4, mb: 4, flexGrow: 1 }}>
         <Box sx={{ mb: 4 }}>
           <Typography variant="h4" gutterBottom>
-            Chào mừng, {user?.fullName || 'Admin'}
+            Welcome, {user?.fullName || 'Admin'}
           </Typography>
           <Typography variant="body1" color="text.secondary">
-            Tổng quan hệ thống MayPayHR
+            MayPayHR System Overview
           </Typography>
         </Box>
 
@@ -67,20 +67,20 @@ const AdminDashboard = () =>
           <Grid item xs={12} md={8}>
             <Paper sx={{ p: 3 }}>
               <Typography variant="h6" gutterBottom>
-                Hoạt động gần đây
+                Recent Activity
               </Typography>
               <Typography variant="body2" color="text.secondary">
-                Chưa có hoạt động nào
+                No recent activity
               </Typography>
             </Paper>
           </Grid>
           <Grid item xs={12} md={4}>
             <Paper sx={{ p: 3 }}>
               <Typography variant="h6" gutterBottom>
-                Thông báo
+                Notifications
               </Typography>
               <Typography variant="body2" color="text.secondary">
-                Không có thông báo mới
+                No new notifications
               </Typography>
             </Paper>
           </Grid>
