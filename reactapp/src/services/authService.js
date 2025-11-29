@@ -25,6 +25,13 @@ export const register = async (userData) =>
   return response.data;
 };
 
+// Xác thực đăng ký
+export const verifyRegistration = async (token, otp) =>
+{
+  const response = await axios.post(`${API_URL}/verify`, { token, otp });
+  return response.data;
+};
+
 // Logout
 export const logout = () =>
 {
@@ -80,6 +87,7 @@ export const setupAxiosInterceptors = () =>
 export default {
   login,
   register,
+  verifyRegistration,
   logout,
   getCurrentUser,
   getToken,

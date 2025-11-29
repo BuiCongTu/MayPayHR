@@ -1,8 +1,8 @@
 -- CREATE DATABASE MayPayHR7;
 -- GO
 
--- USE MayPayHR7;
--- GO
+USE MayPayHR7;
+GO
 
 -- =============================================
 -- 1. tbRole - Vai trò

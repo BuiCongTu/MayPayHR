@@ -2,12 +2,14 @@ import { useEffect } from "react";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 import './App.css';
 import Layout from "./components/layout/Layout";
+import Register from "./components/Register";
 import CheckInPage from "./pages/attendance/CheckInPage";
 import CheckOutPage from "./pages/attendance/CheckOutPage";
 import HistoryPage from "./pages/attendance/HistoryPage";
 import RegisterFacePage from "./pages/attendance/RegisterFacePage";
 import Login from "./pages/auth/Login";
 import Logout from "./pages/auth/Logout";
+import VerifyRegistration from "./pages/auth/VerifyRegistration";
 import DashboardRouter from "./pages/dashboards/DashboardRouter";
 import OvertimeRequestDetail from "./pages/moduleB/overtime/OvertimeRequestDetail";
 import OvertimeRequestForm from "./pages/moduleB/overtime/OvertimeRequestForm";
@@ -51,7 +53,7 @@ function App()
                         <Route path="/overtime-ticket" element={<OvertimeTicketList />} />
                         <Route path="/attendance/checkin" element={<CheckInPage />} />
                         <Route path="/attendance/checkout" element={<CheckOutPage />} />
-                        <Route path="/attendance/register" element={<RegisterFacePage />} />
+                        <Route path="/attendance/register-face" element={<RegisterFacePage />} />
                         <Route path="/attendance/history" element={<HistoryPage />} />
                         <Route path="/overtime-request/:id" element={<OvertimeRequestDetail />} />
                         <Route path="/profile" element={<Profile />} />
@@ -65,6 +67,8 @@ function App()
                     {/* Auth Routes */}
                     <Route path="/login" element={<Login />} />
                     <Route path="/logout" element={<Logout />} />
+                    <Route path="/register" element={<Register />} />
+                    <Route path="/verify-registration" element={<VerifyRegistration />} />
 
                 </Routes>
             </BrowserRouter>

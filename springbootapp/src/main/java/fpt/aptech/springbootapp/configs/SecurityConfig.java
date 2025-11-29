@@ -1,7 +1,9 @@
 package fpt.aptech.springbootapp.configs;
 
-import java.util.*;
-import org.springframework.context.annotation.*;
+import java.util.Arrays;
+
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
@@ -13,9 +15,12 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-import org.springframework.web.cors.*;
-import fpt.aptech.springbootapp.securities.*;
-import fpt.aptech.springbootapp.services.implementations.*;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+
+import fpt.aptech.springbootapp.securities.JwtAuthenticationFilter;
+import fpt.aptech.springbootapp.services.implementations.CustomUserDetailsService;
 
 @Configuration
 @EnableWebSecurity
@@ -99,7 +104,9 @@ public class SecurityConfig {
                         "/api/face-scan/attendance",
                         "/actuator/health",
                         "/api/lines/**",
-                        "/api/user/**"
+                        "/api/line/**",
+                        "/api/user/**",
+                        "/api/form-data/**"
                 )
                 .permitAll()
                 // Protected endpoints

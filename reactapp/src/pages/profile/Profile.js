@@ -1,28 +1,35 @@
 import
-  {
-    Badge as BadgeIcon,
-    Business as BusinessIcon,
-    Cancel as CancelIcon,
-    Edit as EditIcon,
-    Email as EmailIcon,
-    Person as PersonIcon,
-    Phone as PhoneIcon,
-    Save as SaveIcon
-  } from '@mui/icons-material';
+{
+  Badge as BadgeIcon,
+  Business as BusinessIcon,
+  CalendarToday as CalendarIcon,
+  Cancel as CancelIcon,
+  Edit as EditIcon,
+  Email as EmailIcon,
+  Wc as GenderIcon,
+  Timeline as LineIcon,
+  AttachMoney as MoneyIcon,
+  Person as PersonIcon,
+  Phone as PhoneIcon,
+  Save as SaveIcon,
+  Star as SkillIcon,
+  CheckCircle as StatusIcon,
+  Work as WorkIcon
+} from '@mui/icons-material';
 import
-  {
-    Alert,
-    Avatar,
-    Box,
-    Button,
-    CircularProgress,
-    Container,
-    Divider,
-    Grid,
-    Paper,
-    TextField,
-    Typography
-  } from '@mui/material';
+{
+  Alert,
+  Avatar,
+  Box,
+  Button,
+  CircularProgress,
+  Container,
+  Divider,
+  Grid,
+  Paper,
+  TextField,
+  Typography
+} from '@mui/material';
 import { useEffect, useState } from 'react';
 import Sidebar from '../../components/layout/Sidebar';
 import { getCurrentUser } from '../../services/authService';
@@ -43,7 +50,6 @@ const Profile = () =>
     fullName: '',
     email: '',
     phone: '',
-    address: '',
   });
 
   // Check if user is Admin or HR (có sidebar)
@@ -65,7 +71,6 @@ const Profile = () =>
         fullName: data.fullName || '',
         email: data.email || '',
         phone: data.phone || '',
-        address: data.address || '',
       });
     } catch (err)
     {
@@ -101,7 +106,6 @@ const Profile = () =>
       fullName: user.fullName || '',
       email: user.email || '',
       phone: user.phone || '',
-      address: user.address || '',
     });
     setError('');
     setSuccess('');
@@ -313,30 +317,107 @@ const Profile = () =>
             </Box>
           </Grid>
 
-          {/* Address */}
-          <Grid item xs={12}>
-            <Box sx={{ display: 'flex', alignItems: 'flex-start', mb: 2 }}>
-              <PersonIcon sx={{ mr: 2, color: '#4b90f9ff', mt: 1 }} />
+          {/* Line */}
+          <Grid item xs={12} md={6}>
+            <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+              <LineIcon sx={{ mr: 2, color: '#4b90f9ff' }} />
               <Box sx={{ flexGrow: 1 }}>
                 <Typography variant="caption" color="text.secondary">
-                  Địa chỉ
+                  Chuyền
                 </Typography>
-                {editMode ? (
-                  <TextField
-                    fullWidth
-                    name="address"
-                    multiline
-                    rows={2}
-                    value={formData.address}
-                    onChange={handleInputChange}
-                    size="small"
-                    sx={{ mt: 0.5 }}
-                  />
-                ) : (
-                  <Typography variant="body1">
-                    {user?.address || 'N/A'}
-                  </Typography>
-                )}
+                <Typography variant="body1">
+                  {user?.lineName || 'N/A'}
+                </Typography>
+              </Box>
+            </Box>
+          </Grid>
+
+          {/* Skill Level */}
+          <Grid item xs={12} md={6}>
+            <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+              <SkillIcon sx={{ mr: 2, color: '#4b90f9ff' }} />
+              <Box sx={{ flexGrow: 1 }}>
+                <Typography variant="caption" color="text.secondary">
+                  Trình độ kỹ năng
+                </Typography>
+                <Typography variant="body1">
+                  {user?.skillLevelName || 'N/A'}
+                </Typography>
+              </Box>
+            </Box>
+          </Grid>
+
+          {/* Salary Type */}
+          <Grid item xs={12} md={6}>
+            <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+              <WorkIcon sx={{ mr: 2, color: '#4b90f9ff' }} />
+              <Box sx={{ flexGrow: 1 }}>
+                <Typography variant="caption" color="text.secondary">
+                  Loại lương
+                </Typography>
+                <Typography variant="body1">
+                  {user?.salaryType === 'TimeBased' ? 'Theo thời gian' : user?.salaryType === 'ProductBased' ? 'Theo sản phẩm' : user?.salaryType || 'N/A'}
+                </Typography>
+              </Box>
+            </Box>
+          </Grid>
+
+          {/* Base Salary */}
+          <Grid item xs={12} md={6}>
+            <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+              <MoneyIcon sx={{ mr: 2, color: '#4b90f9ff' }} />
+              <Box sx={{ flexGrow: 1 }}>
+                <Typography variant="caption" color="text.secondary">
+                  Lương cơ bản
+                </Typography>
+                <Typography variant="body1">
+                  {user?.baseSalary ? new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(user.baseSalary) : 'N/A'}
+                </Typography>
+              </Box>
+            </Box>
+          </Grid>
+
+          {/* Hire Date */}
+          <Grid item xs={12} md={6}>
+            <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+              <CalendarIcon sx={{ mr: 2, color: '#4b90f9ff' }} />
+              <Box sx={{ flexGrow: 1 }}>
+                <Typography variant="caption" color="text.secondary">
+                  Ngày vào làm
+                </Typography>
+                <Typography variant="body1">
+                  {user?.hireDate ? new Date(user.hireDate).toLocaleDateString('vi-VN') : 'N/A'}
+                </Typography>
+              </Box>
+            </Box>
+          </Grid>
+
+          {/* Gender */}
+          <Grid item xs={12} md={6}>
+            <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+              <GenderIcon sx={{ mr: 2, color: '#4b90f9ff' }} />
+              <Box sx={{ flexGrow: 1 }}>
+                <Typography variant="caption" color="text.secondary">
+                  Giới tính
+                </Typography>
+                <Typography variant="body1">
+                  {user?.gender === true ? 'Nam' : user?.gender === false ? 'Nữ' : 'N/A'}
+                </Typography>
+              </Box>
+            </Box>
+          </Grid>
+
+          {/* Status */}
+          <Grid item xs={12} md={6}>
+            <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+              <StatusIcon sx={{ mr: 2, color: user?.status === 'Active' ? '#4caf50' : '#f44336' }} />
+              <Box sx={{ flexGrow: 1 }}>
+                <Typography variant="caption" color="text.secondary">
+                  Trạng thái
+                </Typography>
+                <Typography variant="body1" sx={{ color: user?.status === 'Active' ? '#4caf50' : '#f44336' }}>
+                  {user?.status === 'Active' ? 'Đang làm việc' : user?.status === 'Inactive' ? 'Ngưng làm việc' : user?.status || 'N/A'}
+                </Typography>
               </Box>
             </Box>
           </Grid>

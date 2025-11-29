@@ -1,19 +1,35 @@
 package fpt.aptech.springbootapp.api;
 
-import fpt.aptech.springbootapp.dtos.request.Auth.*;
-import fpt.aptech.springbootapp.dtos.response.*;
+import java.util.List;
+import java.util.Map;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
+import fpt.aptech.springbootapp.dtos.request.Auth.ChangePassReq;
+import fpt.aptech.springbootapp.dtos.request.Auth.ForgotPasswordReq;
+import fpt.aptech.springbootapp.dtos.request.Auth.LoginReq;
+import fpt.aptech.springbootapp.dtos.request.Auth.RegisterReq;
+import fpt.aptech.springbootapp.dtos.request.Auth.ResetPasswordReq;
+import fpt.aptech.springbootapp.dtos.request.Auth.VerifyTokenReq;
+import fpt.aptech.springbootapp.dtos.response.ApiResponse;
+import fpt.aptech.springbootapp.dtos.response.LoginResponse;
+import fpt.aptech.springbootapp.dtos.response.UserResponseDto;
 import fpt.aptech.springbootapp.entities.Core.TbUser;
 import fpt.aptech.springbootapp.securities.JwtUtils;
 import fpt.aptech.springbootapp.services.System.UserService;
 import jakarta.validation.Valid;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.*;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
-
 
 @RestController
 @RequestMapping("/api/auth")
@@ -25,8 +41,7 @@ public class AuthController {
     @Autowired
     public AuthController(
             JwtUtils jwtUtils,
-            UserService userService)
-    {
+            UserService userService) {
         this.jwtUtils = jwtUtils;
         this.userService = userService;
     }
@@ -48,17 +63,44 @@ public class AuthController {
     }
 
     @PostMapping("/register")
-    public ResponseEntity<ApiResponse<String>> register(@Valid @RequestBody RegisterReq request) {
+    public ResponseEntity<ApiResponse<Map<String, String>>> register(@Valid @RequestBody RegisterReq request) {
         try {
             if (request.getVerificationMethod() == null || request.getVerificationMethod().trim().isEmpty()) {
                 return ResponseEntity.badRequest()
                         .body(ApiResponse.error("Verification method (EMAIL or PHONE) is required"));
             }
 
-            userService.register(request);
+            String token = userService.register(request);
+            Map<String, String> response = new java.util.HashMap<>();
+            response.put("token", token);
+            response.put("message", "Registration initiated. Please verify your " + request.getVerificationMethod().toLowerCase());
+
             return ResponseEntity.status(HttpStatus.CREATED)
-                    .body(ApiResponse.success("Registration initiated. Please verify your " +
-                            request.getVerificationMethod().toLowerCase(), null));
+                    .body(ApiResponse.success("Registration initiated", response));
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest()
+                    .body(ApiResponse.error(e.getMessage()));
+        }
+    }
+
+    @PostMapping("/verify")
+    public ResponseEntity<ApiResponse<String>> verifyRegistration(@RequestBody Map<String, String> request) {
+        try {
+            String token = request.get("token");
+            String otp = request.get("otp");
+
+            if (token == null || token.trim().isEmpty()) {
+                return ResponseEntity.badRequest()
+                        .body(ApiResponse.error("Token is required"));
+            }
+
+            if (otp == null || otp.trim().isEmpty()) {
+                return ResponseEntity.badRequest()
+                        .body(ApiResponse.error("OTP is required"));
+            }
+
+            userService.verifyRegistration(token, otp);
+            return ResponseEntity.ok(ApiResponse.success("Verification successful", null));
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest()
                     .body(ApiResponse.error(e.getMessage()));
@@ -76,7 +118,6 @@ public class AuthController {
         }
     }
 
-
     @GetMapping("/getemp/{phone}")
     public ResponseEntity<ApiResponse<UserResponseDto>> getUserByPhone(@PathVariable String phone) {
         try {
@@ -92,7 +133,6 @@ public class AuthController {
                     .body(ApiResponse.error(e.getMessage()));
         }
     }
-
 
     @PutMapping("/updateuser/{phone}")
     public ResponseEntity<ApiResponse<UserResponseDto>> updateUser(
@@ -158,7 +198,7 @@ public class AuthController {
         }
     }
 
-        //lay thong tin user hiện tại từ JWT token
+    //lay thong tin user hiện tại từ JWT token
     @GetMapping("/me")
     public ResponseEntity<ApiResponse<UserResponseDto>> getCurrentUser() {
         try {
@@ -258,4 +298,3 @@ public class AuthController {
     }
 
 }
-

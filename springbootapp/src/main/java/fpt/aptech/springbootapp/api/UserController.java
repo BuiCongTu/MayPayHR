@@ -38,18 +38,18 @@ public class UserController {
     @GetMapping("/profile")
     public ResponseEntity<ApiResponse<UserResponseDto>> getUserProfile() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        String phone = authentication.getName(); // Lấy phone từ JWT token
+        String loginId = authentication.getName(); // Email hoặc phone từ JWT token
 
-        UserResponseDto user = userService.getUserByPhone(phone);
+        UserResponseDto user = userService.getUserByLoginId(loginId);
         return ResponseEntity.ok(ApiResponse.success(user));
     }
 
     @PutMapping("/profile")
     public ResponseEntity<ApiResponse<UserResponseDto>> updateUserProfile(@RequestBody UpdateProfileRequest request) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        String phone = authentication.getName();
+        String loginId = authentication.getName();
 
-        UserResponseDto updatedUser = userService.updateUserProfile(phone, request);
+        UserResponseDto updatedUser = userService.updateUserProfile(loginId, request);
         return ResponseEntity.ok(ApiResponse.success(updatedUser));
     }
 }

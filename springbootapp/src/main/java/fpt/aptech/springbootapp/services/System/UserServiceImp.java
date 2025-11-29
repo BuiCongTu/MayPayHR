@@ -1,21 +1,36 @@
 package fpt.aptech.springbootapp.services.System;
 
-import java.time.*;
-import java.util.*;
-import java.util.stream.*;
+import java.time.Duration;
+import java.time.Instant;
+import java.util.List;
+import java.util.Optional;
+import java.util.Random;
+import java.util.UUID;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import fpt.aptech.springbootapp.dtos.request.Auth.*;
-import fpt.aptech.springbootapp.dtos.request.*;
-import fpt.aptech.springbootapp.dtos.response.*;
-import fpt.aptech.springbootapp.entities.Core.*;
-import fpt.aptech.springbootapp.entities.System.*;
-import fpt.aptech.springbootapp.repositories.*;
-import fpt.aptech.springbootapp.repositories.System.*;
+import fpt.aptech.springbootapp.dtos.request.Auth.ChangePassReq;
+import fpt.aptech.springbootapp.dtos.request.Auth.LoginReq;
+import fpt.aptech.springbootapp.dtos.request.Auth.RegisterReq;
+import fpt.aptech.springbootapp.dtos.request.UpdateProfileRequest;
+import fpt.aptech.springbootapp.dtos.response.LoginResponse;
+import fpt.aptech.springbootapp.dtos.response.UserResponseDto;
+import fpt.aptech.springbootapp.entities.Core.TbDepartment;
+import fpt.aptech.springbootapp.entities.Core.TbLine;
+import fpt.aptech.springbootapp.entities.Core.TbRole;
+import fpt.aptech.springbootapp.entities.Core.TbSkillLevel;
+import fpt.aptech.springbootapp.entities.Core.TbUser;
+import fpt.aptech.springbootapp.entities.System.TbPasswordResetToken;
+import fpt.aptech.springbootapp.repositories.DepartmentRepository;
+import fpt.aptech.springbootapp.repositories.LineRepository;
+import fpt.aptech.springbootapp.repositories.RoleRepository;
+import fpt.aptech.springbootapp.repositories.SkillLevelRepo;
+import fpt.aptech.springbootapp.repositories.System.PassResetTokenRepo;
+import fpt.aptech.springbootapp.repositories.UserRepository;
 import fpt.aptech.springbootapp.securities.JwtUtils;
 
 @Service
@@ -53,10 +68,9 @@ public class UserServiceImp implements UserService {
         this.emailService = emailService;
     }
 
-
     @Override
     @Transactional
-    public UserResponseDto register(RegisterReq registerReq) {
+    public String register(RegisterReq registerReq) {
         if (userRepo.findByEmail(registerReq.getEmail()).isPresent()) {
             throw new RuntimeException("Email already exists");
         }
@@ -154,9 +168,9 @@ public class UserServiceImp implements UserService {
             System.out.println("Failed to send OTP: " + e.getMessage());
 
         }
-        // Return DTO
+        // Return token
         System.out.println("User registered successfully: " + savedUser.getId());
-        return buildUserResponseDto(savedUser);
+        return token;
     }
 
     @Override
@@ -272,6 +286,22 @@ public class UserServiceImp implements UserService {
     }
 
     @Override
+    public UserResponseDto getUserByLoginId(String loginId) {
+        TbUser user;
+        if (loginId.contains("@")) {
+            // Login with email
+            user = userRepo.findByEmail(loginId)
+                    .orElseThrow(() -> new RuntimeException("Not found employee: " + loginId));
+        } else {
+            // Login with phone
+            user = userRepo.findByPhone(loginId)
+                    .orElseThrow(() -> new RuntimeException("Not found employee: " + loginId));
+        }
+
+        return buildUserResponseDto(user);
+    }
+
+    @Override
     public List<TbUser> findAllUsers() {
         return userRepo.findAll();
     }
@@ -327,19 +357,20 @@ public class UserServiceImp implements UserService {
         resetToken.setCreatedAt(Instant.now());
 
         passResetTokenRepo.save(resetToken);
-        try{
-        if (verificationMethod.equalsIgnoreCase("EMAIL")) {
-            emailService.sendOtpEmail(user.getEmail(), newOtp, user.getFullName());
-        } else if (verificationMethod.equalsIgnoreCase("PHONE")) {
-            emailService.sendSmsOtp(user.getPhone(), newOtp);
-        }} catch (Exception e) {
+        try {
+            if (verificationMethod.equalsIgnoreCase("EMAIL")) {
+                emailService.sendOtpEmail(user.getEmail(), newOtp, user.getFullName());
+            } else if (verificationMethod.equalsIgnoreCase("PHONE")) {
+                emailService.sendSmsOtp(user.getPhone(), newOtp);
+            }
+        } catch (Exception e) {
             System.out.println("Failed to send OTP: " + e.getMessage());
         }
     }
 
     @Override
     @Transactional
-    public void resetPassword(String token,String otp, String newPassword) {
+    public void resetPassword(String token, String otp, String newPassword) {
 
         TbPasswordResetToken resetToken = passResetTokenRepo.findByToken(token)
                 .orElseThrow(() -> new RuntimeException("Invalid reset token"));
@@ -380,9 +411,17 @@ public class UserServiceImp implements UserService {
 
     @Override
     @Transactional
-    public UserResponseDto updateUserProfile(String phone, UpdateProfileRequest request) {
-        TbUser user = userRepo.findByPhone(phone)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+    public UserResponseDto updateUserProfile(String loginId, UpdateProfileRequest request) {
+        TbUser user;
+        if (loginId.contains("@")) {
+            // Login with email
+            user = userRepo.findByEmail(loginId)
+                    .orElseThrow(() -> new RuntimeException("User not found"));
+        } else {
+            // Login with phone
+            user = userRepo.findByPhone(loginId)
+                    .orElseThrow(() -> new RuntimeException("User not found"));
+        }
 
         // Update fields
         if (request.getFullName() != null && !request.getFullName().isEmpty()) {
