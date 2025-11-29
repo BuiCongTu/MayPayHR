@@ -25,6 +25,8 @@ public interface UserService {
 
     Optional<TbUser> findByPhone(String phone);
 
+    Optional<TbUser> findByEmail(String email);
+
     UserResponseDto getUserByPhone(String phone);
 
     List<TbUser> findAllUsers();

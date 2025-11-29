@@ -312,6 +312,11 @@ public class UserServiceImp implements UserService {
     }
 
     @Override
+    public Optional<TbUser> findByEmail(String email) {
+        return userRepo.findByEmail(email);
+    }
+
+    @Override
     public UserResponseDto getUserByPhone(String phone) {
         TbUser user = userRepo.findByPhone(phone)
                 .orElseThrow(() -> new RuntimeException("Not found employee: " + phone));

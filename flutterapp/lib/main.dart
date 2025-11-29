@@ -13,7 +13,8 @@ void main() {
   runApp(MyApp());
 }
 class MyApp extends StatelessWidget {
-  // Check token on startup if you saved phone earlier, you can pass it to loadToken
+  const MyApp({super.key});
+
   @override
   Widget build(BuildContext context) {
     return ChangeNotifierProvider(
