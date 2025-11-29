@@ -25,18 +25,12 @@ public class LineController {
 
     //lấy tất cả line trong 1 dept
     @GetMapping("/department/{deptId}")
-    public ResponseEntity<ApiResponse<List<TbLine>>> getLinesByDepartment(@PathVariable Integer deptId) {
-        try {
-            if (deptId == null || deptId <= 0) {
-                return ResponseEntity.badRequest()
-                        .body(ApiResponse.error("Invalid department ID"));
-            }
-
+    public ResponseEntity<List<TbLine>> getLinesByDepartment(@PathVariable Integer deptId) {
+        try{
             List<TbLine> lines = lineService.getLinesByDepartment(deptId);
-            return ResponseEntity.ok(ApiResponse.success("Lines retrieved successfully", lines));
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(ApiResponse.error("Failed to retrieve lines: " + e.getMessage()));
+            return ResponseEntity.ok(lines);
+        }catch (Exception e){
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
 

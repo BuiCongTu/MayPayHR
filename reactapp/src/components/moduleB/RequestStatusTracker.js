@@ -14,6 +14,7 @@ import HourglassBottomIcon from '@mui/icons-material/HourglassBottom';
 import WorkHistoryIcon from '@mui/icons-material/WorkHistory';
 import PaidIcon from '@mui/icons-material/Paid';
 import CancelIcon from '@mui/icons-material/Cancel';
+import CreateNewFolderIcon from '@mui/icons-material/CreateNewFolder';
 
 const ColorlibConnector = styled(StepConnector)(({ theme }) => ({
     [`&.${stepConnectorClasses.alternativeLabel}`]: {
@@ -63,9 +64,10 @@ function ColorlibStepIcon(props) {
     const { active, completed, className, icon, error } = props;
 
     const icons = {
-        1: <WorkHistoryIcon />,
-        2: <HourglassBottomIcon />,
-        3: <PaidIcon />,
+        1: <CreateNewFolderIcon />,
+        2: <WorkHistoryIcon />,
+        3: <HourglassBottomIcon />,
+        4: <PaidIcon />,
     };
 
     let content = icons[String(icon)];
@@ -86,45 +88,53 @@ export default function RequestStatusTracker({ status, orientation = 'horizontal
 
     const normalizedStatus = status ? status.toLowerCase() : 'pending';
 
+    // Status Mapping Logic
     switch (normalizedStatus) {
         case 'pending':
-            activeStep = 0;
-            break;
-        case 'open':
+            // Created (0) is done. Review (1) is active.
             activeStep = 1;
             break;
+        case 'open':
+            // Review (1) passed. Execution (2) is active.
+            activeStep = 2;
+            break;
         case 'rejected':
-            activeStep = 0;
+            // Failed at Review (1).
+            activeStep = 1;
             isError = true;
             errorLabel = "Rejected by Director";
             break;
         case 'expired':
-            activeStep = 1;
+            // Failed during Execution (2).
+            activeStep = 2;
             isError = true;
             errorLabel = "Expired / Timed Out";
             break;
         case 'processed':
-            activeStep = 3; // Finished
+            // All Done.
+            activeStep = 4;
             break;
         default:
-            activeStep = 0;
+            activeStep = 1; // Default to pending state
     }
 
-    // --- Dynamic Subtitles ---
-    const getStep0Sub = () => {
+    const getStep1Sub = () => {
         if (normalizedStatus === 'pending') return 'Waiting for FD Approval';
         if (normalizedStatus === 'rejected') return 'Contact Director for more info';
-        // If we are past step 0 (open, processed), it means it was approved
         return 'Approved by Director';
     };
 
     const steps = [
         {
-            label: isError && activeStep === 0 ? errorLabel : 'Submission & Review',
-            sub: getStep0Sub()
+            label: 'Request Creation',
+            sub: 'Created By Factory Manager'
         },
         {
-            label: isError && activeStep === 1 ? errorLabel : 'Execution & Tickets',
+            label: isError && activeStep === 1 ? errorLabel : 'Submission & Review',
+            sub: getStep1Sub()
+        },
+        {
+            label: isError && activeStep === 2 ? errorLabel : 'Execution & Tickets',
             sub: 'Line Managers Assign Employees'
         },
         {

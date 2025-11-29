@@ -45,6 +45,7 @@ const getNavLinks = (roleName) =>
                 { title: 'My Team', path: '/my-team' },
                 { title: 'Attendance', path: '/attendance' },
                 { title: 'Overtime Requests', path: '/overtime-request' },
+                { title: 'Overtime Tickets', path: '/overtime-ticket' },
                 { title: 'Reports', path: '/reports' },
             ];
             break;
@@ -54,6 +55,7 @@ const getNavLinks = (roleName) =>
             links = [
                 { title: 'Dashboard', path: '/dashboard' },
                 { title: 'Production Lines', path: '/lines' },
+                { title: 'Overtime Requests', path: '/overtime-request' },
                 { title: 'Attendance', path: '/attendance' },
                 { title: 'Reports', path: '/reports' },
             ];
@@ -63,6 +65,7 @@ const getNavLinks = (roleName) =>
         case 'FDirector':
             links = [
                 { title: 'Dashboard', path: '/dashboard' },
+                { title: 'Overtime Requests', path: '/overtime-request' },
                 { title: 'Overview', path: '/overview' },
                 { title: 'Reports', path: '/reports' },
             ];

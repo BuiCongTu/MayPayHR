@@ -124,6 +124,11 @@ public class OvertimeTicketServiceImpl implements OvertimeTicketService {
         TbUser manager = userRepository.findById(dto.getManagerId())
                 .orElseThrow(() -> new IllegalArgumentException("Manager not found"));
 
+        //check role: manager
+        if(!manager.getRole().getName().equalsIgnoreCase("manager")) {
+            throw new IllegalArgumentException("User is not a manager");
+        }
+
         TbOvertimeRequest request = overtimeRequestRepository.findById(dto.getRequestId())
                 .orElseThrow(() -> new IllegalArgumentException("Overtime Request not found"));
 
