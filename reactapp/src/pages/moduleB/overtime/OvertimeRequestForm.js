@@ -21,6 +21,7 @@ import {
     Checkbox,
     Grid
 } from '@mui/material';
+import {useNavigate} from "react-router-dom";
 
 const filter = createFilterOptions({
     matchFrom: 'any',
@@ -46,6 +47,9 @@ function OvertimeRequestForm() {
     const [success, setSuccess] = useState(null);
     const [linesTableData, setLinesTableData] = useState([]);
     const [isSpecialDay, setIsSpecialDay] = useState(false);
+
+    //navigate
+    const navigate = useNavigate();
 
     useEffect(() => {
         async function loadData() {
@@ -183,6 +187,8 @@ function OvertimeRequestForm() {
             setSuccess(`Successfully created request for ${totalEmployees} employees!`);
             setFormData(prev => ({ ...prev, details: '' }));
             setLinesTableData(prev => prev.map(l => ({ ...l, isSelected: false, numEmployees: '' })));
+            alert(`Successfully created request for ${totalEmployees} employees!`);
+            navigate("/overtime-request")
         } catch (err) {
             setError(err.toString() || 'An unknown error occurred.');
         } finally {

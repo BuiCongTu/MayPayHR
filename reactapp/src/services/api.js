@@ -1,4 +1,4 @@
 // axios config
-const BASE_API = 'http://localhost:9999/api';
+const BASE_API = '/api';
 
 export default BASE_API;
