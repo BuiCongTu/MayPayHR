@@ -6,7 +6,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
 import fpt.aptech.springbootapp.dtos.request.UpdateProfileRequest;
 import fpt.aptech.springbootapp.dtos.response.ApiResponse;
@@ -50,15 +56,21 @@ public class UserController {
 
     @GetMapping("/check-duplicate")
     public ResponseEntity<ApiResponse<UserResponseDto>> checkDuplicateUser(
-            @RequestParam Integer departmentId,
+            @RequestParam(required = false) Integer departmentId,
             @RequestParam(required = false) Integer parentLineId,
             @RequestParam(required = false) Integer lineId,
             @RequestParam(required = false) Integer subLineId,
             @RequestParam Integer roleId) {
-        
+
+        System.out.println("DEBUG: checkDuplicateUser called with: departmentId=" + departmentId
+                + ", parentLineId=" + parentLineId + ", lineId=" + lineId
+                + ", subLineId=" + subLineId + ", roleId=" + roleId);
+
         UserResponseDto duplicateUser = userService.findDuplicateUser(
-            departmentId, parentLineId, lineId, subLineId, roleId);
-        
+                departmentId, parentLineId, lineId, subLineId, roleId);
+
+        System.out.println("DEBUG: Result - duplicateUser=" + (duplicateUser != null ? duplicateUser.getFullName() : "null"));
+
         if (duplicateUser != null) {
             return ResponseEntity.ok(ApiResponse.success(duplicateUser));
         } else {

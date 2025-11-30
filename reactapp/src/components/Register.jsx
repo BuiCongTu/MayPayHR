@@ -198,116 +198,185 @@ export default function Register() {
     };
 
     const onChange = async (e) => {
-        const { name, value } = e.target;
-        setForm({ ...form, [name]: value });
+    const { name, value } = e.target;
+    
+    // Cập nhật form state ngay
+    const updatedForm = { ...form, [name]: value };
+    setForm(updatedForm);
 
-        // Validate field
-        const fieldError = validateField(name, value);
-        setFieldErrors(prev => ({...prev,[name]: fieldError}));
+    // Validate field
+    const fieldError = validateField(name, value);
+    setFieldErrors(prev => ({...prev, [name]: fieldError}));
 
-        if (error) setError('');
+    if (error) setError('');
 
-        // clear duplicate usể
-        if (name === 'roleId') {setDuplicateUser(null); setShowDuplicateModal(false);}
+    // clear duplicate user when role changes
+    if (name === 'roleId') {
+        setDuplicateUser(null);
+        setShowDuplicateModal(false);
+    }
 
-        if (name === 'departmentId' && value) {
-            try {
-                const parents = await formDataService.getRootLines(value);
+        // Lấy role đã chọn để sử dụng trong hàm
+    const selectedRoleId = updatedForm.roleId;
+    const selectedRoleObj = selectedRoleId ? roles.find(r => r.id === parseInt(selectedRoleId)) : null;
+    const selectedRoleName = selectedRoleObj ? selectedRoleObj.name : null;
 
-                console.log('Loaded parent lines:', parents);
-                
-                setParentLines(Array.isArray(parents) ? parents : []);
+        console.log('DEBUG: onChange name=' + name + ', selectedRoleName=' + selectedRoleName);
+
+        // Xử lý Dept selection
+    if (name === 'departmentId' && value) {
+        try {
+            const parents = await formDataService.getRootLines(value);
+            console.log('Loaded parent lines:', parents);
+            setParentLines(Array.isArray(parents) ? parents : []);
+
+            const isFactoryManager = selectedRoleName === 'Factory Manager';
+            if (!isFactoryManager) {
                 setForm(prev => ({ ...prev, parentLineId: '', lineId: '', subLineId: '' }));
-                setChildLines([]);
-                setSubLines([]);
-                setDuplicateUser(null);
-                setShowDuplicateModal(false);
-            } catch (err) {
-                console.error('Failed to load sections:', err);
-                setParentLines([]);
             }
+            
+            setChildLines([]);
+            setSubLines([]);
+            setDuplicateUser(null);
+            setShowDuplicateModal(false);
+
+        } catch (err) {
+            console.error('Failed to load sections:', err);
+            setParentLines([]);
         }
+    }
 
-        if (name === 'parentLineId' && value) {
-            try {
-                const children = await formDataService.getChildLines(value);
+    // Xử lý Section selection
+    if (name === 'parentLineId' && value) {
+        try {
+            const children = await formDataService.getChildLines(value);
+            console.log('Loaded child lines:', children);
+            setChildLines(Array.isArray(children) ? children : []);
+            setForm(prev => ({ ...prev, lineId: '', subLineId: '' }));
+            setSubLines([]);
+            setDuplicateUser(null);
+            setShowDuplicateModal(false);
+        } catch (err) {
+            console.error('Failed to load sub-sections:', err);
+            setChildLines([]);
+        }
+    }
 
-                console.log('Loaded child lines:', children);
+    // Xử lý Sub-Section selection
+    if (name === 'lineId' && value) {
+        try {
+            const subChildren = await formDataService.getChildLines(value);
+            setSubLines(Array.isArray(subChildren) ? subChildren : []);
+            setForm(prev => ({ ...prev, subLineId: '' }));
+            setDuplicateUser(null);
+            setShowDuplicateModal(false);
+        } catch (err) {
+            console.error('Failed to load work units:', err);
+            setSubLines([]);
+        }
+    }
 
-                setChildLines(Array.isArray(children) ? children : []);
-                setForm(prev => ({ ...prev, lineId: '', subLineId: '' }));
-                setSubLines([]);
-                setDuplicateUser(null);
-                setShowDuplicateModal(false);
-            } catch (err) {
-                console.error('Failed to load sub-sections:', err);
-                setChildLines([]);
+    // ========== KIỂM TRA DUPLICATE USER ==========
+    let shouldCheckDuplicate = false;
+
+    // 1. HR - Kiểm tra duplicate ngay khi chọn Role
+    if (name === 'roleId' && selectedRoleName === 'HR') {
+        shouldCheckDuplicate = true;
+        console.log('DEBUG: HR role selected, will check duplicate');
+    }
+    // 2. Factory Director - Kiểm tra duplicate ngay khi chọn Role
+    else if (name === 'roleId' && selectedRoleName === 'Factory Director') {
+        shouldCheckDuplicate = true;
+        console.log('DEBUG: Factory Director role selected, will check duplicate');
+    }
+    // 3. Admin - Kiểm tra duplicate ngay khi chọn Role
+    else if (name === 'roleId' && selectedRoleName === 'Admin') {
+        shouldCheckDuplicate = true;
+        console.log('DEBUG: Admin role selected, will check duplicate');
+    }
+    // 4. Factory Manager - Kiểm tra duplicate khi chọn Department
+    else if (name === 'departmentId' && selectedRoleName === 'Factory Manager' && value) {
+        shouldCheckDuplicate = true;
+        console.log('DEBUG: Factory Manager with department selected, will check duplicate');
+    }
+
+    // 5. Manager - Kiểm tra duplicate khi chọn Section (parentLineId)
+    else if (name === 'parentLineId' && selectedRoleName === 'Manager' && value) {
+        shouldCheckDuplicate = true;
+        console.log('DEBUG: Manager with section selected, will check duplicate');
+    }
+    // 6. Leader/Assistant Leader - Kiểm tra duplicate khi chọn Sub Section (lineId)
+    else if (name === 'lineId' && (selectedRoleName === 'Leader' || selectedRoleName === 'Assistant Leader') && value) {
+        shouldCheckDuplicate = true;
+        console.log('DEBUG: Leader/Assistant Leader with sub-section selected, will check duplicate');
+    }
+
+
+    // Thực hiện kiểm tra duplicate
+    if (shouldCheckDuplicate && selectedRoleId) {
+        try {
+            const noNeedDept = ['Factory Director', 'HR', 'Admin'].includes(selectedRoleName);
+            const currentDeptId = name === 'departmentId' ? value : updatedForm.departmentId;
+            const currentParentLineId = name === 'parentLineId' ? value : updatedForm.parentLineId;
+            const currentLineId = name === 'lineId' ? value : updatedForm.lineId;
+
+            console.log('DEBUG: Attempting duplicate check:');
+            console.log('  - selectedRoleName:', selectedRoleName);
+            console.log('  - noNeedDept:', noNeedDept);
+            console.log('  - currentDeptId:', currentDeptId);
+            console.log('  - roleId:', selectedRoleId);
+
+            let shouldProceed = false;
+
+            if (noNeedDept) {
+                // HR, Factory Director, Admin - không cần Department
+                shouldProceed = true;
+            } else if (selectedRoleName === 'Factory Manager' && currentDeptId) {
+                // Factory Manager - cần Department
+                shouldProceed = true;
+            } else if (selectedRoleName === 'Manager' && currentDeptId && currentParentLineId) {
+                // Manager - cần Department + Section
+                shouldProceed = true;
+            } else if ((selectedRoleName === 'Leader' || selectedRoleName === 'Assistant Leader') && currentDeptId && currentLineId) {
+                // Leader/Assistant Leader - cần Department + Sub Section
+                shouldProceed = true;
             }
-        }
 
-        if (name === 'lineId' && value) {
-            try {
-                const subChildren = await formDataService.getChildLines(value);
-                setSubLines(Array.isArray(subChildren) ? subChildren : []);
-                setForm(prev => ({ ...prev, subLineId: '' }));
-                setDuplicateUser(null);
-                setShowDuplicateModal(false);
-            } catch (err) {
-                console.error('Failed to load work units:', err);
-                setSubLines([]);
-            }
-        }
-
-        let shouldCheckDuplicate = false;
-        
-        if (selectedRoleName === 'Factory Director' && name === 'roleId' && value) {
-            shouldCheckDuplicate = true;
-        }
-        else if (selectedRoleName === 'HR' && name === 'roleId' && value) {
-            shouldCheckDuplicate = true;
-        }       
-        else if (selectedRoleName === 'Factory Manager' && name === 'departmentId' && value) {
-            shouldCheckDuplicate = true;
-        }
-     
-        else if (selectedRoleName === 'Manager' && name === 'parentLineId' && value) {
-            shouldCheckDuplicate = true;
-        }
-        else if (['Leader', 'Assistant Leader'].includes(selectedRoleName) && name === 'lineId' && value) {
-            shouldCheckDuplicate = true;
-        }
-        else if (selectedRoleName === 'Admin' && name === 'roleId' && value) {
-            shouldCheckDuplicate = true;
-        }
-
-        if (shouldCheckDuplicate && form.roleId) {
-            try {
-                const noNeedDept = ['Factory Director', 'HR', 'Admin'].includes(selectedRoleName);
-                
-                if (!noNeedDept && !form.departmentId) {
-                    return;
-                }
+            if (shouldProceed) {
+                console.log('DEBUG: Calling checkDuplicateUser with:', {
+                    departmentId: currentDeptId || null,
+                    parentLineId: currentParentLineId || null,
+                    lineId: currentLineId || null,
+                    subLineId: updatedForm.subLineId || null,
+                    roleId: selectedRoleId
+                });
 
                 const duplicate = await formDataService.checkDuplicateUser(
-                    form.departmentId || null,
-                    name === 'parentLineId' ? value : form.parentLineId,
-                    name === 'lineId' ? value : form.lineId,
-                    name === 'subLineId' ? value : form.subLineId,
-                    form.roleId
+                    currentDeptId || null,
+                    currentParentLineId || null,
+                    currentLineId || null,
+                    updatedForm.subLineId || null,
+                    parseInt(selectedRoleId)
                 );
 
                 if (duplicate) {
+                    console.log('DEBUG: Duplicate found:', duplicate.fullName);
                     setDuplicateUser(duplicate);
                     setShowDuplicateModal(true);
                 } else {
+                    console.log('DEBUG: No duplicate found');
                     setDuplicateUser(null);
                     setShowDuplicateModal(false);
                 }
-            } catch (err) {
-                console.error('Failed to check duplicate user:', err);
+            } else {
+                console.log('DEBUG: Conditions not met, skipping duplicate check');
             }
+        } catch (err) {
+            console.error('Failed to check duplicate user:', err);
         }
-    };
+    }
+};
+
 
     const validate = () => {
         const errors = {};
@@ -406,12 +475,7 @@ export default function Register() {
             <Container maxWidth="sm">
                 <Paper
                     elevation={10}
-                    sx={{
-                        padding: 4,
-                        borderRadius: 3,
-                        backgroundColor: 'rgba(255, 255, 255, 0.95)'
-                    }}
-                >
+                    sx={{padding: 4,borderRadius: 3,backgroundColor: 'rgba(255, 255, 255, 0.95)'}}>
                     <Box sx={{ textAlign: 'center', mb: 3 }}>
                         <Typography variant="h5" component="h1" fontWeight="bold" color="primary" gutterBottom>
                             Register New Employee
@@ -792,13 +856,7 @@ export default function Register() {
                             Already have an account?{' '}
                             <span
                                 onClick={() => navigate('/login')}
-                                style={{
-                                    color: '#667eea',
-                                    cursor: 'pointer',
-                                    fontWeight: 'bold',
-                                    textDecoration: 'underline'
-                                }}
-                            >
+                                style={{color: '#667eea',cursor: 'pointer',fontWeight: 'bold',textDecoration: 'underline'}}>
                 Login now
             </span>
                         </Typography>

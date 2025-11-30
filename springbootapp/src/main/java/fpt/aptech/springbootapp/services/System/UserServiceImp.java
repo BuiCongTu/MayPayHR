@@ -489,18 +489,23 @@ public class UserServiceImp implements UserService {
             Integer subLineId, Integer roleId) {
         TbRole role = roleRepo.findById(roleId).orElse(null);
         if (role == null) {
+            System.out.println("DEBUG: Role not found for roleId=" + roleId);
             return null;
         }
 
         String roleName = role.getName();
+        System.out.println("DEBUG: findDuplicateUser - roleName=" + roleName + ", departmentId=" + departmentId);
         List<TbUser> usersWithRole;
 
         // Factory Director
         if ("Factory Director".equals(roleName)) {
+            System.out.println("DEBUG: Checking Factory Director");
             usersWithRole = userRepo.findAll().stream()
                     .filter(u -> u.getRole() != null && u.getRole().getId().equals(roleId))
                     .collect(Collectors.toList());
+            System.out.println("DEBUG: Found " + usersWithRole.size() + " Factory Director users");
             if (!usersWithRole.isEmpty()) {
+                System.out.println("DEBUG: Returning first Factory Director: " + usersWithRole.get(0).getFullName());
                 return buildUserResponseDto(usersWithRole.get(0));
             }
             return null;
@@ -508,14 +513,32 @@ public class UserServiceImp implements UserService {
 
         // HR
         if ("HR".equals(roleName)) {
+            System.out.println("DEBUG: Checking HR");
             usersWithRole = userRepo.findAll().stream()
                     .filter(u -> u.getRole() != null && u.getRole().getId().equals(roleId))
                     .collect(Collectors.toList());
+            System.out.println("DEBUG: Found " + usersWithRole.size() + " HR users");
             if (!usersWithRole.isEmpty()) {
+                System.out.println("DEBUG: Returning first HR: " + usersWithRole.get(0).getFullName());
                 return buildUserResponseDto(usersWithRole.get(0));
             }
             return null;
         }
+
+        if ("Factory Manager".equals(roleName)) {
+            System.out.println("DEBUG: Checking Factory Manager with departmentId=" + departmentId);
+            usersWithRole = userRepo.findAll().stream()
+                    .filter(u -> u.getRole() != null && u.getRole().getId().equals(roleId)
+                            && u.getDepartment() != null && u.getDepartment().getId().equals(departmentId))
+                    .collect(Collectors.toList());
+            System.out.println("DEBUG: Found " + usersWithRole.size() + " Factory Manager users in this department");
+            if (!usersWithRole.isEmpty()) {
+                System.out.println("DEBUG: Returning first Factory Manager: " + usersWithRole.get(0).getFullName());
+                return buildUserResponseDto(usersWithRole.get(0));
+            }
+            return null;
+        }
+
 
         // Các role khác
         usersWithRole = userRepo.findAll().stream()
@@ -525,11 +548,7 @@ public class UserServiceImp implements UserService {
 
         for (TbUser user : usersWithRole) {
 
-            if ("Factory Manager".equals(roleName)) {
-                if (user.getLine() == null) {
-                    return buildUserResponseDto(user);
-                }
-            } else if ("Manager".equals(roleName) && parentLineId != null) {
+            if ("Manager".equals(roleName) && parentLineId != null) {
                 if (user.getLine() != null && user.getLine().getId().equals(parentLineId)) {
                     return buildUserResponseDto(user);
                 }
