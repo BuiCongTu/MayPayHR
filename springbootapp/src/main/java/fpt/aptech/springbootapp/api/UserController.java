@@ -6,12 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import fpt.aptech.springbootapp.dtos.request.UpdateProfileRequest;
 import fpt.aptech.springbootapp.dtos.response.ApiResponse;
@@ -51,5 +46,23 @@ public class UserController {
 
         UserResponseDto updatedUser = userService.updateUserProfile(loginId, request);
         return ResponseEntity.ok(ApiResponse.success(updatedUser));
+    }
+
+    @GetMapping("/check-duplicate")
+    public ResponseEntity<ApiResponse<UserResponseDto>> checkDuplicateUser(
+            @RequestParam Integer departmentId,
+            @RequestParam(required = false) Integer parentLineId,
+            @RequestParam(required = false) Integer lineId,
+            @RequestParam(required = false) Integer subLineId,
+            @RequestParam Integer roleId) {
+        
+        UserResponseDto duplicateUser = userService.findDuplicateUser(
+            departmentId, parentLineId, lineId, subLineId, roleId);
+        
+        if (duplicateUser != null) {
+            return ResponseEntity.ok(ApiResponse.success(duplicateUser));
+        } else {
+            return ResponseEntity.status(404).body(ApiResponse.error("No duplicate user found"));
+        }
     }
 }

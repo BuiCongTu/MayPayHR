@@ -13,10 +13,10 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import fpt.aptech.springbootapp.dtos.request.UpdateProfileRequest;
 import fpt.aptech.springbootapp.dtos.request.Auth.ChangePassReq;
 import fpt.aptech.springbootapp.dtos.request.Auth.LoginReq;
 import fpt.aptech.springbootapp.dtos.request.Auth.RegisterReq;
+import fpt.aptech.springbootapp.dtos.request.UpdateProfileRequest;
 import fpt.aptech.springbootapp.dtos.response.LoginResponse;
 import fpt.aptech.springbootapp.dtos.response.UserResponseDto;
 import fpt.aptech.springbootapp.entities.Core.TbDepartment;
@@ -29,8 +29,8 @@ import fpt.aptech.springbootapp.repositories.DepartmentRepository;
 import fpt.aptech.springbootapp.repositories.LineRepository;
 import fpt.aptech.springbootapp.repositories.RoleRepository;
 import fpt.aptech.springbootapp.repositories.SkillLevelRepo;
-import fpt.aptech.springbootapp.repositories.UserRepository;
 import fpt.aptech.springbootapp.repositories.System.PassResetTokenRepo;
+import fpt.aptech.springbootapp.repositories.UserRepository;
 import fpt.aptech.springbootapp.securities.JwtUtils;
 
 @Service
@@ -482,5 +482,69 @@ public class UserServiceImp implements UserService {
 
         TbUser savedUser = userRepo.save(user);
         return buildUserResponseDto(savedUser);
+    }
+
+    @Override
+    public UserResponseDto findDuplicateUser(Integer departmentId, Integer parentLineId, Integer lineId,
+            Integer subLineId, Integer roleId) {
+        TbRole role = roleRepo.findById(roleId).orElse(null);
+        if (role == null) {
+            return null;
+        }
+
+        String roleName = role.getName();
+        List<TbUser> usersWithRole;
+
+        // Factory Director
+        if ("Factory Director".equals(roleName)) {
+            usersWithRole = userRepo.findAll().stream()
+                    .filter(u -> u.getRole() != null && u.getRole().getId().equals(roleId))
+                    .collect(Collectors.toList());
+            if (!usersWithRole.isEmpty()) {
+                return buildUserResponseDto(usersWithRole.get(0));
+            }
+            return null;
+        }
+
+        // HR
+        if ("HR".equals(roleName)) {
+            usersWithRole = userRepo.findAll().stream()
+                    .filter(u -> u.getRole() != null && u.getRole().getId().equals(roleId))
+                    .collect(Collectors.toList());
+            if (!usersWithRole.isEmpty()) {
+                return buildUserResponseDto(usersWithRole.get(0));
+            }
+            return null;
+        }
+
+        // Các role khác
+        usersWithRole = userRepo.findAll().stream()
+                .filter(u -> u.getRole() != null && u.getRole().getId().equals(roleId)
+                && u.getDepartment() != null && u.getDepartment().getId().equals(departmentId))
+                .collect(Collectors.toList());
+
+        for (TbUser user : usersWithRole) {
+
+            if ("Factory Manager".equals(roleName)) {
+                if (user.getLine() == null) {
+                    return buildUserResponseDto(user);
+                }
+            } else if ("Manager".equals(roleName) && parentLineId != null) {
+                if (user.getLine() != null && user.getLine().getId().equals(parentLineId)) {
+                    return buildUserResponseDto(user);
+                }
+            } else if (("Leader".equals(roleName) || "Assistant Leader".equals(roleName)) && lineId != null) {
+                if (user.getLine() != null && user.getLine().getId().equals(lineId)) {
+                    return buildUserResponseDto(user);
+                }
+            } // Worker không kiểm tra duplicate
+            else if ("Worker".equals(roleName)) {
+                continue;
+            } else if ("Admin".equals(roleName)) {
+                return buildUserResponseDto(user);
+            }
+        }
+
+        return null;
     }
 }
